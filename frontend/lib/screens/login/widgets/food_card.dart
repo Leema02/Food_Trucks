@@ -10,7 +10,7 @@ class FoodCard extends StatelessWidget {
   final String productClients;
 
   const FoodCard({
-    Key? key,
+    super.key,
     required this.width,
     required this.primaryColor,
     required this.productUrl,
@@ -18,7 +18,7 @@ class FoodCard extends StatelessWidget {
     required this.productPrice,
     required this.productRate,
     required this.productClients,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

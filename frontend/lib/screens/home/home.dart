@@ -81,7 +81,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final _media = MediaQuery.of(context).size;
+    final media = MediaQuery.of(context).size;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -96,8 +96,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
         children: [
-          buildListViewPage(_media),
-          buildMapViewPage(_media),
+          buildListViewPage(media),
+          buildMapViewPage(media),
           Cart(),
           const Account(),
         ],
