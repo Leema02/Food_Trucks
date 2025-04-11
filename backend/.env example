@@ -1,5 +1,12 @@
 PORT=5000
+
 MONGO_URI=mongodb+srv://s12029320:leemamarah@foodtruckdb.sgfvund.mongodb.net/foodtruckdb
 
 JWT_SECRET=supersecretkey123
 JWT_EXPIRES_IN=1h
+
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=foodtruck.team0@gmail.com
+EMAIL_PASS=foodtruck0101
+CLIENT_URL=http://localhost:3000  # or your Flutter web/mobile deep link
