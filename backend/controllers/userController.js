@@ -2,7 +2,7 @@ const User = require('../models/userModel');
 const generateToken = require('../utils/generateToken');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail');
-
+const crypto = require('crypto'); 
 
 const signupUser = async (req, res) => {
   const { F_name, L_name, email_address, phone_num, username, password, role_id } = req.body;
@@ -13,7 +13,7 @@ const signupUser = async (req, res) => {
       return res.status(409).json({ message: 'Email already exists.' });
     }
     const token = jwt.sign(
-             { F_name, L_name, email_address, phone_num, username, password, role_id },
+        { F_name, L_name, email_address, phone_num, username, password, role_id },
         process.env.JWT_SECRET,
         { expiresIn: '10m' }
       );
@@ -112,10 +112,87 @@ const verifyEmail = async (req, res) => {
     }
   };
 
+  
+const forgotPassword = async (req, res) => {
+  const { email_address } = req.body;
+
+  try {
+    // 1. Find user by email
+    const user = await User.findOne({ email_address });
+    if (!user) {
+      return res.status(404).json({ message: 'Email not found' });
+    }
+
+    // 2. Create a reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    // 3. Save hashed token and expiration in DB
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+
+    // 4. Send reset link by email
+    const resetURL = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+
+    const message = `
+      <h2>Hello ${user.F_name},</h2>
+      <p>Click below to reset your password:</p>
+      <a href="${resetURL}" target="_blank">Reset Password</a>
+      <p>This link will expire in 10 minutes.</p>
+    `;
+
+    await sendEmail(user.email_address, 'Reset your password - Food Trucks', message);
+
+    res.status(200).json({ message: 'Reset link sent to email' });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+const resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  try {
+    // 1. Hash the token from the URL
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    // 2. Find user with matching token & not expired
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired token.' });
+    }
+
+    // 3. Hash new password and update user
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+
+    // 4. Clear reset fields
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    res.status(200).json({ message: '✅ Password has been reset successfully.' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
   module.exports = {
     signupUser,
     getAllUsers,
     loginUser,
-    verifyEmail
+    verifyEmail,
+    forgotPassword,
+    resetPassword
   };
   
