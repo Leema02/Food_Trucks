@@ -2,6 +2,10 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
+  
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
+  
   F_name: { type: String, required: true },
   L_name: { type: String, required: true },
   email_address: { type: String, required: true, unique: true },
@@ -37,6 +41,7 @@ userSchema.pre('save', async function (next) {
     next(err);
   }
 });
+
 
 const User = mongoose.model('User', userSchema);
 
