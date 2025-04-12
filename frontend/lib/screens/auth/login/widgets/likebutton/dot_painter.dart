@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import './like_button_util.dart';
+import 'like_button_util.dart';
 
 class DotPainter extends CustomPainter {
   final int dotCount;

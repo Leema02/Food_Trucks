@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/screens/login/login.dart';
-import 'package:myapp/screens/login/widgets/auth_background.dart';
-import 'package:myapp/screens/login/widgets/auth_card.dart';
-import 'package:myapp/screens/login/widgets/auth_buttons.dart';
-import 'package:myapp/screens/login/widgets/sign_up_bar.dart';
-import 'package:myapp/screens/login/widgets/responsive.dart';
+import 'package:myapp/screens/auth/login/login.dart';
+import 'package:myapp/screens/auth/login/widgets/auth_background.dart';
+import 'package:myapp/screens/auth/login/widgets/auth_card.dart';
+import 'package:myapp/screens/auth/login/widgets/auth_buttons.dart';
+import 'package:myapp/screens/auth/login/widgets/sign_up_bar.dart';
+import 'package:myapp/screens/auth/login/widgets/responsive.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});

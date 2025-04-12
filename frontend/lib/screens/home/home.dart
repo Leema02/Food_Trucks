@@ -7,13 +7,13 @@ import 'package:geolocator/geolocator.dart';
 
 import 'package:myapp/screens/account/account.dart';
 import 'package:myapp/screens/cart/cart.dart';
-import 'package:myapp/constant/colors.dart';
-import 'package:myapp/constant/images.dart';
+import 'package:myapp/core/constants/colors.dart';
+import 'package:myapp/core/constants/images.dart';
 import 'package:myapp/screens/home/widgets/bottom_nav_bar.dart';
-import 'package:myapp/screens/login/widgets/card_more_widget.dart';
-import 'package:myapp/screens/login/widgets/card_widget.dart';
-import 'package:myapp/screens/login/widgets/home_page_custom_shape.dart';
-import 'package:myapp/screens/login/widgets/likebutton/LikeButton.dart';
+import 'package:myapp/screens/auth/login/widgets/card_more_widget.dart';
+import 'package:myapp/screens/auth/login/widgets/card_widget.dart';
+import 'package:myapp/screens/auth/login/widgets/home_page_custom_shape.dart';
+import 'package:myapp/screens/auth/login/widgets/likebutton/LikeButton.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

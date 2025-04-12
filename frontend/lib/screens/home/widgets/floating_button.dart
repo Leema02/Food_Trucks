@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/constant/colors.dart';
+import 'package:myapp/core/constants/colors.dart';
 
 class HomeFloatingButton extends StatelessWidget {
   const HomeFloatingButton({super.key});
