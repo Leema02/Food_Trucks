@@ -87,7 +87,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 if (isMobile)
                   Image.asset(
                     'assets/image/truckLogo.png',
-                    height: 100,
+                    height: 120,
                   ),
                 SizedBox(
                   width: formWidth,
@@ -111,6 +111,19 @@ class _SignUpPageState extends State<SignUpPage> {
                               }
                               if (!value.contains('@')) {
                                 return 'Invalid email format';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          buildStyledTextField(
+                            hint: 'Username',
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter a username';
+                              }
+                              if (value.contains(' ')) {
+                                return 'Username should not contain spaces';
                               }
                               return null;
                             },
