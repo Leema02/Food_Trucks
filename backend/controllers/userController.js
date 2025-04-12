@@ -20,6 +20,7 @@ const signupUser = async (req, res) => {
 
     const verifyUrl = `${process.env.API_URL}/api/users/verify-email?token=${token}`;
     //const verifyUrl = `${process.env.CLIENT_URL}/verify-email?token=${token}`;
+
     const message = `
       <h2>Hello ${F_name},</h2>
       <p>Click below to verify your email and complete your signup:</p>
@@ -130,7 +131,8 @@ const forgotPassword = async (req, res) => {
     await user.save();
 
     // 4. Send reset link by email
-    const resetURL = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+    //const resetURL = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+    const resetURL = `${process.env.API_URL}/api/users/reset-password/${resetToken}`;
 
 
     const message = `
