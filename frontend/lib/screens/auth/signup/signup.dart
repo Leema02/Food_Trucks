@@ -194,10 +194,32 @@ class _SignUpPageState extends State<SignUpPage> {
                                     await AuthService.signup(userData);
 
                                 if (response.statusCode == 200) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content:
-                                            Text("✅ Verification email sent!")),
+                                  // Clear form fields first
+                                  _firstNameController.clear();
+                                  _lastNameController.clear();
+                                  _emailController.clear();
+                                  _usernameController.clear();
+                                  _phoneController.clear();
+                                  _cityController.clear();
+                                  _addressController.clear();
+                                  _passwordController.clear();
+
+                                  // Show centered dialog
+                                  await showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) =>
+                                        AlertDialog(
+                                      content: const Text(
+                                          "✅ Verification email sent!",
+                                          textAlign: TextAlign.center),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(),
+                                          child: const Text("OK"),
+                                        ),
+                                      ],
+                                    ),
                                   );
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
