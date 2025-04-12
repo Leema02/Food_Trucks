@@ -5,6 +5,7 @@ import 'package:myapp/screens/auth/login/widgets/auth_card.dart';
 import 'package:myapp/screens/auth/login/widgets/auth_buttons.dart';
 import 'package:myapp/screens/auth/login/widgets/sign_up_bar.dart';
 import 'package:myapp/screens/auth/login/widgets/responsive.dart';
+import 'package:myapp/core/services/auth_service.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -15,7 +16,15 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
   bool _showPassword = false;
 
   Widget buildStyledTextField({
@@ -97,13 +106,18 @@ class _SignUpPageState extends State<SignUpPage> {
                       child: Column(
                         children: [
                           const SignUpBar(isLoginPage: false),
-                          const SizedBox(height: 15),
-                          buildStyledTextField(hint: 'First Name'),
-                          const SizedBox(height: 10),
-                          buildStyledTextField(hint: 'Last Name'),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 13),
+                          buildStyledTextField(
+                              hint: 'First Name',
+                              controller: _firstNameController),
+                          const SizedBox(height: 8),
+                          buildStyledTextField(
+                              hint: 'Last Name',
+                              controller: _lastNameController),
+                          const SizedBox(height: 8),
                           buildStyledTextField(
                             hint: 'Email',
+                            controller: _emailController,
                             type: TextInputType.emailAddress,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -115,9 +129,10 @@ class _SignUpPageState extends State<SignUpPage> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
                           buildStyledTextField(
                             hint: 'Username',
+                            controller: _usernameController,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter a username';
@@ -128,14 +143,19 @@ class _SignUpPageState extends State<SignUpPage> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
                           buildStyledTextField(
                             hint: 'Phone Number',
+                            controller: _phoneController,
                             type: TextInputType.phone,
                           ),
-                          const SizedBox(height: 10),
-                          buildStyledTextField(hint: 'City'),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
+                          buildStyledTextField(
+                              hint: 'City', controller: _cityController),
+                          const SizedBox(height: 8),
+                          buildStyledTextField(
+                              hint: 'Address', controller: _addressController),
+                          const SizedBox(height: 8),
                           buildStyledTextField(
                             hint: 'Password',
                             obscure: !_showPassword,
@@ -156,15 +176,42 @@ class _SignUpPageState extends State<SignUpPage> {
                           const SizedBox(height: 15),
                           AuthButton(
                             text: 'Sign Up',
-                            onPressed: () {
+                            onPressed: () async {
                               if (_formKey.currentState!.validate()) {
-                                print("✅ Form Submitted Successfully");
+                                final userData = {
+                                  "F_name": _firstNameController.text.trim(),
+                                  "L_name": _lastNameController.text.trim(),
+                                  "email_address": _emailController.text.trim(),
+                                  "username": _usernameController.text.trim(),
+                                  "phone_num": _phoneController.text.trim(),
+                                  "city": _cityController.text.trim(),
+                                  "address": _addressController.text.trim(),
+                                  "password": _passwordController.text.trim(),
+                                  "role_id": "customer"
+                                };
+
+                                final response =
+                                    await AuthService.signup(userData);
+
+                                if (response.statusCode == 200) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content:
+                                            Text("✅ Verification email sent!")),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                            "❌ Signup failed: ${response.body}")),
+                                  );
+                                }
                               } else {
                                 print("❌ Form has errors");
                               }
                             },
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
                           AuthSwitchButton(
                             text: "Already have an account? Log In",
                             onPressed: () => Navigator.push(
@@ -179,7 +226,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 15),
               ],
             ),
           ),
