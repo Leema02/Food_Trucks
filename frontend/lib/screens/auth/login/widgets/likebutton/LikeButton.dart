@@ -1,6 +1,6 @@
 // ignore: file_names
 import 'package:flutter/material.dart';
-import './model.dart';
+import 'model.dart';
 import 'dot_painter.dart';
 import 'circle_painter.dart';
 

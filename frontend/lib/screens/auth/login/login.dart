@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/home/home.dart';
-import 'package:myapp/screens/signup/signup.dart';
-import 'package:myapp/screens/forgot_password/ForgotPasswordPage.dart';
-import 'package:myapp/screens/login/widgets/auth_background.dart';
-import 'package:myapp/screens/login/widgets/auth_card.dart';
-import 'package:myapp/screens/login/widgets/auth_text_fields.dart';
-import 'package:myapp/screens/login/widgets/auth_buttons.dart';
-import 'package:myapp/screens/login/widgets/sign_up_bar.dart';
-import 'package:myapp/screens/login/widgets/responsive.dart';
+import 'package:myapp/screens/auth/signup/signup.dart';
+import 'package:myapp/screens/auth/forgot_password/ForgotPasswordPage.dart';
+import 'package:myapp/screens/auth/login/widgets/auth_background.dart';
+import 'package:myapp/screens/auth/login/widgets/auth_card.dart';
+import 'package:myapp/screens/auth/login/widgets/auth_text_fields.dart';
+import 'package:myapp/screens/auth/login/widgets/auth_buttons.dart';
+import 'package:myapp/screens/auth/login/widgets/sign_up_bar.dart';
+import 'package:myapp/screens/auth/login/widgets/responsive.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

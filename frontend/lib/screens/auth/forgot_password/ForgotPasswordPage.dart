@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/screens/login/login.dart';
-import 'package:myapp/screens/forgot_password/ResetPasswordPage.dart';
-import 'package:myapp/screens/login/widgets/auth_background.dart';
-import 'package:myapp/screens/login/widgets/auth_card.dart';
-import 'package:myapp/screens/login/widgets/auth_text_fields.dart';
-import 'package:myapp/screens/login/widgets/auth_buttons.dart';
-import 'package:myapp/screens/login/widgets/responsive.dart';
+import 'package:myapp/screens/auth/login/login.dart';
+import 'package:myapp/screens/auth/forgot_password/ResetPasswordPage.dart';
+import 'package:myapp/screens/auth/login/widgets/auth_background.dart';
+import 'package:myapp/screens/auth/login/widgets/auth_card.dart';
+import 'package:myapp/screens/auth/login/widgets/auth_text_fields.dart';
+import 'package:myapp/screens/auth/login/widgets/auth_buttons.dart';
+import 'package:myapp/screens/auth/login/widgets/responsive.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
