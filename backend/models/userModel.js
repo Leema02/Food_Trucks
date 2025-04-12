@@ -2,16 +2,14 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
-  
-  resetPasswordToken: String,
-  resetPasswordExpires: Date,
-  
   F_name: { type: String, required: true },
   L_name: { type: String, required: true },
   email_address: { type: String, required: true, unique: true },
   phone_num: { type: String, required: true },
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  city: { type: String },
+  address: { type: String }, 
   role_id: {
     type: String,
     enum: ['customer', 'truck owner', 'admin'],
