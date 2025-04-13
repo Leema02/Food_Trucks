@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/screens/auth/login/widgets/likebutton/LikeButton.dart';
-import 'package:myapp/screens/auth/login/widgets/likebutton/model.dart';
+import 'package:myapp/screens/auth/widgets/likebutton/LikeButton.dart';
+import 'package:myapp/screens/auth/widgets/likebutton/model.dart';
 
 class LikeButtonPage extends StatelessWidget {
   const LikeButtonPage({super.key});

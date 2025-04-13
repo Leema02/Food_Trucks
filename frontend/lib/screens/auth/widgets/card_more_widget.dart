@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:myapp/core/constants/colors.dart';
-import 'package:myapp/screens/auth/login/widgets/card_more_shape.dart';
+import 'package:myapp/screens/auth/widgets/card_more_shape.dart';
 
 class CardMoreWidget extends StatefulWidget {
   final String image;

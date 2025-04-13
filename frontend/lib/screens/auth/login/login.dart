@@ -1,13 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/home/home.dart';
 import 'package:myapp/screens/auth/signup/signup.dart';
 import 'package:myapp/screens/auth/forgot_password/ForgotPasswordPage.dart';
-import 'package:myapp/screens/auth/login/widgets/auth_background.dart';
-import 'package:myapp/screens/auth/login/widgets/auth_card.dart';
-import 'package:myapp/screens/auth/login/widgets/auth_text_fields.dart';
-import 'package:myapp/screens/auth/login/widgets/auth_buttons.dart';
-import 'package:myapp/screens/auth/login/widgets/sign_up_bar.dart';
-import 'package:myapp/screens/auth/login/widgets/responsive.dart';
+import 'package:myapp/screens/auth/widgets/auth_background.dart';
+import 'package:myapp/screens/auth/widgets/auth_card.dart';
+import 'package:myapp/screens/auth/widgets/auth_text_fields.dart';
+import 'package:myapp/screens/auth/widgets/auth_buttons.dart';
+import 'package:myapp/screens/auth/widgets/sign_up_bar.dart';
+import 'package:myapp/screens/auth/widgets/responsive.dart';
+import 'package:myapp/core/services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,6 +24,24 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _showPassword = false;
+
+  void _showMessage(String message, {bool isError = false}) {
+    final snackBar = SnackBar(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: isError ? Colors.red[400] : Colors.green[400],
+      content: Center(
+        heightFactor: 1.5,
+        child: Text(
+          message,
+          style: const TextStyle(color: Colors.white),
+        ),
+      ),
+      duration: const Duration(seconds: 2),
+      margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 100),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
                 if (isMobile)
                   Image.asset(
                     'assets/image/truckLogo.png',
-                    height: 100,
+                    height: 120,
                   ),
                 SizedBox(
                   width: formWidth,
@@ -81,8 +102,6 @@ class _LoginPageState extends State<LoginPage> {
                             controller: _emailController,
                           ),
                           const SizedBox(height: 10),
-
-                          /// Updated password field with visibility toggle
                           TextFormField(
                             controller: _passwordController,
                             obscureText: !_showPassword,
@@ -124,16 +143,30 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(height: 15),
                           AuthButton(
                             text: 'Log In',
-                            onPressed: () {
+                            onPressed: () async {
                               if (_formKey.currentState!.validate()) {
-                                print("✅ Form Submitted Successfully");
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => HomePage()),
-                                );
-                              } else {
-                                print("❌ Form has errors");
+                                final credentials = {
+                                  "email_address": _emailController.text.trim(),
+                                  "password": _passwordController.text.trim(),
+                                };
+
+                                final httpResponse =
+                                    await AuthService.login(credentials);
+                                final responseData =
+                                    jsonDecode(httpResponse.body);
+
+                                if (httpResponse.statusCode == 200) {
+                                  _showMessage("✅ Login successful");
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => HomePage(),
+                                    ),
+                                  );
+                                } else {
+                                  _showMessage("❌ ${responseData['message']}",
+                                      isError: true);
+                                }
                               }
                             },
                           ),

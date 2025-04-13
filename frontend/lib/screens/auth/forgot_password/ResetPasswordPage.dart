@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/screens/auth/login/widgets/auth_background.dart';
-import 'package:myapp/screens/auth/login/widgets/auth_card.dart';
-import 'package:myapp/screens/auth/login/widgets/auth_buttons.dart';
-import 'package:myapp/screens/auth/login/widgets/responsive.dart';
+import 'package:myapp/screens/auth/widgets/auth_background.dart';
+import 'package:myapp/screens/auth/widgets/auth_card.dart';
+import 'package:myapp/screens/auth/widgets/auth_buttons.dart';
+import 'package:myapp/screens/auth/widgets/responsive.dart';
 import 'package:myapp/screens/auth/login/login.dart';
 
 class ResetPasswordPage extends StatefulWidget {
