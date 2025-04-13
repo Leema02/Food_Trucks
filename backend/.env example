@@ -7,9 +7,8 @@ JWT_EXPIRES_IN=1h
 
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
-# EMAIL_USER=foodtruck.team0@gmail.com
-# EMAIL_PASS=foodtruck0101
-EMAIL_USER=lemarizeq@gmail.com
-EMAIL_PASS=bqwn vbor ikaj peyi
+EMAIL_USER=foodtruck.team0@gmail.com
+EMAIL_PASS= ywpv sska umvt cbqu
+
 CLIENT_URL=http://localhost:3000  # or your Flutter web/mobile deep link
 API_URL=http://localhost:5000

@@ -84,27 +84,28 @@ const verifyEmail = async (req, res) => {
       return res.status(400).send('❌ Account already verified.');
     }
 
-    const hashedPassword = await bcrypt.hash(decoded.password, 10);
-
+ //   const hashedPassword = await bcrypt.hash(decoded.password, 10);
     const newUser = await User.create({
       F_name: decoded.F_name,
       L_name: decoded.L_name,
       email_address: decoded.email_address,
       phone_num: decoded.phone_num,
       username: decoded.username,
-      password: hashedPassword,
+      password: decoded.password,
       role_id: decoded.role_id,
       city: decoded.city,
       address: decoded.address
     });
 
-    const finalToken = generateToken(newUser._id);
+    // const finalToken = generateToken(newUser._id);
 
-    res.status(201).json({
-      message: '✅ Email verified and account created.',
-      user: newUser,
-      token: finalToken
-    });
+    // res.status(201).json({
+    //   message: '✅ Email verified and account created.',
+    //   user: newUser,
+    //   token: finalToken
+    // });
+    res.status(201).json({ message: '✅ Email verified and account created.' });
+
   } catch (err) {
     res.status(400).send('❌ Invalid or expired token.');
   }
