@@ -3,6 +3,7 @@ const generateToken = require('../utils/generateToken');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail');
 const crypto = require('crypto'); 
+const bcrypt = require('bcrypt');
 
 const signupUser = async (req, res) => {
   const { F_name, L_name, email_address, phone_num, username, password, role_id, city, address } = req.body;
@@ -47,8 +48,9 @@ const getAllUsers = async (req, res) => {
       res.status(500).json({ message: err.message });
     }
   };
-  
-  const bcrypt = require('bcrypt');
+
+
+ 
 
 const loginUser = async (req, res) => {
   const { email_address, password } = req.body;
@@ -111,42 +113,99 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-  
 const forgotPassword = async (req, res) => {
   const { email_address } = req.body;
 
   try {
-    // 1. Find user by email
     const user = await User.findOne({ email_address });
     if (!user) {
       return res.status(404).json({ message: 'Email not found' });
     }
 
-    // 2. Create a reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    // Generate 4-digit numeric code
+    const resetCode = Math.floor(1000 + Math.random() * 9000).toString();
 
-    // 3. Save hashed token and expiration in DB
-    user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    // Set expiry time (10 mins)
+    const codeExpiry = Date.now() + 10 * 60 * 1000;
+
+    user.resetCode = resetCode;
+    user.resetCodeExpires = codeExpiry;
     await user.save();
-
-    // 4. Send reset link by email
-    //const resetURL = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-    const resetURL = `${process.env.API_URL}/api/users/reset-password/${resetToken}`;
-
 
     const message = `
       <h2>Hello ${user.F_name},</h2>
-      <p>Click below to reset your password:</p>
-      <a href="${resetURL}" target="_blank">Reset Password</a>
-      <p>This link will expire in 10 minutes.</p>
+      <p>Use this 4-digit code to reset your password:</p>
+      <h1>${resetCode}</h1>
+      <p>This code will expire in 10 minutes.</p>
     `;
 
-    await sendEmail(user.email_address, 'Reset your password - Food Trucks', message);
+    await sendEmail(user.email_address, 'Your Password Reset Code - Food Trucks', message);
 
-    res.status(200).json({ message: 'Reset link sent to email' });
+    res.status(200).json({ message: 'Reset code sent to your email.' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+  
+// const forgotPassword = async (req, res) => {
+//   const { email_address } = req.body;
 
+//   try {
+//     // 1. Find user by email
+//     const user = await User.findOne({ email_address });
+//     if (!user) {
+//       return res.status(404).json({ message: 'Email not found' });
+//     }
+
+//     // 2. Create a reset token
+//     const resetToken = crypto.randomBytes(32).toString('hex');
+//     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+//     // 3. Save hashed token and expiration in DB
+//     user.resetPasswordToken = hashedToken;
+//     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+//     await user.save();
+
+//     // 4. Send reset link by email
+//     //const resetURL = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+//     const resetURL = `${process.env.API_URL}/api/users/reset-password/${resetToken}`;
+
+
+//     const message = `
+//       <h2>Hello ${user.F_name},</h2>
+//       <p>Click below to reset your password:</p>
+//       <a href="${resetURL}" target="_blank">Reset Password</a>
+//       <p>This link will expire in 10 minutes.</p>
+//     `;
+
+//     await sendEmail(user.email_address, 'Reset your password - Food Trucks', message);
+
+//     res.status(200).json({ message: 'Reset link sent to email' });
+
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+const verifyResetCode = async (req, res) => {
+  const { email_address, code } = req.body;
+
+  try {
+    const user = await User.findOne({ email_address });
+
+    if (!user || !user.resetCode || !user.resetCodeExpires) {
+      return res.status(400).json({ message: 'Invalid or expired code.' });
+    }
+
+    if (user.resetCode !== code) {
+      return res.status(400).json({ message: 'Incorrect reset code.' });
+    }
+
+    if (Date.now() > user.resetCodeExpires) {
+      return res.status(400).json({ message: 'Reset code has expired.' });
+    }
+
+    return res.status(200).json({ message: 'Code verified successfully.' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -154,30 +213,26 @@ const forgotPassword = async (req, res) => {
 
 
 const resetPassword = async (req, res) => {
-  const { token } = req.params;
-  const { password } = req.body;
+  const { email_address, password } = req.body;
 
   try {
-    // 1. Hash the token from the URL
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await User.findOne({ email_address });
 
-    // 2. Find user with matching token & not expired
-    const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpires: { $gt: Date.now() }
-    });
-
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired token.' });
+    if (!user || !user.resetCode || !user.resetCodeExpires) {
+      return res.status(400).json({ message: 'No active reset request.' });
     }
 
-    // 3. Hash new password and update user
+    if (Date.now() > user.resetCodeExpires) {
+      return res.status(400).json({ message: 'Reset code has expired.' });
+    }
+
+    // Hash and update the new password
     const hashedPassword = await bcrypt.hash(password, 10);
     user.password = hashedPassword;
 
-    // 4. Clear reset fields
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    // Clear reset fields
+    user.resetCode = undefined;
+    user.resetCodeExpires = undefined;
 
     await user.save();
 
@@ -193,6 +248,7 @@ const resetPassword = async (req, res) => {
     loginUser,
     verifyEmail,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    verifyResetCode
   };
   
