@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/screens/auth/login/widgets/card_widget.dart';
+import 'package:myapp/screens/auth/widgets/card_widget.dart';
 import 'package:myapp/core/constants/colors.dart';
-import 'package:myapp/screens/auth/login/widgets/likebutton/LikeButton.dart';
+import 'package:myapp/screens/auth/widgets/likebutton/LikeButton.dart';
 
 class Account extends StatefulWidget {
   final String username;

@@ -13,4 +13,14 @@ class AuthService {
       body: jsonEncode(userData),
     );
   }
+
+  static Future<http.Response> login(Map<String, dynamic> credentials) async {
+    final url = Uri.parse("$baseUrl/login");
+
+    return await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(credentials),
+    );
+  }
 }

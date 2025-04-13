@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/auth/login/login.dart';
 import 'package:myapp/screens/auth/signup/signup.dart';
-import 'package:myapp/screens/auth/login/widgets/custom_tab.dart';
+import 'package:myapp/screens/auth/widgets/custom_tab.dart';
 
 class SignUpBar extends StatelessWidget {
   final bool isLoginPage; // To check which page is active
