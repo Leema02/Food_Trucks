@@ -23,4 +23,35 @@ class AuthService {
       body: jsonEncode(credentials),
     );
   }
+
+  static Future<http.Response> forgotPassword(
+      Map<String, dynamic> emailData) async {
+    final url = Uri.parse("$baseUrl/forgot-password");
+
+    return await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(emailData),
+    );
+  }
+
+  static Future<http.Response> verifyResetCode(
+      Map<String, dynamic> data) async {
+    final url = Uri.parse("$baseUrl/verify-reset-code");
+
+    return await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(data),
+    );
+  }
+
+  static Future<http.Response> resetPassword(String email, String password) {
+    final url = Uri.parse("$baseUrl/reset-password");
+    return http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"email_address": email, "password": password}),
+    );
+  }
 }

@@ -68,6 +68,7 @@ const loginUser = async (req, res) => {
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
     }
+    
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -86,7 +87,6 @@ const verifyEmail = async (req, res) => {
       return res.status(400).send('❌ Account already verified.');
     }
 
- //   const hashedPassword = await bcrypt.hash(decoded.password, 10);
     const newUser = await User.create({
       F_name: decoded.F_name,
       L_name: decoded.L_name,
@@ -99,13 +99,6 @@ const verifyEmail = async (req, res) => {
       address: decoded.address
     });
 
-    // const finalToken = generateToken(newUser._id);
-
-    // res.status(201).json({
-    //   message: '✅ Email verified and account created.',
-    //   user: newUser,
-    //   token: finalToken
-    // });
     res.status(201).json({ message: '✅ Email verified and account created.' });
 
   } catch (err) {
@@ -147,45 +140,6 @@ const forgotPassword = async (req, res) => {
   }
 };
   
-// const forgotPassword = async (req, res) => {
-//   const { email_address } = req.body;
-
-//   try {
-//     // 1. Find user by email
-//     const user = await User.findOne({ email_address });
-//     if (!user) {
-//       return res.status(404).json({ message: 'Email not found' });
-//     }
-
-//     // 2. Create a reset token
-//     const resetToken = crypto.randomBytes(32).toString('hex');
-//     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-
-//     // 3. Save hashed token and expiration in DB
-//     user.resetPasswordToken = hashedToken;
-//     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-//     await user.save();
-
-//     // 4. Send reset link by email
-//     //const resetURL = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-//     const resetURL = `${process.env.API_URL}/api/users/reset-password/${resetToken}`;
-
-
-//     const message = `
-//       <h2>Hello ${user.F_name},</h2>
-//       <p>Click below to reset your password:</p>
-//       <a href="${resetURL}" target="_blank">Reset Password</a>
-//       <p>This link will expire in 10 minutes.</p>
-//     `;
-
-//     await sendEmail(user.email_address, 'Reset your password - Food Trucks', message);
-
-//     res.status(200).json({ message: 'Reset link sent to email' });
-
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
 
 const verifyResetCode = async (req, res) => {
   const { email_address, code } = req.body;
@@ -226,9 +180,7 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Reset code has expired.' });
     }
 
-    // Hash and update the new password
-    const hashedPassword = await bcrypt.hash(password, 10);
-    user.password = hashedPassword;
+    user.password = password;
 
     // Clear reset fields
     user.resetCode = undefined;

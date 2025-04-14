@@ -1,11 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/auth/login/login.dart';
 import 'package:myapp/screens/auth/forgot_password/ResetPasswordPage.dart';
 import 'package:myapp/screens/auth/widgets/auth_background.dart';
 import 'package:myapp/screens/auth/widgets/auth_card.dart';
-import 'package:myapp/screens/auth/widgets/auth_text_fields.dart';
 import 'package:myapp/screens/auth/widgets/auth_buttons.dart';
 import 'package:myapp/screens/auth/widgets/responsive.dart';
+import 'package:myapp/core/services/auth_service.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -17,15 +18,62 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _codeController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(Duration.zero, () {
-      if (Responsive.isDesktop(context)) {
-        _showPopup(context, 600);
-      }
+  bool _codeSent = false;
+  bool _verifyingCode = false;
+
+  void _showMessage(String message, {bool isError = false}) {
+    final snackBar = SnackBar(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: isError ? Colors.red[400] : Colors.green[400],
+      content: Center(
+        heightFactor: 1.5,
+        child: Text(message, style: const TextStyle(color: Colors.white)),
+      ),
+      duration: const Duration(seconds: 2),
+      margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 100),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  Future<void> _sendResetCode() async {
+    final email = _emailController.text.trim();
+    final response = await AuthService.forgotPassword({"email_address": email});
+    final responseData = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      setState(() => _codeSent = true);
+      _showMessage("✅ ${responseData['message']}");
+    } else {
+      _showMessage("❌ ${responseData['message']}", isError: true);
+    }
+  }
+
+  void _verifyCodeAndProceed() async {
+    setState(() => _verifyingCode = true);
+
+    final email = _emailController.text.trim();
+    final code = _codeController.text.trim();
+    final response = await AuthService.verifyResetCode({
+      "email_address": email,
+      "code": code,
     });
+
+    final responseData = jsonDecode(response.body);
+    setState(() => _verifyingCode = false);
+
+    if (response.statusCode == 200) {
+      _showMessage("✅ Code verified!");
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ResetPasswordPage(email: email),
+        ),
+      );
+    } else {
+      _showMessage("❌ ${responseData['message']}", isError: true);
+    }
   }
 
   @override
@@ -33,22 +81,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     return Scaffold(
       body: AuthBackground(
         child: Responsive(
-          mobile: _buildNewPage(context, 20, double.infinity),
-          tablet: _buildNewPage(context, 40, 500),
-          desktop: _buildDesktop(context),
+          mobile: _buildForm(context, 20, double.infinity),
+          tablet: _buildForm(context, 40, 500),
+          desktop: _buildForm(context, 80, 600),
         ),
       ),
     );
   }
 
-  Widget _buildNewPage(
-      BuildContext context, double horizontalPadding, double formWidth) {
-    return SingleChildScrollView(
-      // ✅ Scroll on keyboard open
-      child: Center(
+  Widget _buildForm(BuildContext context, double padding, double formWidth) {
+    return Center(
+      child: SingleChildScrollView(
         child: Padding(
-          padding:
-              EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 40),
+          padding: EdgeInsets.symmetric(horizontal: padding),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -57,98 +102,100 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               SizedBox(
                 width: formWidth,
                 child: AuthCard(
-                  child: _buildForm(context),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        const Text(
+                          "Reset Password",
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          "Enter your email to receive a 4-digit code.",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 15),
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: InputDecoration(
+                            hintText: "Email",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  const BorderSide(color: Colors.deepOrange),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your email';
+                            }
+                            if (!value.contains('@')) {
+                              return 'Enter a valid email';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 15),
+                        AuthButton(
+                          text: _codeSent ? "Resend Code" : "Send Code",
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              _sendResetCode();
+                            }
+                          },
+                        ),
+                        if (_codeSent) ...[
+                          const SizedBox(height: 15),
+                          const Text(
+                            "Enter the 4-digit code sent to your email",
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _codeController,
+                            keyboardType: TextInputType.number,
+                            maxLength: 4,
+                            decoration: InputDecoration(
+                              hintText: "4-digit Code",
+                              counterText: "",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          AuthButton(
+                            text:
+                                _verifyingCode ? "Verifying..." : "Verify Code",
+                            onPressed: _verifyingCode
+                                ? () {}
+                                : () => _verifyCodeAndProceed(),
+                          ),
+                        ],
+                        const SizedBox(height: 10),
+                        AuthSwitchButton(
+                          text: "Back to Login",
+                          onPressed: () => Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const LoginPage()),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildDesktop(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset('assets/image/truckLogo.png', height: 120),
-        ],
-      ),
-    );
-  }
-
-  void _showPopup(BuildContext context, double formWidth) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          child: SizedBox(
-            width: formWidth,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: _buildForm(context),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildForm(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            "Reset Password",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            "Enter your email to receive a password reset link.",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.grey),
-          ),
-          const SizedBox(height: 15),
-          AuthTextField(
-            hintText: 'Email',
-            keyboardType: TextInputType.emailAddress,
-            controller: _emailController,
-          ),
-          const SizedBox(height: 15),
-          AuthButton(
-            text: 'Send Reset Link',
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                print("✅ Reset link sent to: ${_emailController.text}");
-                Navigator.pop(context); // Close dialog if desktop
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ResetPasswordPage(),
-                  ),
-                );
-              } else {
-                print("❌ Invalid Email");
-              }
-            },
-          ),
-          const SizedBox(height: 10),
-          AuthSwitchButton(
-            text: "Back to Login",
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const LoginPage(),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
