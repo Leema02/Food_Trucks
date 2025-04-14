@@ -14,7 +14,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['customer', 'truck owner', 'admin'],
     default: 'customer'
-  }
+  },
+  resetCode: { type: String },
+  resetCodeExpires: { type: Date },
 }, {
   timestamps: true,
   toJSON: {
