@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/auth/login/login.dart';
-import 'package:myapp/screens/product/details_screen.dart';
-import 'package:myapp/screens/cart/cart.dart';
+import 'package:myapp/screens/customer/product/details_screen.dart';
+import 'package:myapp/screens/customer/cart/cart.dart';
 
 void main() {
   runApp(const MyApp());

@@ -1,12 +1,10 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:myapp/screens/home/home.dart';
+import 'package:myapp/screens/customer/home/home.dart';
 import 'package:myapp/screens/auth/signup/signup.dart';
 import 'package:myapp/screens/auth/forgot_password/ForgotPasswordPage.dart';
 import 'package:myapp/screens/auth/widgets/auth_background.dart';
 import 'package:myapp/screens/auth/widgets/auth_card.dart';
-import 'package:myapp/screens/auth/widgets/auth_text_fields.dart';
 import 'package:myapp/screens/auth/widgets/auth_buttons.dart';
 import 'package:myapp/screens/auth/widgets/sign_up_bar.dart';
 import 'package:myapp/screens/auth/widgets/responsive.dart';
@@ -39,7 +37,6 @@ class _LoginPageState extends State<LoginPage> {
       duration: const Duration(seconds: 2),
       margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 100),
     );
-
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
@@ -96,12 +93,37 @@ class _LoginPageState extends State<LoginPage> {
                         children: [
                           const SignUpBar(isLoginPage: true),
                           const SizedBox(height: 15),
-                          AuthTextField(
-                            hintText: 'Email',
-                            keyboardType: TextInputType.emailAddress,
+
+                          // Email Field
+                          TextFormField(
                             controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              hintText: "Email",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide:
+                                    const BorderSide(color: Colors.deepOrange),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter an email';
+                              }
+                              final emailRegex =
+                                  RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$');
+                              if (!emailRegex.hasMatch(value)) {
+                                return 'Please enter a valid email';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 10),
+
+                          // Password Field
                           TextFormField(
                             controller: _passwordController,
                             obscureText: !_showPassword,
@@ -129,7 +151,10 @@ class _LoginPageState extends State<LoginPage> {
                                 ? 'Please enter the password'
                                 : null,
                           ),
+
                           const SizedBox(height: 10),
+
+                          // Forgot Password
                           AuthSwitchButton(
                             text: "Forgot Password?",
                             onPressed: () => Navigator.push(
@@ -141,6 +166,8 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const SizedBox(height: 15),
+
+                          // Login Button
                           AuthButton(
                             text: 'Log In',
                             onPressed: () async {
@@ -160,8 +187,7 @@ class _LoginPageState extends State<LoginPage> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => HomePage(),
-                                    ),
+                                        builder: (context) => HomePage()),
                                   );
                                 } else {
                                   _showMessage("❌ ${responseData['message']}",
@@ -171,13 +197,14 @@ class _LoginPageState extends State<LoginPage> {
                             },
                           ),
                           const SizedBox(height: 10),
+
+                          // Sign Up Switch
                           AuthSwitchButton(
                             text: "Don't have an account? Sign Up",
                             onPressed: () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const SignUpPage(),
-                              ),
+                                  builder: (context) => const SignUpPage()),
                             ),
                           ),
                         ],

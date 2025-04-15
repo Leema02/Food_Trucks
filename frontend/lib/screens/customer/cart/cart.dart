@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/screens/meal_details/meal_detail_page.dart'; // Make sure this path matches your file structure
+import 'package:myapp/screens/customer/meal_details/meal_detail_page.dart'; // Make sure this path matches your file structure
 
 class Cart extends StatefulWidget {
   const Cart({super.key});
