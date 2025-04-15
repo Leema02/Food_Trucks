@@ -12,13 +12,12 @@ connectDB();
 
 // Middleware setup
  app.use(bodyParser.json());            // Parse JSON request bodies
-// app.use(bodyParser.urlencoded({ extended: true }));  // Parse URL-encoded form data
-
-// Routes setup (auth route as an example)
-//app.use('/api/auth', require('./routes/authRoutes')); 
 
 const userRoutes = require('./routes/userRoutes');
+const truckRoutes = require('./routes/truckRoutes');
+
 app.use('/api/users', userRoutes);
+app.use('/api/trucks', truckRoutes);
 
 // Start the server
 
