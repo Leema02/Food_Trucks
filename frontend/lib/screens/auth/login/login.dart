@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:myapp/screens/customer/home/home.dart';
 import 'package:myapp/screens/auth/signup/signup.dart';
 import 'package:myapp/screens/auth/forgot_password/ForgotPasswordPage.dart';
@@ -40,6 +42,34 @@ class _LoginPageState extends State<LoginPage> {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
+  Future<void> _handleLogin() async {
+    if (_formKey.currentState!.validate()) {
+      final credentials = {
+        "email_address": _emailController.text.trim(),
+        "password": _passwordController.text.trim(),
+      };
+
+      final httpResponse = await AuthService.login(credentials);
+      final responseData = jsonDecode(httpResponse.body);
+
+      if (httpResponse.statusCode == 200) {
+        _showMessage("✅ Login successful");
+
+        // Save token to SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', responseData['token']);
+
+        // Navigate to HomePage
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      } else {
+        _showMessage("❌ ${responseData['message']}", isError: true);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,10 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                 padding: const EdgeInsets.only(left: 150, top: 180),
                 child: Align(
                   alignment: Alignment.topLeft,
-                  child: Image.asset(
-                    'assets/image/truckLogo.png',
-                    height: 300,
-                  ),
+                  child: Image.asset('assets/image/truckLogo.png', height: 300),
                 ),
               ),
             ),
@@ -80,10 +107,7 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (isMobile)
-                  Image.asset(
-                    'assets/image/truckLogo.png',
-                    height: 120,
-                  ),
+                  Image.asset('assets/image/truckLogo.png', height: 120),
                 SizedBox(
                   width: formWidth,
                   child: AuthCard(
@@ -93,119 +117,51 @@ class _LoginPageState extends State<LoginPage> {
                         children: [
                           const SignUpBar(isLoginPage: true),
                           const SizedBox(height: 15),
-
-                          // Email Field
                           TextFormField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
-                            decoration: InputDecoration(
-                              hintText: "Email",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide:
-                                    const BorderSide(color: Colors.deepOrange),
-                              ),
-                            ),
+                            decoration: _inputDecoration("Email"),
                             validator: (value) {
-                              if (value == null || value.isEmpty) {
+                              if (value == null || value.isEmpty)
                                 return 'Please enter an email';
-                              }
-                              final emailRegex =
-                                  RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$');
-                              if (!emailRegex.hasMatch(value)) {
+                              final emailRegex = RegExp(
+                                  r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                              if (!emailRegex.hasMatch(value))
                                 return 'Please enter a valid email';
-                              }
                               return null;
                             },
                           ),
                           const SizedBox(height: 10),
-
-                          // Password Field
                           TextFormField(
                             controller: _passwordController,
                             obscureText: !_showPassword,
-                            decoration: InputDecoration(
-                              hintText: "Password",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide:
-                                    const BorderSide(color: Colors.deepOrange),
-                              ),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _showPassword
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                ),
-                                onPressed: () => setState(
-                                    () => _showPassword = !_showPassword),
-                              ),
-                            ),
+                            decoration: _inputDecoration("Password",
+                                suffixIcon: _buildPasswordToggle()),
                             validator: (value) => value == null || value.isEmpty
                                 ? 'Please enter the password'
                                 : null,
                           ),
-
                           const SizedBox(height: 10),
-
-                          // Forgot Password
                           AuthSwitchButton(
                             text: "Forgot Password?",
                             onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const ForgotPasswordPage(),
-                              ),
-                            ),
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ForgotPasswordPage())),
                           ),
                           const SizedBox(height: 15),
-
-                          // Login Button
                           AuthButton(
                             text: 'Log In',
-                            onPressed: () async {
-                              if (_formKey.currentState!.validate()) {
-                                final credentials = {
-                                  "email_address": _emailController.text.trim(),
-                                  "password": _passwordController.text.trim(),
-                                };
-
-                                final httpResponse =
-                                    await AuthService.login(credentials);
-                                final responseData =
-                                    jsonDecode(httpResponse.body);
-
-                                if (httpResponse.statusCode == 200) {
-                                  _showMessage("✅ Login successful");
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => HomePage()),
-                                  );
-                                } else {
-                                  _showMessage("❌ ${responseData['message']}",
-                                      isError: true);
-                                }
-                              }
-                            },
+                            onPressed: _handleLogin,
                           ),
                           const SizedBox(height: 10),
-
-                          // Sign Up Switch
                           AuthSwitchButton(
                             text: "Don't have an account? Sign Up",
                             onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const SignUpPage()),
-                            ),
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const SignUpPage())),
                           ),
                         ],
                       ),
@@ -223,5 +179,24 @@ class _LoginPageState extends State<LoginPage> {
     return scrollEnabled
         ? SingleChildScrollView(child: formContent)
         : formContent;
+  }
+
+  InputDecoration _inputDecoration(String hintText, {Widget? suffixIcon}) {
+    return InputDecoration(
+      hintText: hintText,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.deepOrange),
+      ),
+      suffixIcon: suffixIcon,
+    );
+  }
+
+  Widget _buildPasswordToggle() {
+    return IconButton(
+      icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off),
+      onPressed: () => setState(() => _showPassword = !_showPassword),
+    );
   }
 }
