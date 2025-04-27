@@ -190,7 +190,7 @@ class _AccountState extends State<Account> with TickerProviderStateMixin {
           _buildSwitchSettingItem('Location Tracking', theme),
           const SizedBox(height: 50),
           ListTile(
-            leading: const Icon(Icons.power_settings_new, color: Colors.red),
+            leading: const Icon(Icons.power_settings_new, color: Colors.orange),
             title: const Text('Logout', style: TextStyle(fontSize: 18)),
             onTap: () {
               Navigator.of(context).pushNamedAndRemoveUntil(
@@ -209,7 +209,7 @@ class _AccountState extends State<Account> with TickerProviderStateMixin {
     return Column(
       children: [
         ListTile(
-          leading: Icon(icon, color: Colors.green),
+          leading: Icon(icon, color: Colors.orange),
           title: Text(title, style: const TextStyle(fontSize: 18)),
         ),
         Divider(color: Colors.grey[300]),
