@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/screens/auth/login/login.dart';
-import 'package:myapp/screens/product/details_screen.dart';
-import 'package:myapp/screens/cart/cart.dart';
+import 'package:myapp/screens/home/home.dart'; // ✅ imports your real homepage
 
 void main() {
-  runApp(const MyApp());
+  runApp(const MyApp()); // ✅ launches the app
 }
 
 class MyApp extends StatelessWidget {
@@ -13,21 +11,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Food Truck',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-      ),
-      home: const LoginPage(), // Initial screen
-      routes: {
-        'details': (context) => MealDetailPage(
-              image: '',
-              name: '',
-              price: '',
-            ),
-        'cart': (context) => Cart(), // 👈 navigate to this later
-        '/login': (context) => const LoginPage(),
-      },
+      debugShowCheckedModeBanner: false, // ✅ hides the debug banner
+      home: HomePage(), // ✅ loads your `HomePage` from home.dart
     );
   }
 }
