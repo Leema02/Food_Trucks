@@ -1,0 +1,70 @@
+const MenuItem = require('../models/menuModel');
+
+// Create Menu Item
+const createMenuItem = async (req, res) => {
+  try {
+    const { name, description, price, category, image_url, isAvailable } = req.body;
+    const truckId = req.userTruckId || req.body.truck_id; // depends on your auth middleware
+
+    const menuItem = new MenuItem({
+      truck_id: truckId,
+      name,
+      description,
+      price,
+      category,
+      image_url,
+      isAvailable
+    });
+
+    const savedItem = await menuItem.save();
+    res.status(201).json(savedItem);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Get Menu Items for a Truck
+const getMenuItemsByTruck = async (req, res) => {
+  try {
+    const items = await MenuItem.find({ truck_id: req.params.truckId });
+    res.json(items);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Update Menu Item
+const updateMenuItem = async (req, res) => {
+  try {
+    const item = await MenuItem.findById(req.params.itemId);
+
+    if (!item) return res.status(404).json({ message: 'Menu item not found' });
+
+    Object.assign(item, req.body);
+    const updatedItem = await item.save();
+
+    res.json(updatedItem);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Delete Menu Item
+const deleteMenuItem = async (req, res) => {
+  try {
+    const item = await MenuItem.findByIdAndDelete(req.params.itemId);
+
+    if (!item) return res.status(404).json({ message: 'Menu item not found' });
+
+    res.json({ message: 'Menu item deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = {
+  createMenuItem,
+  getMenuItemsByTruck,
+  updateMenuItem,
+  deleteMenuItem
+};

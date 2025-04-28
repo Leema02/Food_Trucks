@@ -18,11 +18,13 @@ connectDB();
 const userRoutes = require('./routes/userRoutes');
 const truckRoutes = require('./routes/truckRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const menuRoutes = require('./routes/menuRoutes');
 
 
 app.use('/api/users', userRoutes);
 app.use('/api/trucks', truckRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/menu', menuRoutes);
 
 
 // Make uploads folder public
