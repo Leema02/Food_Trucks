@@ -5,6 +5,7 @@ class AuthTextField extends StatelessWidget {
   final bool isPassword;
   final TextEditingController? controller;
   final TextInputType keyboardType;
+  final String? Function(String?)? validator;
 
   const AuthTextField({
     super.key,
@@ -12,6 +13,7 @@ class AuthTextField extends StatelessWidget {
     this.isPassword = false,
     this.controller,
     this.keyboardType = TextInputType.text,
+    this.validator,
   });
 
   String? _validateInput(String? value) {

@@ -16,6 +16,7 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
+
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -26,6 +27,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _showPassword = false;
+  String _selectedRole = 'customer';
 
   Widget buildStyledTextField({
     required String hint,
@@ -69,7 +71,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Widget _buildForm(BuildContext context, double horizontalPadding,
       double formWidth, bool isMobile, bool scrollEnabled) {
-    Widget formContent = Padding(
+    final formContent = Padding(
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Row(
         mainAxisAlignment:
@@ -155,17 +157,44 @@ class _SignUpPageState extends State<SignUpPage> {
                           const SizedBox(height: 8),
                           buildStyledTextField(
                               hint: 'Address', controller: _addressController),
+                          const SizedBox(height: 10),
+
+                          /// Role Dropdown
+                          DropdownButtonFormField<String>(
+                            value: _selectedRole,
+                            decoration: InputDecoration(
+                              labelText: 'Select Role',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide:
+                                    const BorderSide(color: Colors.deepOrange),
+                              ),
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                  value: 'customer', child: Text('Customer')),
+                              DropdownMenuItem(
+                                  value: 'truck owner',
+                                  child: Text('Truck Owner')),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedRole = value!;
+                              });
+                            },
+                          ),
+
                           const SizedBox(height: 8),
                           buildStyledTextField(
                             hint: 'Password',
                             obscure: !_showPassword,
                             controller: _passwordController,
                             suffixIcon: IconButton(
-                              icon: Icon(
-                                _showPassword
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                              ),
+                              icon: Icon(_showPassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off),
                               onPressed: () => setState(
                                   () => _showPassword = !_showPassword),
                             ),
@@ -187,14 +216,13 @@ class _SignUpPageState extends State<SignUpPage> {
                                   "city": _cityController.text.trim(),
                                   "address": _addressController.text.trim(),
                                   "password": _passwordController.text.trim(),
-                                  "role_id": "customer"
+                                  "role_id": _selectedRole,
                                 };
 
                                 final response =
                                     await AuthService.signup(userData);
 
                                 if (response.statusCode == 200) {
-                                  // Clear form fields first
                                   _firstNameController.clear();
                                   _lastNameController.clear();
                                   _emailController.clear();
@@ -204,14 +232,13 @@ class _SignUpPageState extends State<SignUpPage> {
                                   _addressController.clear();
                                   _passwordController.clear();
 
-                                  // Show centered dialog
                                   await showDialog(
                                     context: context,
-                                    builder: (BuildContext context) =>
-                                        AlertDialog(
+                                    builder: (context) => AlertDialog(
                                       content: const Text(
-                                          "✅ Verification email sent!",
-                                          textAlign: TextAlign.center),
+                                        "✅ Verification email sent!",
+                                        textAlign: TextAlign.center,
+                                      ),
                                       actions: [
                                         TextButton(
                                           onPressed: () =>
@@ -224,8 +251,9 @@ class _SignUpPageState extends State<SignUpPage> {
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                        content: Text(
-                                            "❌ Signup failed: ${response.body}")),
+                                      content: Text(
+                                          "❌ Signup failed: ${response.body}"),
+                                    ),
                                   );
                                 }
                               } else {
