@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/auth/widgets/auth_background.dart';
 import 'package:myapp/screens/truckOwner/addTruck.dart';
-import 'package:myapp/screens/truckOwner/manageMenu.dart';
+//import 'package:myapp/screens/truckOwner/manageMenu.dart';
 import 'package:myapp/screens/truckOwner/viewTrucks.dart';
 
 void main() {
@@ -91,11 +91,12 @@ class TruckOwnerDashboard extends StatelessWidget {
                         'Manage Menu',
                         Icons.restaurant_menu,
                         Colors.brown,
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const ManageMenuPage()),
-                        ),
+                        // onPressed: () => Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //       builder: (context) => const ManageMenuPage()),
+                        // ),
+                        onPressed: () {},
                       ),
                       _buildActionButton(
                         context,

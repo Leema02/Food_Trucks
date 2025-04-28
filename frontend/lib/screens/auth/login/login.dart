@@ -1,8 +1,8 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:myapp/screens/customer/home/home.dart';
+import 'package:myapp/screens/truckOwner/ownerDashbored.dart';
 import 'package:myapp/screens/auth/signup/signup.dart';
 import 'package:myapp/screens/auth/forgot_password/ForgotPasswordPage.dart';
 import 'package:myapp/screens/auth/widgets/auth_background.dart';
@@ -55,15 +55,27 @@ class _LoginPageState extends State<LoginPage> {
       if (httpResponse.statusCode == 200) {
         _showMessage("✅ Login successful");
 
-        // Save token to SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', responseData['token']);
 
-        // Navigate to HomePage
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
+        // Get user role from response
+        String role = responseData['user']['role_id'];
+
+        // Navigate based on role
+        if (role == 'customer') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+          );
+        } else if (role == 'truck owner') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const TruckOwnerDashboard()),
+          );
+        } else {
+          _showMessage("❌ Unknown role. Contact support.", isError: true);
+        }
       } else {
         _showMessage("❌ ${responseData['message']}", isError: true);
       }
@@ -85,7 +97,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildForm(BuildContext context, double horizontalPadding,
       double formWidth, bool isMobile, bool scrollEnabled) {
-    Widget formContent = Padding(
+    final formContent = Padding(
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Row(
         mainAxisAlignment:
@@ -122,12 +134,14 @@ class _LoginPageState extends State<LoginPage> {
                             keyboardType: TextInputType.emailAddress,
                             decoration: _inputDecoration("Email"),
                             validator: (value) {
-                              if (value == null || value.isEmpty)
+                              if (value == null || value.isEmpty) {
                                 return 'Please enter an email';
+                              }
                               final emailRegex = RegExp(
                                   r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-                              if (!emailRegex.hasMatch(value))
+                              if (!emailRegex.hasMatch(value)) {
                                 return 'Please enter a valid email';
+                              }
                               return null;
                             },
                           ),
@@ -135,8 +149,10 @@ class _LoginPageState extends State<LoginPage> {
                           TextFormField(
                             controller: _passwordController,
                             obscureText: !_showPassword,
-                            decoration: _inputDecoration("Password",
-                                suffixIcon: _buildPasswordToggle()),
+                            decoration: _inputDecoration(
+                              "Password",
+                              suffixIcon: _buildPasswordToggle(),
+                            ),
                             validator: (value) => value == null || value.isEmpty
                                 ? 'Please enter the password'
                                 : null,
@@ -145,10 +161,11 @@ class _LoginPageState extends State<LoginPage> {
                           AuthSwitchButton(
                             text: "Forgot Password?",
                             onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const ForgotPasswordPage())),
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const ForgotPasswordPage()),
+                            ),
                           ),
                           const SizedBox(height: 15),
                           AuthButton(
@@ -159,9 +176,10 @@ class _LoginPageState extends State<LoginPage> {
                           AuthSwitchButton(
                             text: "Don't have an account? Sign Up",
                             onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const SignUpPage())),
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const SignUpPage()),
+                            ),
                           ),
                         ],
                       ),
@@ -195,7 +213,9 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildPasswordToggle() {
     return IconButton(
-      icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off),
+      icon: Icon(
+        _showPassword ? Icons.visibility : Icons.visibility_off,
+      ),
       onPressed: () => setState(() => _showPassword = !_showPassword),
     );
   }
