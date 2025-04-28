@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/auth/widgets/auth_background.dart';
+import 'package:myapp/screens/truckOwner/addTruck.dart';
+import 'package:myapp/screens/truckOwner/manageMenu.dart';
+import 'package:myapp/screens/truckOwner/viewTrucks.dart';
 
 void main() {
   runApp(const MaterialApp(
@@ -25,7 +28,7 @@ class TruckOwnerDashboard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Image.asset('assets/image/truckLogo.png', height: 80),
-                    Icon(Icons.notifications_none,
+                    const Icon(Icons.notifications_none,
                         size: 28, color: Colors.deepOrange),
                   ],
                 ),
@@ -61,18 +64,60 @@ class TruckOwnerDashboard extends StatelessWidget {
                     crossAxisSpacing: 16,
                     childAspectRatio: 1.3,
                     children: [
-                      _buildActionButton(context, 'Add Truck',
-                          Icons.add_business, Colors.orange),
-                      _buildActionButton(context, 'View Trucks',
-                          Icons.directions_bus, Colors.deepOrange),
-                      _buildActionButton(context, 'Manage Menu',
-                          Icons.restaurant_menu, Colors.brown),
-                      _buildActionButton(context, 'View Orders',
-                          Icons.receipt_long, Colors.teal),
                       _buildActionButton(
-                          context, 'Event Bookings', Icons.event, Colors.amber),
+                        context,
+                        'Add Truck',
+                        Icons.add_business,
+                        Colors.orange,
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const AddTruckPage()),
+                        ),
+                      ),
                       _buildActionButton(
-                          context, 'Reviews', Icons.rate_review, Colors.indigo),
+                        context,
+                        'View Trucks',
+                        Icons.directions_bus,
+                        Colors.deepOrange,
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const ViewTrucksScreen()),
+                        ),
+                      ),
+                      _buildActionButton(
+                        context,
+                        'Manage Menu',
+                        Icons.restaurant_menu,
+                        Colors.brown,
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const ManageMenuPage()),
+                        ),
+                      ),
+                      _buildActionButton(
+                        context,
+                        'View Orders',
+                        Icons.receipt_long,
+                        Colors.teal,
+                        onPressed: () {},
+                      ),
+                      _buildActionButton(
+                        context,
+                        'Event Bookings',
+                        Icons.event,
+                        Colors.amber,
+                        onPressed: () {},
+                      ),
+                      _buildActionButton(
+                        context,
+                        'Reviews',
+                        Icons.rate_review,
+                        Colors.indigo,
+                        onPressed: () {},
+                      ),
                     ],
                   ),
                 )
@@ -91,7 +136,7 @@ class TruckOwnerDashboard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Colors.black12,
             blurRadius: 4,
@@ -114,9 +159,14 @@ class TruckOwnerDashboard extends StatelessWidget {
   }
 
   Widget _buildActionButton(
-      BuildContext context, String label, IconData icon, Color color) {
+    BuildContext context,
+    String label,
+    IconData icon,
+    Color color, {
+    required VoidCallback onPressed,
+  }) {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,
         foregroundColor: color,
