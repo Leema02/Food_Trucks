@@ -1,4 +1,6 @@
 const Truck = require('../models/truckModel');
+const fs = require('fs');
+const path = require('path');
 
 // 1. Create new truck
 const createTruck = async (req, res) => {
@@ -48,16 +50,52 @@ const updateTruck = async (req, res) => {
   }
 };
 
-// 4. Delete truck
+// // 4. Delete truck
+// const deleteTruck = async (req, res) => {
+//   try {
+//     const truck = await Truck.findOneAndDelete({ _id: req.params.id, owner_id: req.user._id });
+
+//     if (!truck) return res.status(404).json({ message: 'Truck not found or not authorized' });
+
+//     res.json({ message: 'Truck deleted successfully' });
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+
 const deleteTruck = async (req, res) => {
   try {
-    const truck = await Truck.findOneAndDelete({ _id: req.params.id, owner_id: req.user._id });
+    const truck = await Truck.findOne({ _id: req.params.id, owner_id: req.user._id });
 
-    if (!truck) return res.status(404).json({ message: 'Truck not found or not authorized' });
+    if (!truck) {
+      return res.status(404).json({ message: 'Truck not found or not authorized' });
+    }
 
-    res.json({ message: 'Truck deleted successfully' });
+    // 🧹 Try to delete the logo image if it exists
+    if (truck.logo_image_url) {
+      const logoPathPart = truck.logo_image_url.includes('/uploads/') 
+        ? truck.logo_image_url.split('/uploads/')[1] 
+        : null;
+
+      if (logoPathPart) {
+        const filePath = path.join(__dirname, '..', 'uploads', logoPathPart);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath); // delete the file
+          console.log('✅ Image deleted:', filePath);
+        } else {
+          console.log('⚠️ Image file not found, skipping deletion.');
+        }
+      }
+    }
+
+    // Then delete the truck from database
+    await Truck.deleteOne({ _id: req.params.id, owner_id: req.user._id });
+
+    res.json({ message: '✅ Truck and its image deleted successfully.' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('❌ Error deleting truck:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
