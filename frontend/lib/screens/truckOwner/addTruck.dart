@@ -22,7 +22,6 @@ class _AddTruckPageState extends State<AddTruckPage> {
   TimeOfDay? _openTime;
   TimeOfDay? _closeTime;
   File? _selectedImage;
-  String? _uploadedImageUrl;
   bool isSubmitting = false;
 
   final ImagePicker _picker = ImagePicker();
@@ -33,13 +32,11 @@ class _AddTruckPageState extends State<AddTruckPage> {
       setState(() {
         _selectedImage = File(pickedFile.path);
       });
-      await _uploadImage(File(pickedFile.path));
     }
   }
 
-  Future<void> _uploadImage(File imageFile) async {
+  Future<String?> _uploadImage(File imageFile) async {
     final uri = Uri.parse('http://10.0.2.2:5000/api/upload');
-
     var request = http.MultipartRequest('POST', uri);
     request.files
         .add(await http.MultipartFile.fromPath('file', imageFile.path));
@@ -48,67 +45,56 @@ class _AddTruckPageState extends State<AddTruckPage> {
     if (response.statusCode == 200) {
       final resBody = await response.stream.bytesToString();
       final resData = jsonDecode(resBody);
-      setState(() {
-        _uploadedImageUrl = resData['url'];
-      });
-      _showMessage('✅ Image uploaded successfully.');
+      return resData['url'];
     } else {
-      _showMessage('❌ Failed to upload image.');
-    }
-  }
-
-  Future<void> _selectTime(bool isOpenTime) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        if (isOpenTime) {
-          _openTime = picked;
-        } else {
-          _closeTime = picked;
-        }
-      });
+      return null;
     }
   }
 
   Future<void> _addTruck() async {
-    if (_formKey.currentState!.validate() && _uploadedImageUrl != null) {
+    if (_formKey.currentState!.validate() && _selectedImage != null) {
       setState(() {
         isSubmitting = true;
       });
 
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token') ?? '';
+      try {
+        final uploadedUrl = await _uploadImage(_selectedImage!);
+        if (uploadedUrl == null) {
+          _showMessage('❌ Failed to upload image.');
+          return;
+        }
 
-      final truckData = {
-        "truck_name": _nameController.text.trim(),
-        "cuisine_type": _cuisineController.text.trim(),
-        "description": _descriptionController.text.trim(),
-        "location": {
-          "address_string": _addressController.text.trim(),
-        },
-        "operating_hours": {
-          "open": _openTime?.format(context) ?? '',
-          "close": _closeTime?.format(context) ?? '',
-        },
-        "logo_image_url": _uploadedImageUrl!,
-      };
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('token') ?? '';
 
-      final response = await TruckOwnerService.addTruck(token, truckData);
+        final truckData = {
+          "truck_name": _nameController.text.trim(),
+          "cuisine_type": _cuisineController.text.trim(),
+          "description": _descriptionController.text.trim(),
+          "location": {
+            "address_string": _addressController.text.trim(),
+          },
+          "operating_hours": {
+            "open": _openTime?.format(context) ?? '',
+            "close": _closeTime?.format(context) ?? '',
+          },
+          "logo_image_url": uploadedUrl,
+        };
 
-      setState(() {
-        isSubmitting = false;
-      });
+        final response = await TruckOwnerService.addTruck(token, truckData);
 
-      if (response.statusCode == 201) {
-        await _showSuccessPopup();
-      } else {
-        _showMessage('❌ Failed to add truck.');
+        if (response.statusCode == 201) {
+          await _showSuccessPopup();
+        } else {
+          _showMessage('❌ Failed to add truck.');
+        }
+      } finally {
+        setState(() {
+          isSubmitting = false;
+        });
       }
     } else {
-      _showMessage('❌ Please complete all fields and upload a logo.');
+      _showMessage('❌ Please complete all fields and select a logo.');
     }
   }
 
@@ -140,8 +126,8 @@ class _AddTruckPageState extends State<AddTruckPage> {
               ),
             ),
             onPressed: () {
-              Navigator.pop(context); // close dialog
-              Navigator.pop(context, true); // go back
+              Navigator.pop(context);
+              Navigator.pop(context, true);
             },
             child: const Padding(
               padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -166,8 +152,7 @@ class _AddTruckPageState extends State<AddTruckPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          const Color.fromARGB(255, 255, 222, 182), // soft baby orange
+      backgroundColor: const Color.fromARGB(255, 255, 222, 182),
       appBar: AppBar(
         title: const Text('Add Truck'),
         backgroundColor: const Color.fromARGB(255, 255, 132, 39),
@@ -182,8 +167,7 @@ class _AddTruckPageState extends State<AddTruckPage> {
               const SizedBox(height: 12),
               _buildTextField(_cuisineController, 'Cuisine Type'),
               const SizedBox(height: 12),
-              _buildTextField(
-                  _descriptionController, 'Description'), // NEW FIELD
+              _buildTextField(_descriptionController, 'Description'),
               const SizedBox(height: 12),
               _buildTextField(_addressController, 'Address'),
               const SizedBox(height: 12),
@@ -246,6 +230,22 @@ class _AddTruckPageState extends State<AddTruckPage> {
       trailing: const Icon(Icons.access_time),
       onTap: () => _selectTime(isOpenTime),
     );
+  }
+
+  Future<void> _selectTime(bool isOpenTime) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isOpenTime) {
+          _openTime = picked;
+        } else {
+          _closeTime = picked;
+        }
+      });
+    }
   }
 
   Widget _buildImagePicker() {
