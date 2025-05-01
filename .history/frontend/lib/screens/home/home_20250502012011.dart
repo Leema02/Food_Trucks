@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -18,13 +17,6 @@ import 'package:myapp/screens/home/widgets/location_selector_sheet.dart';
 import 'package:myapp/screens/home/widgets/list_view_widget.dart';
 import 'package:myapp/screens/home/widgets/map_view_widget.dart';
 import 'package:myapp/screens/home/widgets/city_list_sheet.dart';
-
-void main() {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: HomePage(),
-  ));
-}
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -210,19 +202,12 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   header: _buildHeaderBar(),
                   onHeaderTap: _showLocationSelector,
                   onDrawerTap: () => _scaffoldKey.currentState?.openEndDrawer(),
-                  cityName: '',
                 )
               : MapViewWidget(
                   currentLocation: currentLocation,
                   mapController: _mapController,
                   markers: _mapMarkers,
                   header: _buildHeaderBar(),
-                  center: currentLocation != null
-                      ? LatLng(
-                          currentLocation!.latitude, currentLocation!.longitude)
-                      : const LatLng(31.9, 35.2), // fallback (e.g., Palestine)
-                  onHeaderTap: _showLocationSelector,
-                  onDrawerTap: () => _scaffoldKey.currentState?.openEndDrawer(),
                 ),
           const Center(
             child: Text('Search Page (Coming Soon)',
@@ -348,25 +333,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  final List<String> supportedCities = [
-    "Ramallah",
-    "Nablus",
-    "Bethlehem",
-    "Hebron",
-    "Jericho",
-    "Tulkarm",
-    "Jenin",
-    "Qalqilya",
-    "Salfit",
-    "Tubas",
-  ];
-
-  void showCityListSheet(
-    BuildContext context,
-    MapController mapController,
-    List<Marker> mapMarkers,
-    Function(String) onCitySelected,
-  ) {
+  void showCityListSheet(BuildContext context, MapController mapController,
+      List<Marker> mapMarkers, Function(String) onCitySelected) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -374,29 +342,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) => CityListSheet(
-        cities: supportedCities,
-        onCitySelected: (cityName) async {
-          Navigator.pop(context); // ✅ CLOSE THE SHEET IMMEDIATELY
-
-          // Lookup coordinates for selected city
-          final locations = await locationFromAddress('$cityName, Palestine');
-          if (locations.isNotEmpty) {
-            final loc = locations.first;
-            final latLng = LatLng(loc.latitude, loc.longitude);
-
-            mapMarkers.add(
-              Marker(
-                width: 40,
-                height: 40,
-                point: latLng,
-                child: const Icon(Icons.location_on, color: Colors.orange),
-              ),
-            );
-
-            mapController.move(latLng, 15);
-            onCitySelected(cityName); // ✅ Apply the selection
-          }
+        onCitySelected: (cityName) {
+          // Update the map or perform any necessary actions
+          onCitySelected(cityName);
         },
+        cities: [],
       ),
     );
   }

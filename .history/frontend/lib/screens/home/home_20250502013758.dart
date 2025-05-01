@@ -348,6 +348,24 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  void showCityListSheet(BuildContext context, MapController mapController,
+      List<Marker> mapMarkers, Function(String) onCitySelected) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => CityListSheet(
+        onCitySelected: (cityName) {
+          // Update the map or perform any necessary actions
+          onCitySelected(cityName);
+        },
+        cities: [],
+      ),
+    );
+  }
+
   final List<String> supportedCities = [
     "Ramallah",
     "Nablus",
@@ -361,40 +379,37 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     "Tubas",
   ];
 
-  void showCityListSheet(
-    BuildContext context,
-    MapController mapController,
-    List<Marker> mapMarkers,
-    Function(String) onCitySelected,
-  ) {
+  void _showCityListSheet() {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) => CityListSheet(
-        cities: supportedCities,
-        onCitySelected: (cityName) async {
-          Navigator.pop(context); // ✅ CLOSE THE SHEET IMMEDIATELY
-
-          // Lookup coordinates for selected city
-          final locations = await locationFromAddress('$cityName, Palestine');
+        onCitySelected: (city) async {
+          Navigator.pop(context);
+          final locations = await locationFromAddress('$city, Palestine');
           if (locations.isNotEmpty) {
             final loc = locations.first;
             final latLng = LatLng(loc.latitude, loc.longitude);
 
-            mapMarkers.add(
-              Marker(
-                width: 40,
-                height: 40,
-                point: latLng,
-                child: const Icon(Icons.location_on, color: Colors.orange),
-              ),
-            );
+            setState(() {
+              currentLocation = Position(
+                latitude: latLng.latitude,
+                longitude: latLng.longitude,
+                timestamp: DateTime.now(),
+                accuracy: 1.0,
+                altitude: 0.0,
+                heading: 0.0,
+                speed: 0.0,
+                speedAccuracy: 0.0,
+                altitudeAccuracy: 1.0,
+                headingAccuracy: 1.0,
+              );
+              _currentCityName = city;
+            });
 
-            mapController.move(latLng, 15);
-            onCitySelected(cityName); // ✅ Apply the selection
+            _mapController.move(latLng, 15);
           }
         },
       ),

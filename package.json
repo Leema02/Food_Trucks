@@ -1,0 +1,22 @@
+{
+  "name": "food_trucks",
+  "version": "1.0.0",
+  "description": "Software GP",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Leema02/Food_Trucks.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Leema02/Food_Trucks/issues"
+  },
+  "homepage": "https://github.com/Leema02/Food_Trucks#readme",
+  "dependencies": {
+    "nodemailer": "^6.10.1"
+  }
+}
