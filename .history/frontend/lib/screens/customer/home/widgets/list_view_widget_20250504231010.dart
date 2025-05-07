@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/screens/customer/home/widgets/home_main_container.dart';
+import 'package:myapp/screens/home/widgets/home_main_container.dart';
 
 class ListViewWidget extends StatelessWidget {
   final String selectedLocation;

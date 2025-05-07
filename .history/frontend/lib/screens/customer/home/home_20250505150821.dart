@@ -8,7 +8,7 @@ import 'package:latlong2/latlong.dart';
 
 import 'package:myapp/screens/account/account.dart';
 import 'package:myapp/screens/auth/widgets/home_page_custom_shape.dart';
-import 'package:myapp/screens/customer/cart/cart.dart';
+import 'package:myapp/screens/cart/cart.dart';
 import 'package:myapp/core/constants/colors.dart';
 import 'package:myapp/screens/customer/home/widgets/bottom_nav_bar.dart';
 import 'package:myapp/screens/customer/home/widgets/contact_drawer.dart';
@@ -42,7 +42,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Position? currentLocation;
   bool showMaps = false;
   bool selectedColor = true;
-  int _currentIndex = 0;
 
   final List<Marker> _mapMarkers = [];
 

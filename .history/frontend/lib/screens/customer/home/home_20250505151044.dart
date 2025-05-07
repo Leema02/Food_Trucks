@@ -8,16 +8,16 @@ import 'package:latlong2/latlong.dart';
 
 import 'package:myapp/screens/account/account.dart';
 import 'package:myapp/screens/auth/widgets/home_page_custom_shape.dart';
-import 'package:myapp/screens/cart/cart.dart';
+import 'package:myapp/screens/customer/cart/cart.dart';
 import 'package:myapp/core/constants/colors.dart';
-import 'package:myapp/screens/home/widgets/bottom_nav_bar.dart';
-import 'package:myapp/screens/home/widgets/contact_drawer.dart';
-import 'package:myapp/screens/home/widgets/floating_star_button.dart';
-import 'package:myapp/screens/home/widgets/location_utils.dart';
-import 'package:myapp/screens/home/widgets/location_selector_sheet.dart';
-import 'package:myapp/screens/home/widgets/list_view_widget.dart';
-import 'package:myapp/screens/home/widgets/map_view_widget.dart';
-import 'package:myapp/screens/home/widgets/city_list_sheet.dart';
+import 'package:myapp/screens/customer/home/widgets/bottom_nav_bar.dart';
+import 'package:myapp/screens/customer/home/widgets/contact_drawer.dart';
+import 'package:myapp/screens/customer/home/widgets/floating_star_button.dart';
+import 'package:myapp/screens/customer/home/widgets/location_utils.dart';
+import 'package:myapp/screens/customer/home/widgets/location_selector_sheet.dart';
+import 'package:myapp/screens/customer/home/widgets/list_view_widget.dart';
+import 'package:myapp/screens/customer/home/widgets/map_view_widget.dart';
+import 'package:myapp/screens/customer/home/widgets/city_list_sheet.dart';
 
 void main() {
   runApp(const MaterialApp(
@@ -33,19 +33,31 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => HomePageState();
 }
 
-int _currentIndex = 0;
-
 class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late final PageController _pageController;
-  late final MapController _mapController = MapController();
+  final MapController _mapController = MapController();
 
-  String? _currentCityName;
+  String _currentCityName = '';
   Position? currentLocation;
   bool showMaps = false;
   bool selectedColor = true;
+  int _currentIndex = 0;
 
   final List<Marker> _mapMarkers = [];
+
+  final List<String> supportedCities = [
+    'Ramallah',
+    'Nablus',
+    'Bethlehem',
+    'Hebron',
+    'Jericho',
+    'Tulkarm',
+    'Jenin',
+    'Qalqilya',
+    'Salfit',
+    'Tubas',
+  ];
 
   @override
   void initState() {
@@ -53,19 +65,18 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _pageController = PageController(initialPage: 0, keepPage: true);
 
     Geolocator.getCurrentPosition().then((position) async {
-      setState(() {
-        currentLocation = position;
-        showMaps = true;
-      });
       final city =
           await getCorrectedCityName(position.latitude, position.longitude);
-      setState(() => _currentCityName = city);
+      setState(() {
+        currentLocation = position;
+        _currentCityName = city;
+        showMaps = true;
+      });
     });
   }
 
   void _onTabTapped(int index) {
     setState(() {
-      _currentIndex = index;
       _pageController.jumpToPage(index);
     });
   }
@@ -95,23 +106,23 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text("Contact Food Truck",
+            const Text('Contact Food Truck',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             ListTile(
               leading: const Icon(Icons.phone, color: Colors.green),
-              title: const Text("Call Us"),
+              title: const Text('Call Us'),
               onTap: () {
                 Navigator.pop(context);
-                print("Calling...");
+                print('Calling...');
               },
             ),
             ListTile(
               leading: const Icon(Icons.chat, color: Colors.blueAccent),
-              title: const Text("Chat with Us"),
+              title: const Text('Chat with Us'),
               onTap: () {
                 Navigator.pop(context);
-                print("Chatting...");
+                print('Chatting...');
               },
             ),
           ],
@@ -123,38 +134,28 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget _buildCurrentLocationTile() {
     return ListTile(
       leading: const Icon(Icons.my_location, color: Colors.red),
-      title: const Text("Current location"),
-      subtitle: const Text("Move to your current location"),
+      title: const Text('Current location'),
+      subtitle: const Text('Move to your current location'),
       trailing: const Icon(Icons.check_circle, color: Colors.red),
       onTap: () async {
         Navigator.pop(context);
-
-        if (currentLocation != null) {
-          _mapController.move(
-            LatLng(currentLocation!.latitude, currentLocation!.longitude),
-            15,
-          );
-        }
 
         try {
           final freshPosition = await Geolocator.getCurrentPosition(
             desiredAccuracy: LocationAccuracy.high,
           );
-
-          _mapController.move(
-            LatLng(freshPosition.latitude, freshPosition.longitude),
-            15,
-          );
-
           final detectedCity = await getCorrectedCityName(
               freshPosition.latitude, freshPosition.longitude);
+
+          _mapController.move(
+              LatLng(freshPosition.latitude, freshPosition.longitude), 15);
 
           setState(() {
             currentLocation = freshPosition;
             _currentCityName = detectedCity;
           });
         } catch (e) {
-          print("Error: $e");
+          print('Error $e');
         }
       },
     );
@@ -163,7 +164,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget _buildExploreServiceAreasTile(BuildContext context) {
     return ListTile(
       leading: const Icon(Icons.location_city),
-      title: const Text("Explore our service areas"),
+      title: const Text('Explore our service areas'),
       subtitle: const Text("See where we're operating"),
       onTap: () {
         Navigator.pop(context);
@@ -178,59 +179,41 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingStarButton(onTap: () {}),
-      bottomNavigationBar: HomeBottomNavBar(
-        onTabSelected: _onTabTapped,
-        currentIndex: _currentIndex,
+  void showCityListSheet(
+    BuildContext context,
+    MapController mapController,
+    List<Marker> mapMarkers,
+    Function(String) onCitySelected,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      endDrawer: ContactDrawer(
-        onCallTap: () {
+      builder: (context) => CityListSheet(
+        cities: supportedCities,
+        onCitySelected: (cityName) async {
           Navigator.pop(context);
-          Future.delayed(
-              const Duration(milliseconds: 200), () => _showContactOptions());
+
+          final locations = await locationFromAddress('$cityName, Palestine');
+          if (locations.isNotEmpty) {
+            final loc = locations.first;
+            final latLng = LatLng(loc.latitude, loc.longitude);
+
+            mapMarkers.add(
+              Marker(
+                width: 40,
+                height: 40,
+                point: latLng,
+                child: const Icon(Icons.location_on, color: Colors.orange),
+              ),
+            );
+
+            mapController.move(latLng, 15);
+            onCitySelected(cityName);
+          }
         },
-        onChatTap: () {
-          Navigator.pop(context);
-          Future.delayed(
-              const Duration(milliseconds: 200), () => _showContactOptions());
-        },
-      ),
-      body: PageView(
-        controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          selectedColor
-              ? ListViewWidget(
-                  selectedLocation: _currentCityName ?? '',
-                  header: _buildHeaderBar(),
-                  onHeaderTap: _showLocationSelector,
-                  onDrawerTap: () => _scaffoldKey.currentState?.openEndDrawer(),
-                  cityName: '',
-                )
-              : MapViewWidget(
-                  currentLocation: currentLocation,
-                  mapController: _mapController,
-                  markers: _mapMarkers,
-                  header: _buildHeaderBar(),
-                  center: currentLocation != null
-                      ? LatLng(
-                          currentLocation!.latitude, currentLocation!.longitude)
-                      : const LatLng(31.9, 35.2), // fallback (e.g., Palestine)
-                  onHeaderTap: _showLocationSelector,
-                  onDrawerTap: () => _scaffoldKey.currentState?.openEndDrawer(),
-                ),
-          const Center(
-            child: Text('Search Page (Coming Soon)',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          ),
-          Cart(),
-          const Account(),
-        ],
       ),
     );
   }
@@ -270,7 +253,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     ),
                     icon: const Icon(Icons.location_on),
                     label: Text(
-                      _currentCityName ?? 'Choose Location',
+                      _currentCityName.isEmpty
+                          ? 'Choose Location'
+                          : _currentCityName,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -284,7 +269,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           const Icon(Icons.phone_in_talk, color: Colors.white),
                       iconSize: 28,
                       onPressed: () =>
-                          _scaffoldKey.currentState?.openEndDrawer(),
+                          _scaffoldKey.currentState!.openEndDrawer(),
                     ),
                   ),
                 ],
@@ -313,7 +298,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 GestureDetector(
                   onTap: () => setState(() => selectedColor = true),
                   child: Text(
-                    "List View",
+                    'List View',
                     style: TextStyle(
                       color: selectedColor
                           ? AppColors.orangeColor
@@ -330,11 +315,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 GestureDetector(
                   onTap: () => setState(() => selectedColor = false),
                   child: Text(
-                    "Map View",
+                    'Map View',
                     style: TextStyle(
-                      color: selectedColor
-                          ? AppColors.greyColor
-                          : AppColors.orangeColor,
+                      color: !selectedColor
+                          ? AppColors.orangeColor
+                          : AppColors.greyColor,
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
                     ),
@@ -348,55 +333,59 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  final List<String> supportedCities = [
-    "Ramallah",
-    "Nablus",
-    "Bethlehem",
-    "Hebron",
-    "Jericho",
-    "Tulkarm",
-    "Jenin",
-    "Qalqilya",
-    "Salfit",
-    "Tubas",
-  ];
-
-  void showCityListSheet(
-    BuildContext context,
-    MapController mapController,
-    List<Marker> mapMarkers,
-    Function(String) onCitySelected,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      key: _scaffoldKey,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: FloatingStarButton(onTap: () {}),
+      bottomNavigationBar: HomeBottomNavBar(
+        onTabSelected: _onTabTapped,
+        currentIndex: _currentIndex,
       ),
-      builder: (context) => CityListSheet(
-        cities: supportedCities,
-        onCitySelected: (cityName) async {
-          Navigator.pop(context); // ✅ CLOSE THE SHEET IMMEDIATELY
-
-          // Lookup coordinates for selected city
-          final locations = await locationFromAddress('$cityName, Palestine');
-          if (locations.isNotEmpty) {
-            final loc = locations.first;
-            final latLng = LatLng(loc.latitude, loc.longitude);
-
-            mapMarkers.add(
-              Marker(
-                width: 40,
-                height: 40,
-                point: latLng,
-                child: const Icon(Icons.location_on, color: Colors.orange),
-              ),
-            );
-
-            mapController.move(latLng, 15);
-            onCitySelected(cityName); // ✅ Apply the selection
-          }
+      endDrawer: ContactDrawer(
+        onCallTap: () {
+          Navigator.pop(context);
+          Future.delayed(
+              const Duration(milliseconds: 200), () => _showContactOptions());
         },
+        onChatTap: () {
+          Navigator.pop(context);
+          Future.delayed(
+              const Duration(milliseconds: 200), () => _showContactOptions());
+        },
+      ),
+      body: PageView(
+        controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [
+          selectedColor
+              ? ListViewWidget(
+                  selectedLocation: _currentCityName,
+                  header: _buildHeaderBar(),
+                  onHeaderTap: _showLocationSelector,
+                  onDrawerTap: () => _scaffoldKey.currentState!.openEndDrawer(),
+                  cityName: '',
+                )
+              : MapViewWidget(
+                  currentLocation: currentLocation,
+                  mapController: _mapController,
+                  markers: _mapMarkers,
+                  header: _buildHeaderBar(),
+                  center: currentLocation != null
+                      ? LatLng(
+                          currentLocation!.latitude, currentLocation!.longitude)
+                      : const LatLng(31.9, 35.2), // fallback
+                  onHeaderTap: _showLocationSelector,
+                  onDrawerTap: () => _scaffoldKey.currentState!.openEndDrawer(),
+                ),
+          const Center(
+            child: Text('Search Page (Coming Soon)',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          ),
+          const Cart(),
+          const Account(),
+        ],
       ),
     );
   }

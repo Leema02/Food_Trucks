@@ -42,7 +42,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Position? currentLocation;
   bool showMaps = false;
   bool selectedColor = true;
-  int _currentIndex = 0;
 
   final List<Marker> _mapMarkers = [];
 
