@@ -1,215 +1,231 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 
 import 'package:myapp/screens/account/account.dart';
+import 'package:myapp/screens/auth/widgets/home_page_custom_shape.dart';
 import 'package:myapp/screens/customer/cart/cart.dart';
 import 'package:myapp/core/constants/colors.dart';
-import 'package:myapp/core/constants/images.dart';
 import 'package:myapp/screens/customer/home/widgets/bottom_nav_bar.dart';
-import 'package:myapp/screens/auth/widgets/card_more_widget.dart';
-import 'package:myapp/screens/auth/widgets/card_widget.dart';
-import 'package:myapp/screens/auth/widgets/home_page_custom_shape.dart';
-import 'package:myapp/screens/auth/widgets/likebutton/LikeButton.dart';
+import 'package:myapp/screens/customer/home/widgets/contact_drawer.dart';
+import 'package:myapp/screens/customer/home/widgets/floating_star_button.dart';
+import 'package:myapp/screens/customer/home/widgets/location_utils.dart';
+import 'package:myapp/screens/customer/home/widgets/location_selector_sheet.dart';
+import 'package:myapp/screens/customer/home/widgets/list_view_widget.dart';
+import 'package:myapp/screens/customer/home/widgets/map_view_widget.dart';
+import 'package:myapp/screens/customer/home/widgets/city_list_sheet.dart';
+
+void main() {
+  runApp(const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: HomePage(),
+  ));
+}
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  HomePageState createState() => HomePageState();
+  State<HomePage> createState() => HomePageState();
 }
-
-int _currentIndex = 0;
 
 class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  late PageController _pageController;
+  late final PageController _pageController;
+  final MapController _mapController = MapController();
 
-  String _selectedLocation = "Istanbul, TR";
-  bool selectedColor = true;
+  String _currentCityName = '';
   Position? currentLocation;
   bool showMaps = false;
+  bool selectedColor = true;
+  final int _currentIndex = 0;
 
   final List<Marker> _mapMarkers = [];
-  final List<String> _location = ["Newyork, NY", "Dubai", "Istanbul, TR"];
+
+  final List<String> supportedCities = [
+    'Ramallah',
+    'Nablus',
+    'Bethlehem',
+    'Hebron',
+    'Jericho',
+    'Tulkarm',
+    'Jenin',
+    'Qalqilya',
+    'Salfit',
+    'Tubas',
+  ];
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: 0, keepPage: true);
 
-    Geolocator.getCurrentPosition().then((position) {
+    Geolocator.getCurrentPosition().then((position) async {
+      final city =
+          await getCorrectedCityName(position.latitude, position.longitude);
       setState(() {
         currentLocation = position;
+        _currentCityName = city;
         showMaps = true;
       });
     });
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
   void _onTabTapped(int index) {
     setState(() {
-      _currentIndex = index;
       _pageController.jumpToPage(index);
     });
   }
 
-  void _addMarker(LatLng position, String title, String snippet) {
-    final marker = Marker(
-      width: 40,
-      height: 40,
-      point: position,
-      child: const Icon(
-        Icons.location_on,
-        color: Colors.orange,
-        size: 36,
+  void _showLocationSelector() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-    );
-
-    setState(() {
-      _mapMarkers.add(marker);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final media = MediaQuery.of(context).size;
-
-    return Scaffold(
-      key: _scaffoldKey,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: buildFloatingActionButton(),
-      bottomNavigationBar: HomeBottomNavBar(
-        onTabSelected: _onTabTapped,
-        currentIndex: _currentIndex, // ✅ FIXED!
-      ),
-      endDrawer: buildEndDrawer(),
-      body: PageView(
-        controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          buildListViewPage(media),
-          buildMapViewPage(media),
-          Cart(),
-          const Account(),
-        ],
+      builder: (context) => LocationSelectorSheet(
+        currentLocationTile: _buildCurrentLocationTile(),
+        exploreServiceAreasTile: _buildExploreServiceAreasTile(context),
       ),
     );
   }
 
-  Widget buildListViewPage(Size media) => Stack(
-        children: [
-          SizedBox(
-            width: media.width,
-            height: media.height,
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  buildHeaderStack(media),
-                  buildHomeMainContainer(),
-                ],
-              ),
+  void _showContactOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Contact Food Truck',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: const Icon(Icons.phone, color: Colors.green),
+              title: const Text('Call Us'),
+              onTap: () {
+                Navigator.pop(context);
+                print('Calling...');
+              },
             ),
-          ),
-        ],
-      );
-
-  Widget buildMapViewPage(Size media) => Stack(
-        children: [
-          SizedBox(
-            width: media.width,
-            height: media.height,
-            child: showMaps
-                ? FlutterMap(
-                    options: MapOptions(
-                      initialCenter: LatLng(currentLocation!.latitude,
-                          currentLocation!.longitude),
-                      initialZoom: 15,
-                    ),
-                    children: [
-                      TileLayer(
-                        urlTemplate:
-                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.example.myapp',
-                      ),
-                      MarkerLayer(markers: _mapMarkers),
-                    ],
-                  )
-                : const Center(child: CircularProgressIndicator()),
-          ),
-          Positioned(
-            bottom: 0,
-            child: SizedBox(
-              height: 280,
-              width: media.width,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      _addMarker(
-                        LatLng(41.087381, 28.788369),
-                        "Cafe De Perks",
-                        "Good food",
-                      );
-                    },
-                    child: CardListWidget(
-                      heartIcon: LikeButton(
-                          key: const Key('like1'),
-                          width: 70,
-                          onIconClicked: (isLike) {}),
-                      foodDetail: "Desert - Fast Food - Alcohol",
-                      foodName: "Cafe De Perks",
-                      vote: 4.5,
-                      foodTime: "15-30 min",
-                      image: AppImages.image1[0],
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      _addMarker(
-                        LatLng(41.056120, 28.721480),
-                        "Cafe De Istanbul",
-                        "Great spot",
-                      );
-                    },
-                    child: CardListWidget(
-                      heartIcon: LikeButton(
-                          key: const Key('like2'),
-                          width: 70,
-                          onIconClicked: (isLike) {}),
-                      foodDetail: "Desert - Fast Food - Alcohol",
-                      foodName: "Cafe De Istanbul",
-                      vote: 4.5,
-                      foodTime: "15-60 min",
-                      image: AppImages.image1[1],
-                    ),
-                  ),
-                ],
-              ),
+            ListTile(
+              leading: const Icon(Icons.chat, color: Colors.blueAccent),
+              title: const Text('Chat with Us'),
+              onTap: () {
+                Navigator.pop(context);
+                print('Chatting...');
+              },
             ),
-          ),
-          buildHeaderStack(media),
-        ],
-      );
+          ],
+        ),
+      ),
+    );
+  }
 
-  Stack buildHeaderStack(Size media) {
-    return Stack(
+  Widget _buildCurrentLocationTile() {
+    return ListTile(
+      leading: const Icon(Icons.my_location, color: Colors.red),
+      title: const Text('Current location'),
+      subtitle: const Text('Move to your current location'),
+      trailing: const Icon(Icons.check_circle, color: Colors.red),
+      onTap: () async {
+        Navigator.pop(context);
+
+        try {
+          final freshPosition = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+          );
+          final detectedCity = await getCorrectedCityName(
+              freshPosition.latitude, freshPosition.longitude);
+
+          _mapController.move(
+              LatLng(freshPosition.latitude, freshPosition.longitude), 15);
+
+          setState(() {
+            currentLocation = freshPosition;
+            _currentCityName = detectedCity;
+          });
+        } catch (e) {
+          print('Error $e');
+        }
+      },
+    );
+  }
+
+  Widget _buildExploreServiceAreasTile(BuildContext context) {
+    return ListTile(
+      leading: const Icon(Icons.location_city),
+      title: const Text('Explore our service areas'),
+      subtitle: const Text("See where we're operating"),
+      onTap: () {
+        Navigator.pop(context);
+        Future.delayed(const Duration(milliseconds: 200), () {
+          showCityListSheet(context, _mapController, _mapMarkers, (newCity) {
+            setState(() {
+              _currentCityName = newCity;
+            });
+          });
+        });
+      },
+    );
+  }
+
+  void showCityListSheet(
+    BuildContext context,
+    MapController mapController,
+    List<Marker> mapMarkers,
+    Function(String) onCitySelected,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => CityListSheet(
+        cities: supportedCities,
+        onCitySelected: (cityName) async {
+          Navigator.pop(context);
+
+          final locations = await locationFromAddress('$cityName, Palestine');
+          if (locations.isNotEmpty) {
+            final loc = locations.first;
+            final latLng = LatLng(loc.latitude, loc.longitude);
+
+            mapMarkers.add(
+              Marker(
+                width: 40,
+                height: 40,
+                point: latLng,
+                child: const Icon(Icons.location_on, color: Colors.orange),
+              ),
+            );
+
+            mapController.move(latLng, 15);
+            onCitySelected(cityName);
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildHeaderBar() {
+    return Column(
       children: [
         ClipPath(
           clipper: CustomShapeClipper(),
           child: Container(
-            height: Platform.isIOS ? 200 : 150,
-            width: media.width,
+            height: Platform.isIOS ? 200 : 160,
+            width: double.infinity,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [AppColors.orangeColor, AppColors.orangeLightColor],
@@ -217,295 +233,160 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 end: Alignment.bottomCenter,
               ),
             ),
-          ),
-        ),
-        Padding(
-          padding: Platform.isAndroid
-              ? const EdgeInsets.only(left: 20, top: 30, right: 10)
-              : const EdgeInsets.only(left: 20, top: 50, right: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  hint: Row(
-                    children: [
-                      Text(
-                        _selectedLocation,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      const Icon(FontAwesomeIcons.caretDown,
-                          color: Colors.white, size: 12),
-                    ],
-                  ),
-                  iconSize: 0,
-                  items: _location.map((location) {
-                    return DropdownMenuItem(
-                      value: location,
-                      child:
-                          Text(location, style: const TextStyle(fontSize: 18)),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedLocation = value!;
-                    });
-                  },
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.tune, color: Colors.white),
-                onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-              )
-            ],
-          ),
-        ),
-        buildPositionedButtons(),
-      ],
-    );
-  }
-
-  Widget buildFloatingActionButton() {
-    return GestureDetector(
-      onTap: () {
-        print("FAB tapped");
-      },
-      child: Container(
-        padding: const EdgeInsets.only(bottom: 12),
-        height: 55,
-        width: 55,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.orangeColor,
-              AppColors.orangeLightColor.withOpacity(0.8),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-          borderRadius: BorderRadius.circular(50),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.orangeColor,
-              blurRadius: 12,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: const Icon(
-          FontAwesomeIcons.solidStar,
-          size: 26,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-
-  Widget buildHomeMainContainer() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        const SizedBox(height: 10),
-        Padding(
-          padding: const EdgeInsets.only(left: 22.0, bottom: 10),
-          child: Text(
-            "Featured Restaurants in $_selectedLocation",
-            style: TextStyle(
-              color: AppColors.blackColor,
-              fontSize: 18,
-              fontFamily: "Poppins",
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        SizedBox(
-          height: 280,
-          child: ListView.builder(
-            padding: const EdgeInsets.only(right: 20),
-            scrollDirection: Axis.horizontal,
-            itemCount: AppImages.image1.length,
-            itemBuilder: (BuildContext context, int index) {
-              return CardListWidget(
-                heartIcon: LikeButton(
-                  key: ObjectKey(index.toString()),
-                  width: 70,
-                  onIconClicked: (bool isLike) {},
-                ),
-                image: AppImages.image1[index],
-                foodDetail: "Desert - Fast Food - Alcohol",
-                foodName: "Cafe De Perks",
-                vote: 4.5,
-                foodTime: "15-30 min",
-              );
-            },
-          ),
-        ),
-        Divider(
-            height: 25, thickness: 1.5, color: AppColors.greyColor.shade300),
-        Padding(
-          padding: const EdgeInsets.only(top: 20, left: 22.0, bottom: 10),
-          child: Text(
-            "More Restaurants in $_selectedLocation",
-            style: TextStyle(
-              color: AppColors.blackColor,
-              fontSize: 18,
-              fontFamily: "Poppins",
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        CardMoreWidget(
-          image: AppImages.image1[1],
-          foodDetail: "Desert - Fast Food - Alcohol",
-          foodName: "Cafe De Ankara",
-          vote: 4.5,
-          foodTime: "15-30 min",
-          status: "CLOSE",
-          statusColor: Colors.pinkAccent,
-          heartIcon: LikeButton(
-              width: 70,
-              key: const Key('like2'),
-              onIconClicked: (bool isLike) {}),
-        ),
-        CardMoreWidget(
-          heartIcon: LikeButton(
-            width: 70,
-            key: const Key('like2'),
-            onIconClicked: (bool isLike) {},
-          ),
-          image: AppImages.image1[0],
-          foodDetail: "Desert - Fast Food - Alcohol",
-          foodName: "Cafe De NewYork",
-          vote: 4.5,
-          foodTime: "15-30 min",
-          status: "OPEN",
-          statusColor: Colors.green,
-        ),
-      ],
-    );
-  }
-
-  Positioned buildPositionedButtons() {
-    return Positioned(
-      bottom: 10,
-      left: 40,
-      right: 40,
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.shade400,
-              blurRadius: 8,
-              spreadRadius: 1,
-            )
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            GestureDetector(
-              onTap: () {
-                _pageController.jumpToPage(0);
-                setState(() {
-                  selectedColor = true;
-                });
-              },
-              child: Text(
-                "List View",
-                style: TextStyle(
-                  color: selectedColor
-                      ? AppColors.orangeColor
-                      : AppColors.greyColor,
-                  fontWeight: FontWeight.w400,
-                  fontSize: 16,
-                  fontFamily: "Poppins",
-                ),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: VerticalDivider(color: Colors.black),
-            ),
-            GestureDetector(
-              onTap: () {
-                _pageController.jumpToPage(1);
-                setState(() {
-                  selectedColor = false;
-                });
-              },
-              child: Text(
-                "Map View",
-                style: TextStyle(
-                  color: selectedColor
-                      ? AppColors.greyColor
-                      : AppColors.orangeColor,
-                  fontWeight: FontWeight.w400,
-                  fontSize: 16,
-                  fontFamily: "Poppins",
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildEndDrawer() {
-    return Stack(
-      children: [
-        Theme(
-          data: ThemeData(canvasColor: Colors.transparent),
-          child: SizedBox(
-            width: 80,
-            height: 150,
-            child: Drawer(
-              elevation: 5,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            child: Padding(
+              padding: Platform.isIOS
+                  ? const EdgeInsets.only(top: 50, left: 20, right: 20)
+                  : const EdgeInsets.only(top: 30, left: 20, right: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    height: 75,
-                    decoration: BoxDecoration(
-                      color: AppColors.orangeColor,
-                      borderRadius:
-                          const BorderRadius.only(topLeft: Radius.circular(10)),
+                  ElevatedButton.icon(
+                    onPressed: _showLocationSelector,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.orangeColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
                     ),
-                    child: const Icon(Icons.shopping_cart,
-                        color: Colors.white, size: 32),
+                    icon: const Icon(Icons.location_on),
+                    label: Text(
+                      _currentCityName.isEmpty
+                          ? 'Choose Location'
+                          : _currentCityName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
-                  Container(
-                    height: 75,
-                    decoration: BoxDecoration(
-                      color: AppColors.orangeLightColor,
-                      borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(10)),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 55.0, right: 8.0),
+                    child: IconButton(
+                      icon:
+                          const Icon(Icons.phone_in_talk, color: Colors.white),
+                      iconSize: 28,
+                      onPressed: () =>
+                          _scaffoldKey.currentState!.openEndDrawer(),
                     ),
-                    child: const Icon(Icons.contact_phone,
-                        color: Colors.white, size: 32),
                   ),
                 ],
               ),
             ),
           ),
         ),
-        Positioned(
-          right: 42,
-          top: -10,
-          child: IconButton(
-            icon: const Icon(Icons.close, color: Colors.white, size: 16),
-            onPressed: () => Navigator.of(context).pop(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+          child: Container(
+            height: 50,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.shade400,
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                )
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                GestureDetector(
+                  onTap: () => setState(() => selectedColor = true),
+                  child: Text(
+                    'List View',
+                    style: TextStyle(
+                      color: selectedColor
+                          ? AppColors.orangeColor
+                          : AppColors.greyColor,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: VerticalDivider(color: Colors.black),
+                ),
+                GestureDetector(
+                  onTap: () => setState(() => selectedColor = false),
+                  child: Text(
+                    'Map View',
+                    style: TextStyle(
+                      color: !selectedColor
+                          ? AppColors.orangeColor
+                          : AppColors.greyColor,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      key: _scaffoldKey,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: FloatingStarButton(onTap: () {}),
+      bottomNavigationBar: HomeBottomNavBar(
+        onTabSelected: _onTabTapped,
+        currentIndex: _currentIndex,
+      ),
+      endDrawer: ContactDrawer(
+        onCallTap: () {
+          Navigator.pop(context);
+          Future.delayed(
+              const Duration(milliseconds: 200), () => _showContactOptions());
+        },
+        onChatTap: () {
+          Navigator.pop(context);
+          Future.delayed(
+              const Duration(milliseconds: 200), () => _showContactOptions());
+        },
+      ),
+      body: PageView(
+        controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [
+          selectedColor
+              ? ListViewWidget(
+                  selectedLocation: _currentCityName,
+                  header: _buildHeaderBar(),
+                  onHeaderTap: _showLocationSelector,
+                  onDrawerTap: () => _scaffoldKey.currentState!.openEndDrawer(),
+                  cityName: '',
+                )
+              : MapViewWidget(
+                  currentLocation: currentLocation,
+                  mapController: _mapController,
+                  markers: _mapMarkers,
+                  header: _buildHeaderBar(),
+                  center: currentLocation != null
+                      ? LatLng(
+                          currentLocation!.latitude, currentLocation!.longitude)
+                      : const LatLng(31.9, 35.2), // fallback
+                  onHeaderTap: _showLocationSelector,
+                  onDrawerTap: () => _scaffoldKey.currentState!.openEndDrawer(),
+                ),
+          const Center(
+            child: Text('Search Page (Coming Soon)',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          ),
+          const Cart(),
+          const Account(),
+        ],
+      ),
     );
   }
 }
