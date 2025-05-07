@@ -3,6 +3,8 @@ require('dotenv').config();            // Load .env file
 const express = require('express');
 const connectDB = require('./config/db');
 const bodyParser = require('body-parser');
+const path = require('path');
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -12,16 +14,23 @@ connectDB();
 
 // Middleware setup
  app.use(bodyParser.json());            // Parse JSON request bodies
-// app.use(bodyParser.urlencoded({ extended: true }));  // Parse URL-encoded form data
-
-// Routes setup (auth route as an example)
-//app.use('/api/auth', require('./routes/authRoutes')); 
 
 const userRoutes = require('./routes/userRoutes');
+const truckRoutes = require('./routes/truckRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
+const menuRoutes = require('./routes/menuRoutes');
+
+
 app.use('/api/users', userRoutes);
+app.use('/api/trucks', truckRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/menu', menuRoutes);
+
+
+// Make uploads folder public
+app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 
 // Start the server
-
 app.listen(PORT, () => {
   console.log(`Server is running on port http://localhost:${PORT}`);
 });
