@@ -50,20 +50,6 @@ const updateTruck = async (req, res) => {
   }
 };
 
-// // 4. Delete truck
-// const deleteTruck = async (req, res) => {
-//   try {
-//     const truck = await Truck.findOneAndDelete({ _id: req.params.id, owner_id: req.user._id });
-
-//     if (!truck) return res.status(404).json({ message: 'Truck not found or not authorized' });
-
-//     res.json({ message: 'Truck deleted successfully' });
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
-
-
 const deleteTruck = async (req, res) => {
   try {
     const truck = await Truck.findOne({ _id: req.params.id, owner_id: req.user._id });
@@ -99,9 +85,21 @@ const deleteTruck = async (req, res) => {
   }
 };
 
+// Public route: Get all trucks for customer view
+const getAllPublicTrucks = async (req, res) => {
+  try {
+    const trucks = await Truck.find({}, '-__v -updatedAt -createdAt'); // clean output
+    res.json(trucks);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
 module.exports = {
   createTruck,
   getMyTrucks,
   updateTruck,
-  deleteTruck
+  deleteTruck,
+  getAllPublicTrucks
 };
