@@ -24,6 +24,24 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _showPassword = false;
+  bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberedCredentials();
+  }
+
+  void _loadRememberedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    final remember = prefs.getBool('remember_me') ?? false;
+
+    if (remember) {
+      _emailController.text = prefs.getString('saved_email') ?? '';
+      _passwordController.text = prefs.getString('saved_password') ?? '';
+      setState(() => _rememberMe = true);
+    }
+  }
 
   void _showMessage(String message, {bool isError = false}) {
     final snackBar = SnackBar(
@@ -58,10 +76,18 @@ class _LoginPageState extends State<LoginPage> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', responseData['token']);
 
-        // Get user role from response
+        if (_rememberMe) {
+          await prefs.setString('saved_email', _emailController.text);
+          await prefs.setString('saved_password', _passwordController.text);
+          await prefs.setBool('remember_me', true);
+        } else {
+          await prefs.remove('saved_email');
+          await prefs.remove('saved_password');
+          await prefs.setBool('remember_me', false);
+        }
+
         String role = responseData['user']['role_id'];
 
-        // Navigate based on role
         if (role == 'customer') {
           Navigator.pushReplacement(
             context,
@@ -158,7 +184,19 @@ class _LoginPageState extends State<LoginPage> {
                                 ? 'Please enter the password'
                                 : null,
                           ),
-                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _rememberMe,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _rememberMe = value ?? false;
+                                  });
+                                },
+                              ),
+                              const Text("Remember Me"),
+                            ],
+                          ),
                           AuthSwitchButton(
                             text: "Forgot Password?",
                             onPressed: () => Navigator.push(
