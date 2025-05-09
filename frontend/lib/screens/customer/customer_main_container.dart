@@ -24,9 +24,10 @@ class _CustomerMainContainerState extends State<CustomerMainContainer> {
 
   final List<Widget> _pages = [
     const Home(),
-    // const ExplorePage(),
+    //const ExplorePage(),
     // const OrdersPage(),
     const CartPage(),
+    //const AccountPage(),
   ];
 
   void _onTabTapped(int index) {
@@ -64,6 +65,10 @@ class _CustomerMainContainerState extends State<CustomerMainContainer> {
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart_outlined),
             label: 'Cart',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Account',
           ),
         ],
       ),
