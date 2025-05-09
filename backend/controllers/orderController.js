@@ -35,7 +35,10 @@ const getMyOrders = async (req, res) => {
 const getTruckOrders = async (req, res) => {
   try {
     const truckId = req.params.truckId;
-    const orders = await Order.find({ truck_id: truckId }).sort({ createdAt: -1 });
+    const orders = await Order.find({ truck_id: truckId })
+      .populate('customer_id', 'F_name L_name') 
+      .sort({ createdAt: -1 });
+
     res.json(orders);
   } catch (err) {
     res.status(500).json({ message: err.message });

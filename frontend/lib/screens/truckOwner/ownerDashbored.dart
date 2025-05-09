@@ -3,6 +3,7 @@ import 'package:myapp/screens/auth/widgets/auth_background.dart';
 import 'package:myapp/screens/truckOwner/manageTrucks/addTruck.dart';
 //import 'package:myapp/screens/truckOwner/manageMenu.dart';
 import 'package:myapp/screens/truckOwner/manageTrucks/viewTrucks.dart';
+import 'package:myapp/screens/truckOwner/owner_orders.dart';
 
 void main() {
   runApp(const MaterialApp(
@@ -103,7 +104,11 @@ class TruckOwnerDashboard extends StatelessWidget {
                         'View Orders',
                         Icons.receipt_long,
                         Colors.teal,
-                        onPressed: () {},
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const OwnerOrdersPage()),
+                        ),
                       ),
                       _buildActionButton(
                         context,
