@@ -20,13 +20,13 @@ const userRoutes = require('./routes/userRoutes');
 const truckRoutes = require('./routes/truckRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const menuRoutes = require('./routes/menuRoutes');
-
+const orderRoutes = require('./routes/orderRoutes');
 
 app.use('/api/users', userRoutes);
 app.use('/api/trucks', truckRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/menu', menuRoutes);
-
+app.use('/api/orders', orderRoutes);
 
 // Make uploads folder public
 app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
