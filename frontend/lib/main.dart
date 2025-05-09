@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/auth/login/login.dart';
-import 'package:myapp/screens/customer/product/details_screen.dart';
-import 'package:myapp/screens/customer/cart/cart.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,12 +18,12 @@ class MyApp extends StatelessWidget {
       ),
       home: const LoginPage(), // Initial screen
       routes: {
-        'details': (context) => MealDetailPage(
-              image: '',
-              name: '',
-              price: '',
-            ),
-        'cart': (context) => Cart(), // 👈 navigate to this later
+        // 'details': (context) => MealDetailPage(
+        //       image: '',
+        //       name: '',
+        //       price: '',
+        //     ),
+        // 'cart': (context) => Cart(), // 👈 navigate to this later
         '/login': (context) => const LoginPage(),
       },
     );

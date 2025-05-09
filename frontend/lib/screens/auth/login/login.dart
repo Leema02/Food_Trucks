@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:myapp/screens/customer/customer_main_container.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:myapp/screens/customer/home/home.dart';
 import 'package:myapp/screens/truckOwner/ownerDashbored.dart';
 import 'package:myapp/screens/auth/signup/signup.dart';
 import 'package:myapp/screens/auth/forgot_password/ForgotPasswordPage.dart';
@@ -65,7 +65,8 @@ class _LoginPageState extends State<LoginPage> {
         if (role == 'customer') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
+            MaterialPageRoute(
+                builder: (context) => const CustomerMainContainer()),
           );
         } else if (role == 'truck owner') {
           Navigator.pushReplacement(

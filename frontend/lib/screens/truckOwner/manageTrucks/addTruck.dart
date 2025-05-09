@@ -36,7 +36,7 @@ class _AddTruckPageState extends State<AddTruckPage> {
   }
 
   Future<String?> _uploadImage(File imageFile) async {
-    final uri = Uri.parse('http://10.0.2.2:5000/api/upload');
+    final uri = Uri.parse('http://192.168.10.7:5000/api/upload');
     var request = http.MultipartRequest('POST', uri);
     request.files
         .add(await http.MultipartFile.fromPath('file', imageFile.path));

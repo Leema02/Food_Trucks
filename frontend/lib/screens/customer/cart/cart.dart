@@ -1,203 +1,95 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/screens/customer/meal_details/meal_detail_page.dart'; // Make sure this path matches your file structure
+import 'package:myapp/screens/customer/cart/cart_controller.dart';
 
-class Cart extends StatefulWidget {
-  const Cart({super.key});
+class CartPage extends StatefulWidget {
+  const CartPage({super.key});
 
   @override
-  State<Cart> createState() => _CartState();
+  State<CartPage> createState() => _CartPageState();
 }
 
-class _CartState extends State<Cart> with TickerProviderStateMixin {
-  late TabController _tabController;
+class _CartPageState extends State<CartPage> {
+  List<Map<String, dynamic>> get cart => CartController.getCartItems();
 
-  final List<Map<String, String>> foods = [
-    {
-      'name': 'Rice and meat',
-      'price': '130.00',
-      'rate': '4.8',
-      'clients': '150',
-      'image': 'assets/image/plate-003.png'
-    },
-    {
-      'name': 'Vegan food',
-      'price': '400.00',
-      'rate': '4.2',
-      'clients': '150',
-      'image': 'assets/image/plate-007.png'
-    },
-  ];
+  void updateQuantity(int index, int change) {
+    setState(() {
+      final item = cart[index];
+      final menuId = item['menu_id'];
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
-
-  Widget renderList(List<Map<String, String>> data, {bool showReview = false}) {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: data.length,
-      itemBuilder: (BuildContext context, int index) {
-        final food = data[index];
-
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => MealDetailPage(
-                  image: food['image']!,
-                  name: food['name']!,
-                  price: food['price']!,
-                ),
-              ),
-            );
-          },
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 10.0),
-            child: Card(
-              child: Row(
-                children: [
-                  Container(
-                    height: 100,
-                    width: 100,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(food['image']!),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(food['name']!),
-                              if (!showReview) const Icon(Icons.delete_outline),
-                            ],
-                          ),
-                          Text('\$${food['price']}'),
-                          if (showReview)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(food['rate']!),
-                                  const Text(
-                                    'Give your review',
-                                    style: TextStyle(color: Colors.orange),
-                                  ),
-                                ],
-                              ),
-                            )
-                          else
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                const Icon(Icons.remove),
-                                Container(
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 10),
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 3, horizontal: 12),
-                                  color: Colors.orange,
-                                  child: const Text('Add To 2',
-                                      style: TextStyle(color: Colors.white)),
-                                ),
-                                const Icon(Icons.add, color: Colors.orange),
-                              ],
-                            )
-                        ],
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
+      if (change == -1 && item['quantity'] == 1) {
+        CartController.removeFromCart(menuId);
+      } else {
+        cart[index]['quantity'] += change;
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final total = CartController.getTotal();
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Cart")),
-      body: Column(
-        children: [
-          TabBar(
-            controller: _tabController,
-            indicatorColor: Colors.orange,
-            labelColor: Colors.black,
-            tabs: const [
-              Tab(text: 'Add Food'),
-              Tab(text: 'Tracking Order'),
-              Tab(text: 'Done Order'),
-            ],
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        renderList(foods),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 15.0, horizontal: 35.0),
-                          ),
-                          onPressed: () {},
-                          child: const Text('CHECKOUT',
-                              style: TextStyle(color: Colors.white)),
-                        )
-                      ],
-                    ),
-                  ),
-                  SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        renderList(foods),
-                        const SizedBox(height: 20),
-                        ElevatedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.location_searching,
-                              color: Colors.white),
-                          label: const Text('View Tracking Order',
-                              style: TextStyle(color: Colors.white)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 15.0, horizontal: 25.0),
-                          ),
+      appBar: AppBar(title: const Text('My Cart')),
+      body: cart.isEmpty
+          ? const Center(child: Text('🛒 Your cart is empty.'))
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: cart.length,
+                    itemBuilder: (context, index) {
+                      final item = cart[index];
+                      return ListTile(
+                        leading: item['image_url'] != null
+                            ? Image.network(item['image_url'], width: 50)
+                            : const Icon(Icons.fastfood),
+                        title: Text(item['name']),
+                        subtitle:
+                            Text('\$${item['price']} × ${item['quantity']}'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove),
+                              onPressed: () => updateQuantity(index, -1),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.add),
+                              onPressed: () => updateQuantity(index, 1),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                  SingleChildScrollView(
-                    child: renderList(foods, showReview: true),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Total:',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text('\$${total.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          // TODO: Handle order logic
+                        },
+                        child: const Text('Checkout'),
+                      )
+                    ],
                   ),
-                ],
-              ),
+                )
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }

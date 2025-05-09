@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class MenuService {
-  static const String baseUrl = "http://10.0.2.2:5000/api/menu";
+  static const String baseUrl = "http://192.168.10.7:5000/api/menu";
 
   static Future<http.Response> addMenuItem(
       String token, Map<String, dynamic> data) {
