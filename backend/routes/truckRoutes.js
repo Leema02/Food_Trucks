@@ -4,6 +4,8 @@ const TruckController = require('../controllers/truckController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorizeRoles } = require('../middleware/roleMiddleware');
 
+router.get('/public', TruckController.getAllPublicTrucks);// View trucks for customer
+
 // 🛡️ All routes below require authentication
 router.use(protect);
 
@@ -12,6 +14,8 @@ router.post('/', authorizeRoles('truck owner'), TruckController.createTruck); //
 router.get('/my-trucks', authorizeRoles('truck owner'), TruckController.getMyTrucks); // View my trucks
 router.put('/:id', authorizeRoles('truck owner'), TruckController.updateTruck); // Update my truck
 router.delete('/:id', authorizeRoles('truck owner'), TruckController.deleteTruck); // Delete my truck
+
+
 
 module.exports = router;
 

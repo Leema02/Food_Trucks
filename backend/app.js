@@ -4,7 +4,7 @@ const express = require('express');
 const connectDB = require('./config/db');
 const bodyParser = require('body-parser');
 const path = require('path');
-
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -13,7 +13,8 @@ const PORT = process.env.PORT || 5000;
 connectDB();
 
 // Middleware setup
- app.use(bodyParser.json());            // Parse JSON request bodies
+app.use(bodyParser.json());            // Parse JSON request bodies
+app.use(cors()); 
 
 const userRoutes = require('./routes/userRoutes');
 const truckRoutes = require('./routes/truckRoutes');
