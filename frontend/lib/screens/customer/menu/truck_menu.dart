@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:myapp/core/services/menu_service.dart';
 import 'package:myapp/screens/customer/menu/menu_card.dart';
 
 class TruckMenuPage extends StatefulWidget {
@@ -25,9 +25,7 @@ class _TruckMenuPageState extends State<TruckMenuPage> {
 
   Future<void> fetchMenu() async {
     try {
-      final response = await http.get(
-        Uri.parse("http://192.168.10.7:5000/api/menu/${widget.truckId}"),
-      );
+      final response = await MenuService.getMenuItems(widget.truckId);
 
       if (response.statusCode == 200) {
         setState(() {
@@ -36,13 +34,13 @@ class _TruckMenuPageState extends State<TruckMenuPage> {
         });
       } else {
         setState(() {
-          errorMessage = "HTTP ${response.statusCode}";
+          errorMessage = "Server Error: ${response.statusCode}";
           isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        errorMessage = "Error: $e";
+        errorMessage = "Connection Error: $e";
         isLoading = false;
       });
     }
@@ -59,14 +57,19 @@ class _TruckMenuPageState extends State<TruckMenuPage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.orange))
           : errorMessage.isNotEmpty
-              ? Center(child: Text(errorMessage))
+              ? Center(
+                  child: Text(errorMessage,
+                      style: const TextStyle(color: Colors.red)))
               : menuItems.isEmpty
                   ? const Center(child: Text("No menu items found 😢"))
                   : ListView.builder(
                       padding: const EdgeInsets.all(16),
                       itemCount: menuItems.length,
                       itemBuilder: (context, index) {
-                        return MenuCard(item: menuItems[index]);
+                        return MenuCard(
+                          item: menuItems[index],
+                          truckId: widget.truckId, // ✅ Pass truckId for cart
+                        );
                       },
                     ),
     );

@@ -24,10 +24,10 @@ class _CustomerMainContainerState extends State<CustomerMainContainer> {
 
   final List<Widget> _pages = [
     const Home(),
-    //const ExplorePage(),
-    // const OrdersPage(),
+    const ExplorePage(),
+    const OrdersPage(),
     const CartPage(),
-    //const AccountPage(),
+    const AccountPage(),
   ];
 
   void _onTabTapped(int index) {

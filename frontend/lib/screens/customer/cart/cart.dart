@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/customer/cart/cart_controller.dart';
+import 'package:myapp/screens/customer/orders/checkout.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -29,7 +30,10 @@ class _CartPageState extends State<CartPage> {
     final total = CartController.getTotal();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Cart')),
+      appBar: AppBar(
+        title: const Text('My Cart'),
+        backgroundColor: Colors.orange,
+      ),
       body: cart.isEmpty
           ? const Center(child: Text('🛒 Your cart is empty.'))
           : Column(
@@ -39,33 +43,81 @@ class _CartPageState extends State<CartPage> {
                     itemCount: cart.length,
                     itemBuilder: (context, index) {
                       final item = cart[index];
-                      return ListTile(
-                        leading: item['image_url'] != null
-                            ? Image.network(item['image_url'], width: 50)
-                            : const Icon(Icons.fastfood),
-                        title: Text(item['name']),
-                        subtitle:
-                            Text('\$${item['price']} × ${item['quantity']}'),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove),
-                              onPressed: () => updateQuantity(index, -1),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add),
-                              onPressed: () => updateQuantity(index, 1),
-                            ),
-                          ],
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 3,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: item['image_url'] != null
+                                    ? Image.network(
+                                        item['image_url'],
+                                        width: 70,
+                                        height: 70,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : const Icon(Icons.fastfood, size: 50),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(item['name'],
+                                        style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600)),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '\$${item['price']} × ${item['quantity']}',
+                                      style: const TextStyle(fontSize: 15),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon:
+                                        const Icon(Icons.remove_circle_outline),
+                                    onPressed: () => updateQuantity(index, -1),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.add_circle_outline),
+                                    onPressed: () => updateQuantity(index, 1),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 4,
+                        offset: Offset(0, -2),
+                      )
+                    ],
+                  ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -78,13 +130,41 @@ class _CartPageState extends State<CartPage> {
                                   fontSize: 18, fontWeight: FontWeight.bold)),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                       ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
                         onPressed: () {
-                          // TODO: Handle order logic
+                          final cartItems = CartController.getCartItems();
+                          final truckId = cartItems.isNotEmpty
+                              ? cartItems[0]['truck_id'] as String?
+                              : null;
+
+                          if (truckId != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CheckoutPage(truckId: truckId),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text("Cannot proceed: Missing truck ID")),
+                            );
+                          }
                         },
-                        child: const Text('Checkout'),
-                      )
+                        child: const Text(
+                          "Checkout",
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
                     ],
                   ),
                 )
