@@ -13,7 +13,7 @@ class TruckCard extends StatelessWidget {
     final String? imageUrl = imagePath != null
         ? (imagePath.startsWith('http')
             ? imagePath
-            : 'http://192.168.10.7:5000$imagePath')
+            : 'http://10.0.2.2:5000$imagePath')
         : null;
 
     return Container(

@@ -1,8 +1,14 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class TruckOwnerService {
-  static const String baseUrl = "http://192.168.10.7:5000/api/trucks";
+  // static const String baseUrl = "http://192.168.10.3:5000/api/trucks";
+  // static const String baseUrl = "http:/10.0.2.2:5000/api/trucks";
+
+  static final String baseUrl = Platform.isAndroid
+      ? "http://192.168.10.1:5000/api/trucks" // real device on WiFi
+      : "http://10.0.2.2:5000/api/trucks"; // Android emulator
 
   static Future<http.Response> addTruck(
       String token, Map<String, dynamic> data) {
