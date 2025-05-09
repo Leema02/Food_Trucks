@@ -25,7 +25,7 @@ const orderSchema = new mongoose.Schema({
   ],
   total_price: { type: Number, required: true },
   order_type: { type: String, enum: ['pickup', 'delivery'], default: 'pickup' },
-  status: { type: String, enum: ['pending', 'preparing', 'ready', 'completed'], default: 'pending' },
+  status: { type: String, enum: ['Pending', 'Preparing', 'Ready', 'Completed'], default: 'Pending' },
 }, {
     timestamps: true,
     toJSON: {
