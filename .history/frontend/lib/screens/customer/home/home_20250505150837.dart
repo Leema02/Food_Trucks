@@ -26,8 +26,8 @@ void main() {
   ));
 }
 
-class Home extends StatefulWidget {
-  const Home({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => HomePageState();
@@ -42,7 +42,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Position? currentLocation;
   bool showMaps = false;
   bool selectedColor = true;
-  int _currentIndex = 0;
 
   final List<Marker> _mapMarkers = [];
 
@@ -75,7 +74,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
-  Future<void> fetchPublicTrucks() async {
+  void _onTabTapped(int index) {
     setState(() {
       _pageController.jumpToPage(index);
     });
