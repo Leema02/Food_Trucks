@@ -1,0 +1,20 @@
+{
+  "login": "Log In",
+  "signup": "Sign Up",
+  "email": "Email",
+  "password": "Password",
+  "rememberme": "Remember Me",
+  "forgotpassword": "Forgot Password",
+  "donthaveanaccount": "Don't have an account? Sign Up",
+  "alreadyhaveanaccount": "Already have an account? Log In",
+  "resetpassword": "Reset Password",
+  "enteryouremail": "Enter your email to receive a 4-digit code.",
+  "sendcode": "Send Code",
+  "backtologin": "Back to Login",
+  "fname": "First Name",
+  "lname": "Last Name",
+  "phone": "Phone Number",
+  "city": "City",
+  "address": "Address",
+  "selectrole": "Select Role"
+}
