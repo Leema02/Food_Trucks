@@ -4,28 +4,38 @@ class CartController {
   static String? get activeTruckId =>
       _cartItems.isNotEmpty ? _cartItems[0]['truck_id'] : null;
 
+  static String? get activeTruckCity =>
+      _cartItems.isNotEmpty ? _cartItems[0]['truck_city'] : null;
+
+  /// Add item to cart
+  /// Returns false if item belongs to a different truck
   static bool addToCart(Map<String, dynamic> item) {
     final truckId = item['truck_id'];
+    final truckCity = item['truck_city'];
 
-    // ❌ Block adding from a different truck
-    if (_cartItems.isNotEmpty && truckId != activeTruckId) {
-      return false; // signal "not allowed"
+    if (truckId == null || truckCity == null) {
+      throw ArgumentError("Missing truck_id or truck_city in cart item");
     }
 
-    final existing =
-        _cartItems.indexWhere((e) => e['menu_id'] == item['menu_id']);
+    // ❌ Prevent adding from a different truck
+    if (_cartItems.isNotEmpty && truckId != activeTruckId) {
+      return false;
+    }
 
-    if (existing >= 0) {
-      _cartItems[existing]['quantity'] += 1;
+    final index = _cartItems.indexWhere((e) => e['menu_id'] == item['menu_id']);
+
+    if (index >= 0) {
+      _cartItems[index]['quantity'] += 1;
     } else {
       _cartItems.add({
         ...item,
         'quantity': 1,
         'truck_id': truckId,
+        'truck_city': truckCity,
       });
     }
 
-    return true; // ✅ added successfully
+    return true;
   }
 
   static void removeFromCart(String menuId) {

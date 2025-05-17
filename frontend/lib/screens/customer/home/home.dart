@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/truckOwner_service.dart';
-
+import '../../../core/constants/supported_cities.dart';
 import 'widgets/header_section.dart';
 import 'widgets/search_filter_bar.dart';
 import 'widgets/truck_card.dart';
+import 'customer_map.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -17,6 +18,7 @@ class _HomeState extends State<Home> {
   bool isLoading = true;
   String errorMessage = '';
   String selectedCity = 'Gaza';
+  bool _isMapView = false;
 
   @override
   void initState() {
@@ -31,7 +33,7 @@ class _HomeState extends State<Home> {
     });
 
     try {
-      final data = await TruckOwnerService.getPublicTrucks();
+      final data = await TruckOwnerService.getPublicTrucks(city: selectedCity);
       setState(() {
         trucks = data;
         isLoading = false;
@@ -42,6 +44,42 @@ class _HomeState extends State<Home> {
         isLoading = false;
       });
     }
+  }
+
+  Widget _buildToggleButton(String label, bool value) {
+    final isSelected = value == _isMapView;
+
+    return GestureDetector(
+      onTap: () async {
+        if (value != _isMapView) {
+          setState(() => _isMapView = value);
+
+          if (value) {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const CustomerMapPage(),
+              ),
+            );
+            setState(() => _isMapView = false);
+          }
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.orange : Colors.grey,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -58,15 +96,38 @@ class _HomeState extends State<Home> {
         children: [
           HeaderSection(
             city: selectedCity,
+            supportedCities: supportedCities, // 🔁 Shared list
             onCityChange: (newCity) {
               setState(() => selectedCity = newCity);
+              fetchPublicTrucks();
             },
           ),
           const SearchFilterBar(),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black12, blurRadius: 6),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildToggleButton('List View', false),
+                  const VerticalDivider(width: 1, color: Colors.black26),
+                  _buildToggleButton('Map View', true),
+                ],
+              ),
+            ),
+          ),
           Expanded(
             child: isLoading
                 ? const Center(
-                    child: CircularProgressIndicator(color: Colors.orange))
+                    child: CircularProgressIndicator(color: Colors.orange),
+                  )
                 : errorMessage.isNotEmpty
                     ? Center(child: Text(errorMessage))
                     : trucks.isEmpty

@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:myapp/screens/truckOwner/manageMenu/viewMenu.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:myapp/core/services/truckOwner_service.dart';
-import 'package:myapp/screens/auth/widgets/auth_background.dart';
-import 'package:myapp/screens/truckOwner/manageTrucks/editTruck.dart';
 import 'package:myapp/core/utils/url_helper.dart';
+import 'package:myapp/screens/auth/widgets/auth_background.dart';
+import 'package:myapp/screens/truckOwner/manageMenu/viewMenu.dart';
+import 'package:myapp/screens/truckOwner/manageTrucks/editTruck.dart';
 
 class ViewTrucksScreen extends StatefulWidget {
   const ViewTrucksScreen({super.key});
@@ -28,19 +28,19 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token') ?? '';
-
       final response = await TruckOwnerService.getMyTrucks(token);
+
       if (response.statusCode == 200) {
         setState(() {
           trucks = jsonDecode(response.body);
           isLoading = false;
         });
       } else {
-        print('Failed to fetch trucks: ${response.body}');
+        _showMessage('❌ Failed to fetch trucks.');
         setState(() => isLoading = false);
       }
     } catch (e) {
-      print('Error: $e');
+      _showMessage('❌ Error: $e');
       setState(() => isLoading = false);
     }
   }
@@ -60,9 +60,7 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
             onPressed: () => Navigator.of(context).pop(false),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Delete'),
             onPressed: () => Navigator.of(context).pop(true),
           ),
@@ -74,7 +72,7 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
       final response = await TruckOwnerService.deleteTruck(id, token);
       if (response.statusCode == 200) {
         _showMessage('✅ Truck deleted successfully.');
-        fetchTrucks(); // Refresh list
+        fetchTrucks();
       } else {
         _showMessage('❌ Failed to delete truck.');
       }
@@ -95,13 +93,8 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'My Trucks',
-          style: TextStyle(
-            fontSize: 22,
-            color: Colors.black,
-          ),
-        ),
+        title: const Text('My Trucks',
+            style: TextStyle(fontSize: 22, color: Colors.black)),
         backgroundColor: const Color.fromARGB(255, 255, 136, 0),
       ),
       body: AuthBackground(
@@ -138,10 +131,7 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
                                       fontSize: 16,
                                     ),
                                   ),
-                                  if (truck['description'] != null &&
-                                      truck['description']
-                                          .toString()
-                                          .isNotEmpty)
+                                  if ((truck['description'] ?? '').isNotEmpty)
                                     Padding(
                                       padding: const EdgeInsets.only(top: 4),
                                       child: Text(
@@ -162,7 +152,9 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
                                   Text(
                                       'Address: ${truck['location']?['address_string'] ?? ''}'),
                                   Text(
-                                    'Hours: ${truck['operating_hours']?['open'] ?? ''} - ${truck['operating_hours']?['close'] ?? ''}',
+                                      'City: ${truck['city'] ?? 'Not specified'}'),
+                                  Text(
+                                    'Hours: ${truck['operating_hours']?['open'] ?? '--'} - ${truck['operating_hours']?['close'] ?? '--'}',
                                   ),
                                 ],
                               ),
@@ -177,13 +169,13 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
                                       final result = await Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
+                                          builder: (_) =>
                                               EditTruckPage(truck: truck),
                                         ),
                                       );
 
                                       if (result == true) {
-                                        fetchTrucks(); // Refresh after editing
+                                        fetchTrucks(); // Refresh
                                       }
                                     },
                                   ),
@@ -205,7 +197,7 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => ManageMenuPage(
+                                        builder: (_) => ManageMenuPage(
                                           truckId: truck['_id'],
                                         ),
                                       ),

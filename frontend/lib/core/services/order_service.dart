@@ -1,15 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
-import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OrderService {
-  // static const String baseUrl = "http://10.0.2.2:5000/api/orders";
-  static final String baseUrl = Platform.isAndroid
-      ? "http://192.168.10.1:5000/api/orders" // real device on WiFi
-      : "http://10.0.2.2:5000/api/orders"; // Android emulator
-
+  static const String baseUrl = "http://10.0.2.2:5000/api/orders";
   static Future<http.Response> placeOrder(
       Map<String, dynamic> orderData) async {
     final prefs = await SharedPreferences.getInstance();

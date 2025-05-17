@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:myapp/core/constants/supported_cities.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:myapp/core/services/truckOwner_service.dart';
@@ -26,6 +27,7 @@ class _EditTruckPageState extends State<EditTruckPage> {
 
   File? _selectedImage;
   String? _uploadedImageUrl;
+  String? selectedCity;
   final ImagePicker _picker = ImagePicker();
   bool isUploadingImage = false;
 
@@ -44,18 +46,15 @@ class _EditTruckPageState extends State<EditTruckPage> {
     _closeTimeController = TextEditingController(
         text: widget.truck['operating_hours']?['close'] ?? '');
     _uploadedImageUrl = widget.truck['logo_image_url'];
+    selectedCity = widget.truck['city'];
   }
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() {
-        isUploadingImage = true;
-      });
+      setState(() => isUploadingImage = true);
       await _uploadImage(File(pickedFile.path));
-      setState(() {
-        isUploadingImage = false;
-      });
+      setState(() => isUploadingImage = false);
     }
   }
 
@@ -73,7 +72,7 @@ class _EditTruckPageState extends State<EditTruckPage> {
 
         setState(() {
           _uploadedImageUrl = resData['url'];
-          _selectedImage = File(imageFile.path);
+          _selectedImage = imageFile;
         });
 
         _showMessage('✅ Image uploaded successfully.');
@@ -86,7 +85,7 @@ class _EditTruckPageState extends State<EditTruckPage> {
   }
 
   Future<void> _saveChanges() async {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState!.validate() && selectedCity != null) {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token') ?? '';
 
@@ -94,6 +93,7 @@ class _EditTruckPageState extends State<EditTruckPage> {
         "truck_name": _nameController.text.trim(),
         "cuisine_type": _cuisineController.text.trim(),
         "description": _descriptionController.text.trim(),
+        "city": selectedCity,
         "location": {
           "address_string": _addressController.text.trim(),
         },
@@ -112,6 +112,8 @@ class _EditTruckPageState extends State<EditTruckPage> {
       } else {
         _showMessage('❌ Failed to update truck.');
       }
+    } else {
+      _showMessage('❌ Please complete all required fields.');
     }
   }
 
@@ -147,6 +149,8 @@ class _EditTruckPageState extends State<EditTruckPage> {
               const SizedBox(height: 12),
               _buildTextField(_addressController, 'Address'),
               const SizedBox(height: 12),
+              _buildCityDropdown(),
+              const SizedBox(height: 12),
               _buildTextField(
                   _openTimeController, 'Opening Time (e.g., 10:00 AM)'),
               const SizedBox(height: 12),
@@ -167,9 +171,11 @@ class _EditTruckPageState extends State<EditTruckPage> {
                 ),
                 child: isUploadingImage
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Save Changes',
+                    : const Text(
+                        'Save Changes',
                         style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
               )
             ],
           ),
@@ -189,6 +195,23 @@ class _EditTruckPageState extends State<EditTruckPage> {
           borderRadius: BorderRadius.circular(12),
         ),
       ),
+      validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+    );
+  }
+
+  Widget _buildCityDropdown() {
+    return DropdownButtonFormField<String>(
+      value: selectedCity,
+      decoration: InputDecoration(
+        labelText: 'City',
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      items: supportedCities.map((city) {
+        return DropdownMenuItem(value: city, child: Text(city));
+      }).toList(),
+      onChanged: (value) => setState(() => selectedCity = value),
       validator: (value) => value == null || value.isEmpty ? 'Required' : null,
     );
   }
