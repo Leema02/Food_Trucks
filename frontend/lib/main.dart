@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:myapp/screens/auth/login/login.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
+
+  runApp(
+    EasyLocalization(
+      supportedLocales: [Locale('en'), Locale('ar')],
+      path: 'assets/langs', // Translation files location
+      fallbackLocale: Locale('en'),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -13,17 +24,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Food Truck',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-      ),
-      home: const LoginPage(), // Initial screen
+      theme: ThemeData(primarySwatch: Colors.orange),
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
+      home: const LoginPage(),
       routes: {
-        // 'details': (context) => MealDetailPage(
-        //       image: '',
-        //       name: '',
-        //       price: '',
-        //     ),
-        // 'cart': (context) => Cart(), // 👈 navigate to this later
         '/login': (context) => const LoginPage(),
       },
     );

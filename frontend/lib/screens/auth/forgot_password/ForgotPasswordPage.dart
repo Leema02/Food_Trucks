@@ -7,6 +7,7 @@ import 'package:myapp/screens/auth/widgets/auth_card.dart';
 import 'package:myapp/screens/auth/widgets/auth_buttons.dart';
 import 'package:myapp/screens/auth/widgets/responsive.dart';
 import 'package:myapp/core/services/auth_service.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -106,14 +107,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     key: _formKey,
                     child: Column(
                       children: [
-                        const Text(
-                          "Reset Password",
+                        Text(
+                          "resetpassword".tr(),
                           style: TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 10),
-                        const Text(
-                          "Enter your email to receive a 4-digit code.",
+                        Text(
+                          "enteryouremail".tr(),
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 14, color: Colors.grey),
                         ),
@@ -122,7 +123,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
-                            hintText: "Email",
+                            hintText: "email".tr(),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -144,7 +145,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         ),
                         const SizedBox(height: 15),
                         AuthButton(
-                          text: _codeSent ? "Resend Code" : "Send Code",
+                          text: _codeSent ? "resendcode".tr() : "sendcode".tr(),
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
                               _sendResetCode();
@@ -153,8 +154,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         ),
                         if (_codeSent) ...[
                           const SizedBox(height: 15),
-                          const Text(
-                            "Enter the 4-digit code sent to your email",
+                          Text(
+                            "enteryouremail".tr(),
                             style: TextStyle(fontSize: 14),
                           ),
                           const SizedBox(height: 8),
@@ -163,7 +164,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             keyboardType: TextInputType.number,
                             maxLength: 4,
                             decoration: InputDecoration(
-                              hintText: "4-digit Code",
+                              hintText: "4digitcode".tr(),
                               counterText: "",
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -172,8 +173,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           ),
                           const SizedBox(height: 10),
                           AuthButton(
-                            text:
-                                _verifyingCode ? "Verifying..." : "Verify Code",
+                            text: _verifyingCode
+                                ? "verifiying".tr()
+                                : "verifycode".tr(),
                             onPressed: _verifyingCode
                                 ? () {}
                                 : () => _verifyCodeAndProceed(),
@@ -181,7 +183,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         ],
                         const SizedBox(height: 10),
                         AuthSwitchButton(
-                          text: "Back to Login",
+                          text: "backtologin".tr(),
                           onPressed: () => Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(

@@ -11,9 +11,11 @@ import 'package:myapp/screens/auth/widgets/auth_buttons.dart';
 import 'package:myapp/screens/auth/widgets/sign_up_bar.dart';
 import 'package:myapp/screens/auth/widgets/responsive.dart';
 import 'package:myapp/core/services/auth_service.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final Locale? locale;
+  const LoginPage({super.key, this.locale});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -30,12 +32,15 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     _loadRememberedCredentials();
+    if (widget.locale != null) {
+      // ✅ Apply passed locale
+      context.setLocale(widget.locale!);
+    }
   }
 
   void _loadRememberedCredentials() async {
     final prefs = await SharedPreferences.getInstance();
     final remember = prefs.getBool('remember_me') ?? false;
-
     if (remember) {
       _emailController.text = prefs.getString('saved_email') ?? '';
       _passwordController.text = prefs.getString('saved_password') ?? '';
@@ -87,7 +92,6 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         String role = responseData['user']['role_id'];
-
         if (role == 'customer') {
           Navigator.pushReplacement(
             context,
@@ -112,12 +116,33 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AuthBackground(
-        child: Responsive(
-          mobile: _buildForm(context, 20, double.infinity, true, true),
-          tablet: _buildForm(context, 40, 500, true, false),
-          desktop: _buildForm(context, 80, 600, false, false),
-        ),
+      body: Stack(
+        children: [
+          AuthBackground(
+            child: Responsive(
+              mobile: _buildForm(context, 20, double.infinity, true, true),
+              tablet: _buildForm(context, 40, 500, true, false),
+              desktop: _buildForm(context, 80, 600, false, false),
+            ),
+          ),
+          _buildLanguageToggle(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageToggle() {
+    return Positioned(
+      top: 60,
+      right: 20,
+      child: IconButton(
+        icon: const Icon(Icons.language),
+        onPressed: () {
+          Locale newLocale = context.locale.languageCode == 'en'
+              ? const Locale('ar')
+              : const Locale('en');
+          context.setLocale(newLocale);
+        },
       ),
     );
   }
@@ -154,20 +179,24 @@ class _LoginPageState extends State<LoginPage> {
                       key: _formKey,
                       child: Column(
                         children: [
-                          const SignUpBar(isLoginPage: true),
+                          SignUpBar(
+                            key: ValueKey(
+                                context.locale.languageCode), // ✅ Add this line
+                            isLoginPage: true, // or false depending on page
+                          ),
                           const SizedBox(height: 15),
                           TextFormField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
-                            decoration: _inputDecoration("Email"),
+                            decoration: _inputDecoration("email".tr()),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Please enter an email';
+                                return 'pleaseenteremail'.tr();
                               }
                               final emailRegex = RegExp(
                                   r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
                               if (!emailRegex.hasMatch(value)) {
-                                return 'Please enter a valid email';
+                                return 'pleaseentervalidemail'.tr();
                               }
                               return null;
                             },
@@ -176,29 +205,24 @@ class _LoginPageState extends State<LoginPage> {
                           TextFormField(
                             controller: _passwordController,
                             obscureText: !_showPassword,
-                            decoration: _inputDecoration(
-                              "Password",
-                              suffixIcon: _buildPasswordToggle(),
-                            ),
+                            decoration: _inputDecoration("password".tr(),
+                                suffixIcon: _buildPasswordToggle()),
                             validator: (value) => value == null || value.isEmpty
-                                ? 'Please enter the password'
+                                ? 'pleaseenterpassword'.tr()
                                 : null,
                           ),
                           Row(
                             children: [
                               Checkbox(
                                 value: _rememberMe,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _rememberMe = value ?? false;
-                                  });
-                                },
+                                onChanged: (value) => setState(
+                                    () => _rememberMe = value ?? false),
                               ),
-                              const Text("Remember Me"),
+                              Text('rememberme'.tr()),
                             ],
                           ),
                           AuthSwitchButton(
-                            text: "Forgot Password?",
+                            text: "forgotpassword".tr(),
                             onPressed: () => Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -208,16 +232,18 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 15),
                           AuthButton(
-                            text: 'Log In',
+                            text: "login".tr(),
                             onPressed: _handleLogin,
                           ),
                           const SizedBox(height: 10),
                           AuthSwitchButton(
-                            text: "Don't have an account? Sign Up",
+                            text: "donthaveanaccount".tr(),
                             onPressed: () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const SignUpPage()),
+                                builder: (context) => SignUpPage(
+                                    locale: context.locale), // ✅ Pass locale
+                              ),
                             ),
                           ),
                         ],
@@ -252,9 +278,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildPasswordToggle() {
     return IconButton(
-      icon: Icon(
-        _showPassword ? Icons.visibility : Icons.visibility_off,
-      ),
+      icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off),
       onPressed: () => setState(() => _showPassword = !_showPassword),
     );
   }
