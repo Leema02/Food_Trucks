@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myapp/screens/auth/login/login.dart';
 import 'package:myapp/screens/auth/signup/signup.dart';
 import 'package:myapp/screens/auth/widgets/custom_tab.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SignUpBar extends StatelessWidget {
   final bool isLoginPage; // To check which page is active
@@ -20,7 +21,7 @@ class SignUpBar extends StatelessWidget {
       child: Row(
         children: [
           CustomTab(
-            text: "Log In",
+            text: "login".tr(),
             isSelected: isLoginPage, // Active if on Login Page
             onPressed: isLoginPage
                 ? () {} // Provide an empty function instead of null
@@ -28,13 +29,14 @@ class SignUpBar extends StatelessWidget {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const LoginPage(),
+                        builder: (context) =>
+                            LoginPage(locale: context.locale), // ✅ Pass locale
                       ),
                     );
                   },
           ),
           CustomTab(
-            text: "Sign Up",
+            text: "signup".tr(),
             isSelected: !isLoginPage, // Active if on Sign-Up Page
             onPressed: !isLoginPage
                 ? () {} // Provide an empty function instead of null
@@ -42,7 +44,8 @@ class SignUpBar extends StatelessWidget {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const SignUpPage(),
+                        builder: (context) =>
+                            SignUpPage(locale: context.locale), // ✅ Pass locale
                       ),
                     );
                   },

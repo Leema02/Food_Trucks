@@ -6,9 +6,11 @@ import 'package:myapp/screens/auth/widgets/auth_buttons.dart';
 import 'package:myapp/screens/auth/widgets/sign_up_bar.dart';
 import 'package:myapp/screens/auth/widgets/responsive.dart';
 import 'package:myapp/core/services/auth_service.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key});
+  final Locale? locale;
+  const SignUpPage({super.key, this.locale});
 
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -16,7 +18,6 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
-
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -28,6 +29,14 @@ class _SignUpPageState extends State<SignUpPage> {
 
   bool _showPassword = false;
   String _selectedRole = 'customer';
+  @override
+  void initState() {
+    super.initState();
+    if (widget.locale != null) {
+      // ✅ Apply passed locale
+      context.setLocale(widget.locale!);
+    }
+  }
 
   Widget buildStyledTextField({
     required String hint,
@@ -59,12 +68,33 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AuthBackground(
-        child: Responsive(
-          mobile: _buildForm(context, 20, double.infinity, true, true),
-          tablet: _buildForm(context, 40, 500, true, false),
-          desktop: _buildForm(context, 80, 600, false, false),
-        ),
+      body: Stack(
+        children: [
+          AuthBackground(
+            child: Responsive(
+              mobile: _buildForm(context, 20, double.infinity, true, true),
+              tablet: _buildForm(context, 40, 500, true, false),
+              desktop: _buildForm(context, 80, 600, false, false),
+            ),
+          ),
+          _buildLanguageToggle(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageToggle() {
+    return Positioned(
+      top: 60,
+      right: 20,
+      child: IconButton(
+        icon: const Icon(Icons.language),
+        onPressed: () {
+          Locale newLocale = context.locale.languageCode == 'en'
+              ? const Locale('ar')
+              : const Locale('en');
+          context.setLocale(newLocale);
+        },
       ),
     );
   }
@@ -83,10 +113,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 padding: const EdgeInsets.only(left: 150),
                 child: Align(
                   alignment: Alignment.topLeft,
-                  child: Image.asset(
-                    'assets/image/truckLogo.png',
-                    height: 300,
-                  ),
+                  child: Image.asset('assets/image/truckLogo.png', height: 300),
                 ),
               ),
             ),
@@ -96,10 +123,7 @@ class _SignUpPageState extends State<SignUpPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (isMobile)
-                  Image.asset(
-                    'assets/image/truckLogo.png',
-                    height: 120,
-                  ),
+                  Image.asset('assets/image/truckLogo.png', height: 120),
                 SizedBox(
                   width: formWidth,
                   child: AuthCard(
@@ -107,63 +131,61 @@ class _SignUpPageState extends State<SignUpPage> {
                       key: _formKey,
                       child: Column(
                         children: [
-                          const SignUpBar(isLoginPage: false),
+                          SignUpBar(
+                            key: ValueKey(
+                                context.locale.languageCode), // ✅ Add this line
+                            isLoginPage: false, // or false depending on page
+                          ),
                           const SizedBox(height: 13),
                           buildStyledTextField(
-                              hint: 'First Name',
+                              hint: 'fname'.tr(),
                               controller: _firstNameController),
                           const SizedBox(height: 8),
                           buildStyledTextField(
-                              hint: 'Last Name',
+                              hint: 'lname'.tr(),
                               controller: _lastNameController),
                           const SizedBox(height: 8),
                           buildStyledTextField(
-                            hint: 'Email',
+                            hint: 'email'.tr(),
                             controller: _emailController,
                             type: TextInputType.emailAddress,
                             validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter a valid email';
-                              }
-                              if (!value.contains('@')) {
-                                return 'Invalid email format';
-                              }
+                              if (value == null || value.isEmpty)
+                                return 'pleaseentervalidemail'.tr();
+                              if (!value.contains('@'))
+                                return 'invalidemailformat'.tr();
                               return null;
                             },
                           ),
                           const SizedBox(height: 8),
                           buildStyledTextField(
-                            hint: 'Username',
+                            hint: 'username_key'.tr(),
                             controller: _usernameController,
                             validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter a username';
-                              }
-                              if (value.contains(' ')) {
-                                return 'Username should not contain spaces';
-                              }
+                              if (value == null || value.isEmpty)
+                                return 'pleaseenterausername'.tr();
+                              if (value.contains(' '))
+                                return 'usernameshouldnotcontainspaces'.tr();
                               return null;
                             },
                           ),
                           const SizedBox(height: 8),
                           buildStyledTextField(
-                            hint: 'Phone Number',
-                            controller: _phoneController,
-                            type: TextInputType.phone,
-                          ),
+                              hint: 'phone'.tr(),
+                              controller: _phoneController,
+                              type: TextInputType.phone),
                           const SizedBox(height: 8),
                           buildStyledTextField(
-                              hint: 'City', controller: _cityController),
+                              hint: 'city'.tr(), controller: _cityController),
                           const SizedBox(height: 8),
                           buildStyledTextField(
-                              hint: 'Address', controller: _addressController),
+                              hint: 'address'.tr(),
+                              controller: _addressController),
                           const SizedBox(height: 10),
-
-                          /// Role Dropdown
                           DropdownButtonFormField<String>(
                             value: _selectedRole,
                             decoration: InputDecoration(
-                              labelText: 'Select Role',
+                              labelText: 'selectrole'.tr(),
                               border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10)),
                               focusedBorder: OutlineInputBorder(
@@ -172,23 +194,20 @@ class _SignUpPageState extends State<SignUpPage> {
                                     const BorderSide(color: Colors.deepOrange),
                               ),
                             ),
-                            items: const [
+                            items: [
                               DropdownMenuItem(
-                                  value: 'customer', child: Text('Customer')),
+                                  value: 'customer',
+                                  child: Text('customer'.tr())),
                               DropdownMenuItem(
                                   value: 'truck owner',
-                                  child: Text('Truck Owner')),
+                                  child: Text('truckowner'.tr())),
                             ],
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedRole = value!;
-                              });
-                            },
+                            onChanged: (value) =>
+                                setState(() => _selectedRole = value!),
                           ),
-
                           const SizedBox(height: 8),
                           buildStyledTextField(
-                            hint: 'Password',
+                            hint: 'password'.tr(),
                             obscure: !_showPassword,
                             controller: _passwordController,
                             suffixIcon: IconButton(
@@ -199,75 +218,22 @@ class _SignUpPageState extends State<SignUpPage> {
                                   () => _showPassword = !_showPassword),
                             ),
                             validator: (value) => value == null || value.isEmpty
-                                ? 'Please enter the password'
+                                ? 'pleaseenterpassword'.tr()
                                 : null,
                           ),
                           const SizedBox(height: 15),
                           AuthButton(
-                            text: 'Sign Up',
-                            onPressed: () async {
-                              if (_formKey.currentState!.validate()) {
-                                final userData = {
-                                  "F_name": _firstNameController.text.trim(),
-                                  "L_name": _lastNameController.text.trim(),
-                                  "email_address": _emailController.text.trim(),
-                                  "username": _usernameController.text.trim(),
-                                  "phone_num": _phoneController.text.trim(),
-                                  "city": _cityController.text.trim(),
-                                  "address": _addressController.text.trim(),
-                                  "password": _passwordController.text.trim(),
-                                  "role_id": _selectedRole,
-                                };
-
-                                final response =
-                                    await AuthService.signup(userData);
-
-                                if (response.statusCode == 200) {
-                                  _firstNameController.clear();
-                                  _lastNameController.clear();
-                                  _emailController.clear();
-                                  _usernameController.clear();
-                                  _phoneController.clear();
-                                  _cityController.clear();
-                                  _addressController.clear();
-                                  _passwordController.clear();
-
-                                  await showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      content: const Text(
-                                        "✅ Verification email sent!",
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.of(context).pop(),
-                                          child: const Text("OK"),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          "❌ Signup failed: ${response.body}"),
-                                    ),
-                                  );
-                                }
-                              } else {
-                                print("❌ Form has errors");
-                              }
-                            },
+                            text: 'signup'.tr(),
+                            onPressed: _handleSignUp,
                           ),
                           const SizedBox(height: 8),
                           AuthSwitchButton(
-                            text: "Already have an account? Log In",
+                            text: 'alreadyhaveanaccount'.tr(),
                             onPressed: () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const LoginPage(),
+                                builder: (context) => LoginPage(
+                                    locale: context.locale), // ✅ Pass locale
                               ),
                             ),
                           ),
@@ -287,5 +253,58 @@ class _SignUpPageState extends State<SignUpPage> {
     return scrollEnabled
         ? SingleChildScrollView(child: formContent)
         : formContent;
+  }
+
+  void _handleSignUp() async {
+    if (_formKey.currentState!.validate()) {
+      final userData = {
+        "F_name": _firstNameController.text.trim(),
+        "L_name": _lastNameController.text.trim(),
+        "email_address": _emailController.text.trim(),
+        "username": _usernameController.text.trim(),
+        "phone_num": _phoneController.text.trim(),
+        "city": _cityController.text.trim(),
+        "address": _addressController.text.trim(),
+        "password": _passwordController.text.trim(),
+        "role_id": _selectedRole,
+      };
+
+      final response = await AuthService.signup(userData);
+
+      if (response.statusCode == 200) {
+        _clearFields();
+        _showVerificationDialog();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("❌ Signup failed: ${response.body}")),
+        );
+      }
+    }
+  }
+
+  void _clearFields() {
+    _firstNameController.clear();
+    _lastNameController.clear();
+    _emailController.clear();
+    _usernameController.clear();
+    _phoneController.clear();
+    _cityController.clear();
+    _addressController.clear();
+    _passwordController.clear();
+  }
+
+  void _showVerificationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: const Text("✅ Verification email sent!",
+            textAlign: TextAlign.center),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"))
+        ],
+      ),
+    );
   }
 }
