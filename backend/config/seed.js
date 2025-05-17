@@ -45,7 +45,7 @@ async function seed() {
     MenuItem.deleteMany({})
   ]);
 
-  const hashedPass = await bcrypt.hash('00', 10);
+  //const hashedPass = await bcrypt.hash('00', 10);
 
   console.log('🧑 Seeding real users...');
   const customer = await User.create({
@@ -54,7 +54,7 @@ async function seed() {
     email_address: 'lemarizeq@gmail.com',
     phone_num: '0590000001',
     username: 'lemar_customer',
-    password: hashedPass,
+    password: '00',
     city: 'Nablus',
     address: 'Main Street',
     role_id: 'customer'
@@ -66,7 +66,7 @@ async function seed() {
     email_address: 's12029320@stu.najah.edu',
     phone_num: '0590000002',
     username: 'leema_owner',
-    password: hashedPass,
+    password: '00',
     city: 'Hebron',
     address: 'Old Market',
     role_id: 'truck owner'
@@ -78,13 +78,18 @@ async function seed() {
     email_address: 'itech.leema01@gmail.com',
     phone_num: '0590000003',
     username: 'leema_admin',
-    password: hashedPass,
+    password: '00',
     city: 'Ramallah',
     address: 'Downtown',
     role_id: 'admin'
   });
 
   console.log('🚚 Seeding fake trucks...');
+  const cuisineOptions = [
+  'Palestinian', 'Middle Eastern', 'BBQ', 'Burgers', 'Pizza', 'Mexican',
+  'Asian', 'Sushi', 'Italian', 'Fried Chicken', 'Sandwiches', 'Seafood',
+  'Desserts', 'Ice Cream', 'Coffee', 'Shawarma', 'Falafel', 'Vegan'
+];
   const trucks = [];
   for (let i = 0; i < 10; i++) {
     const city = faker.helpers.arrayElement(supportedCities);
@@ -92,9 +97,10 @@ async function seed() {
 
     const truck = await Truck.create({
       truck_name: `${faker.company.name()} Truck`,
-      cuisine_type: faker.commerce.department(),
+     cuisine_type: faker.helpers.arrayElement(cuisineOptions),
       description: faker.lorem.sentence(),
       owner_id: truckOwner._id,
+      city,
       location: {
         latitude: coords.latitude,
         longitude: coords.longitude,
