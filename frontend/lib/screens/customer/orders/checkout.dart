@@ -4,8 +4,15 @@ import '../../../core/services/order_service.dart';
 
 class CheckoutPage extends StatefulWidget {
   final String truckId;
+  final String truckCity;
+  final String customerCity;
 
-  const CheckoutPage({super.key, required this.truckId});
+  const CheckoutPage({
+    super.key,
+    required this.truckId,
+    required this.truckCity,
+    required this.customerCity,
+  });
 
   @override
   State<CheckoutPage> createState() => _CheckoutPageState();
@@ -14,6 +21,17 @@ class CheckoutPage extends StatefulWidget {
 class _CheckoutPageState extends State<CheckoutPage> {
   bool isSubmitting = false;
   String orderType = 'pickup';
+  String deliveryAddress = '';
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Enforce pickup if customer and truck are in different cities
+    if (widget.customerCity != widget.truckCity) {
+      orderType = 'pickup';
+    }
+  }
 
   Future<void> _placeOrder() async {
     setState(() => isSubmitting = true);
@@ -33,6 +51,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       "items": items,
       "total_price": CartController.getTotal(),
       "order_type": orderType,
+      if (orderType == 'delivery') "delivery_address": deliveryAddress,
     };
 
     final response = await OrderService.placeOrder(orderData);
@@ -56,6 +75,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   @override
   Widget build(BuildContext context) {
     final total = CartController.getTotal();
+    final citiesMatch = widget.customerCity == widget.truckCity;
 
     return Scaffold(
       appBar: AppBar(
@@ -75,18 +95,46 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 Radio<String>(
                   value: 'pickup',
                   groupValue: orderType,
-                  onChanged: (value) => setState(() => orderType = value!),
+                  onChanged: (value) {
+                    setState(() => orderType = value!);
+                  },
                 ),
                 const Text('Pickup'),
                 const SizedBox(width: 20),
                 Radio<String>(
                   value: 'delivery',
                   groupValue: orderType,
-                  onChanged: (value) => setState(() => orderType = value!),
+                  onChanged: citiesMatch
+                      ? (value) => setState(() => orderType = value!)
+                      : null, // Disable delivery if cities mismatch
                 ),
                 const Text('Delivery'),
               ],
             ),
+
+            // ❗ Message if delivery not allowed
+            if (!citiesMatch)
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Text(
+                  "⚠ Delivery is only available for trucks in your city.",
+                  style: TextStyle(color: Colors.red, fontSize: 13),
+                ),
+              ),
+
+            // 📦 Address field for delivery
+            if (orderType == 'delivery')
+              Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: TextField(
+                  onChanged: (value) => deliveryAddress = value,
+                  decoration: const InputDecoration(
+                    labelText: 'Delivery Address',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+
             const SizedBox(height: 30),
             Text(
               "Total: ₪${total.toStringAsFixed(2)}",

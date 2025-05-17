@@ -4,8 +4,14 @@ import 'package:myapp/screens/customer/cart/cart_controller.dart';
 class MenuCard extends StatelessWidget {
   final Map<String, dynamic> item;
   final String truckId;
+  final String truckCity;
 
-  const MenuCard({super.key, required this.item, required this.truckId});
+  const MenuCard({
+    super.key,
+    required this.item,
+    required this.truckId,
+    required this.truckCity,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -72,21 +78,24 @@ class MenuCard extends StatelessWidget {
               ),
             ),
 
-            // ➕ Add to Cart Button
+            // ➕ Add to Cart
             ElevatedButton(
               onPressed: () {
-                CartController.addToCart({
+                final success = CartController.addToCart({
                   'menu_id': item['_id'],
                   'name': item['name'],
                   'price': item['price'],
                   'image_url': item['image_url'],
-                  'truck_id': truckId, // ✅ include truck_id
+                  'truck_id': truckId,
+                  'truck_city': truckCity, // ✅ Include truck city
                 });
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${item['name']} added to cart 🛒'),
-                    duration: const Duration(seconds: 1),
+                    content: Text(success
+                        ? '${item['name']} added to cart 🛒'
+                        : '❌ You can only order from one truck at a time.'),
+                    duration: const Duration(seconds: 2),
                     behavior: SnackBarBehavior.floating,
                     margin: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 60),

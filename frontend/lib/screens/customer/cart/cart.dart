@@ -141,22 +141,36 @@ class _CartPageState extends State<CartPage> {
                         ),
                         onPressed: () {
                           final cartItems = CartController.getCartItems();
+
                           final truckId = cartItems.isNotEmpty
                               ? cartItems[0]['truck_id'] as String?
                               : null;
 
-                          if (truckId != null) {
+                          final truckCity = cartItems.isNotEmpty
+                              ? cartItems[0]['truck_city'] as String?
+                              : null;
+
+                          // TODO: Replace this with the actual user city from session or profile
+                          final customerCity =
+                              'Nablus'; // 🔁 Replace with real data
+
+                          if (truckId != null && truckCity != null) {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => CheckoutPage(truckId: truckId),
+                                builder: (_) => CheckoutPage(
+                                  truckId: truckId,
+                                  truckCity: truckCity,
+                                  customerCity: customerCity,
+                                ),
                               ),
                             );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                  content:
-                                      Text("Cannot proceed: Missing truck ID")),
+                                content:
+                                    Text("Cannot proceed: Missing truck info"),
+                              ),
                             );
                           }
                         },

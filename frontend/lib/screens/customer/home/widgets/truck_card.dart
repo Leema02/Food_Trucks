@@ -83,7 +83,10 @@ class TruckCard extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => TruckMenuPage(truckId: truck['_id']),
+                          builder: (_) => TruckMenuPage(
+                            truckId: truck['_id'],
+                            truckCity: truck['city'], // ✅ required!
+                          ),
                         ),
                       );
                     },

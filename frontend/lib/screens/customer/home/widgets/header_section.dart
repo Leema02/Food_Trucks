@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 
 class HeaderSection extends StatelessWidget {
   final String city;
+  final List<String> supportedCities;
   final Function(String) onCityChange;
 
   const HeaderSection({
     super.key,
     required this.city,
+    required this.supportedCities,
     required this.onCityChange,
   });
 
   void _showCitySelector(BuildContext context) {
-    final cities = ['Gaza', 'Ramallah', 'Nablus', 'Hebron', 'Jericho', 'Jenin'];
-
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -20,7 +20,7 @@ class HeaderSection extends StatelessWidget {
       ),
       builder: (_) => ListView(
         shrinkWrap: true,
-        children: cities.map((c) {
+        children: supportedCities.map((c) {
           return ListTile(
             title: Text(c),
             trailing: c == city
@@ -51,7 +51,8 @@ class HeaderSection extends StatelessWidget {
               backgroundColor: Colors.white,
               foregroundColor: Colors.orange,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30)),
+                borderRadius: BorderRadius.circular(30),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
           ),
@@ -62,7 +63,7 @@ class HeaderSection extends StatelessWidget {
                 const SnackBar(content: Text("Call us feature coming soon")),
               );
             },
-          )
+          ),
         ],
       ),
     );

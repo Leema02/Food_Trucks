@@ -97,7 +97,11 @@ class _OrdersPageState extends State<OrdersPage> {
 
   List<dynamic> getFilteredOrders() {
     if (selectedStatus == 'All') return orders;
-    return orders.where((o) => o['status'] == selectedStatus).toList();
+    return orders
+        .where((o) =>
+            (o['status'] ?? '').toString().toLowerCase() ==
+            selectedStatus.toLowerCase())
+        .toList();
   }
 
   @override

@@ -5,8 +5,13 @@ import 'package:myapp/screens/customer/menu/menu_card.dart';
 
 class TruckMenuPage extends StatefulWidget {
   final String truckId;
+  final String truckCity;
 
-  const TruckMenuPage({super.key, required this.truckId});
+  const TruckMenuPage({
+    super.key,
+    required this.truckId,
+    required this.truckCity,
+  });
 
   @override
   State<TruckMenuPage> createState() => _TruckMenuPageState();
@@ -20,27 +25,28 @@ class _TruckMenuPageState extends State<TruckMenuPage> {
   @override
   void initState() {
     super.initState();
-    fetchMenu();
+    fetchMenuItems();
   }
 
-  Future<void> fetchMenu() async {
+  Future<void> fetchMenuItems() async {
     try {
       final response = await MenuService.getMenuItems(widget.truckId);
 
       if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         setState(() {
-          menuItems = jsonDecode(response.body);
+          menuItems = data;
           isLoading = false;
         });
       } else {
         setState(() {
-          errorMessage = "Server Error: ${response.statusCode}";
+          errorMessage = 'Server Error: ${response.statusCode}';
           isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        errorMessage = "Connection Error: $e";
+        errorMessage = 'Connection Error: $e';
         isLoading = false;
       });
     }
@@ -55,11 +61,17 @@ class _TruckMenuPageState extends State<TruckMenuPage> {
         centerTitle: true,
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.orange))
+          ? const Center(
+              child: CircularProgressIndicator(color: Colors.orange),
+            )
           : errorMessage.isNotEmpty
               ? Center(
-                  child: Text(errorMessage,
-                      style: const TextStyle(color: Colors.red)))
+                  child: Text(
+                    errorMessage,
+                    style: const TextStyle(color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
+                )
               : menuItems.isEmpty
                   ? const Center(child: Text("No menu items found 😢"))
                   : ListView.builder(
@@ -68,7 +80,8 @@ class _TruckMenuPageState extends State<TruckMenuPage> {
                       itemBuilder: (context, index) {
                         return MenuCard(
                           item: menuItems[index],
-                          truckId: widget.truckId, // ✅ Pass truckId for cart
+                          truckId: widget.truckId,
+                          truckCity: widget.truckCity, // ✅ passed properly
                         );
                       },
                     ),

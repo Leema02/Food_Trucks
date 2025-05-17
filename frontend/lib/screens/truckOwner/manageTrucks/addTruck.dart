@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:myapp/core/constants/supported_cities.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:myapp/core/services/truckOwner_service.dart';
 import 'package:http/http.dart' as http;
@@ -15,23 +16,22 @@ class AddTruckPage extends StatefulWidget {
 
 class _AddTruckPageState extends State<AddTruckPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _cuisineController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _cuisineController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _addressController = TextEditingController();
+
+  String? selectedCity;
   TimeOfDay? _openTime;
   TimeOfDay? _closeTime;
   File? _selectedImage;
   bool isSubmitting = false;
-
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
+      setState(() => _selectedImage = File(pickedFile.path));
     }
   }
 
@@ -52,10 +52,10 @@ class _AddTruckPageState extends State<AddTruckPage> {
   }
 
   Future<void> _addTruck() async {
-    if (_formKey.currentState!.validate() && _selectedImage != null) {
-      setState(() {
-        isSubmitting = true;
-      });
+    if (_formKey.currentState!.validate() &&
+        _selectedImage != null &&
+        selectedCity != null) {
+      setState(() => isSubmitting = true);
 
       try {
         final uploadedUrl = await _uploadImage(_selectedImage!);
@@ -71,6 +71,7 @@ class _AddTruckPageState extends State<AddTruckPage> {
           "truck_name": _nameController.text.trim(),
           "cuisine_type": _cuisineController.text.trim(),
           "description": _descriptionController.text.trim(),
+          "city": selectedCity, // ✅ include city
           "location": {
             "address_string": _addressController.text.trim(),
           },
@@ -89,12 +90,11 @@ class _AddTruckPageState extends State<AddTruckPage> {
           _showMessage('❌ Failed to add truck.');
         }
       } finally {
-        setState(() {
-          isSubmitting = false;
-        });
+        setState(() => isSubmitting = false);
       }
     } else {
-      _showMessage('❌ Please complete all fields and select a logo.');
+      _showMessage(
+          '❌ Please complete all fields, select a city, and choose a logo.');
     }
   }
 
@@ -105,10 +105,10 @@ class _AddTruckPageState extends State<AddTruckPage> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Column(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.deepOrange, size: 60),
-            const SizedBox(height: 10),
-            const Text(
+          children: const [
+            Icon(Icons.check_circle, color: Colors.deepOrange, size: 60),
+            SizedBox(height: 10),
+            Text(
               'Truck Added Successfully!',
               textAlign: TextAlign.center,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
@@ -171,6 +171,8 @@ class _AddTruckPageState extends State<AddTruckPage> {
               const SizedBox(height: 12),
               _buildTextField(_addressController, 'Address'),
               const SizedBox(height: 12),
+              _buildCityDropdown(), // ✅ City Selector
+              const SizedBox(height: 12),
               _buildTimePicker('Opening Time', true),
               const SizedBox(height: 12),
               _buildTimePicker('Closing Time', false),
@@ -229,6 +231,23 @@ class _AddTruckPageState extends State<AddTruckPage> {
       title: Text(time == null ? label : time.format(context)),
       trailing: const Icon(Icons.access_time),
       onTap: () => _selectTime(isOpenTime),
+    );
+  }
+
+  Widget _buildCityDropdown() {
+    return DropdownButtonFormField<String>(
+      value: selectedCity,
+      decoration: InputDecoration(
+        labelText: 'City',
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      items: supportedCities.map((city) {
+        return DropdownMenuItem(value: city, child: Text(city));
+      }).toList(),
+      onChanged: (value) => setState(() => selectedCity = value),
+      validator: (value) => value == null || value.isEmpty ? 'Required' : null,
     );
   }
 

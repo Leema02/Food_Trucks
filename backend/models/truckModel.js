@@ -11,6 +11,15 @@ const truckSchema = new mongoose.Schema({
   cuisine_type: { type: String, required: true },
   description: { type: String },
   logo_image_url: { type: String }, // optional logo
+    city: {
+    type: String,
+    required: true,
+    enum: [
+      'Ramallah', 'Nablus', 'Bethlehem', 'Hebron', 'Jericho',
+      'Tulkarm', 'Jenin', 'Qalqilya', 'Salfit', 'Tubas', 'Gaza'
+    ]
+  },
+
   location: {
     latitude: Number,
     longitude: Number,
