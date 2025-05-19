@@ -6,6 +6,7 @@ require('dotenv').config({ path: '../.env' });
 const User = require('../models/userModel');
 const Truck = require('../models/truckModel');
 const MenuItem = require('../models/menuModel');
+const EventBooking = require('../models/eventBookingModel');
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/foodtrucks';
 
@@ -42,10 +43,9 @@ async function seed() {
   await Promise.all([
     User.deleteMany({}),
     Truck.deleteMany({}),
-    MenuItem.deleteMany({})
+    MenuItem.deleteMany({}),
+    EventBooking.deleteMany({})
   ]);
-
-  //const hashedPass = await bcrypt.hash('00', 10);
 
   console.log('🧑 Seeding real users...');
   const customer = await User.create({
@@ -86,18 +86,27 @@ async function seed() {
 
   console.log('🚚 Seeding fake trucks...');
   const cuisineOptions = [
-  'Palestinian', 'Middle Eastern', 'BBQ', 'Burgers', 'Pizza', 'Mexican',
-  'Asian', 'Sushi', 'Italian', 'Fried Chicken', 'Sandwiches', 'Seafood',
-  'Desserts', 'Ice Cream', 'Coffee', 'Shawarma', 'Falafel', 'Vegan'
-];
+    'Palestinian', 'Middle Eastern', 'BBQ', 'Burgers', 'Pizza', 'Mexican',
+    'Asian', 'Sushi', 'Italian', 'Fried Chicken', 'Sandwiches', 'Seafood',
+    'Desserts', 'Ice Cream', 'Coffee', 'Shawarma', 'Falafel', 'Vegan'
+  ];
   const trucks = [];
   for (let i = 0; i < 10; i++) {
     const city = faker.helpers.arrayElement(supportedCities);
     const coords = getRandomLocation(city);
 
+    const unavailable_dates = [];
+    const numberOfDates = faker.number.int({ min: 2, max: 4 });
+    for (let j = 0; j < numberOfDates; j++) {
+      const daysFromNow = faker.number.int({ min: 1, max: 60 });
+      const randomDate = new Date();
+      randomDate.setDate(randomDate.getDate() + daysFromNow);
+      unavailable_dates.push(randomDate);
+    }
+
     const truck = await Truck.create({
       truck_name: `${faker.company.name()} Truck`,
-     cuisine_type: faker.helpers.arrayElement(cuisineOptions),
+      cuisine_type: faker.helpers.arrayElement(cuisineOptions),
       description: faker.lorem.sentence(),
       owner_id: truckOwner._id,
       city,
@@ -110,7 +119,8 @@ async function seed() {
         open: '10:00 AM',
         close: '10:00 PM'
       },
-      logo_image_url: faker.image.urlLoremFlickr({ category: 'food' })
+      logo_image_url: faker.image.urlLoremFlickr({ category: 'food' }),
+      unavailable_dates
     });
 
     trucks.push(truck);
@@ -129,6 +139,33 @@ async function seed() {
       isAvailable: true,
       image_url: faker.image.urlLoremFlickr({ category: 'food' })
     });
+  }
+
+  console.log('📅 Seeding fake event bookings...');
+  const occasionTypes = ['Wedding', 'Birthday', 'Graduation', 'Corporate'];
+  for (const truck of trucks) {
+    const numBookings = faker.number.int({ min: 1, max: 3 });
+
+    for (let k = 0; k < numBookings; k++) {
+      const daysFromNow = faker.number.int({ min: 5, max: 90 });
+      const eventDate = new Date();
+      eventDate.setDate(eventDate.getDate() + daysFromNow);
+
+      await EventBooking.create({
+        truck_id: truck._id,
+        user_id: customer._id,
+        event_date: eventDate,
+        event_time: '18:00',
+        occasion_type: faker.helpers.arrayElement(occasionTypes),
+        location: faker.location.streetAddress(),
+        city: truck.city,
+        guest_count: faker.number.int({ min: 30, max: 150 }),
+        special_requests: faker.lorem.words(5),
+        total_amount: faker.number.int({ min: 500, max: 2000 }),
+        status: faker.helpers.arrayElement(['pending', 'confirmed', 'rejected']),
+        deposit: faker.number.int({ min: 50, max: 200 })
+      });
+    }
   }
 
   console.log('✅ Seed complete.');

@@ -1,6 +1,7 @@
 const Truck = require('../models/truckModel');
 const fs = require('fs');
 const path = require('path');
+const truckService = require('../services/truckService');
 
 // 1. Create new truck
 const createTruck = async (req, res) => {
@@ -25,7 +26,7 @@ const createTruck = async (req, res) => {
       cuisine_type,
       description,
       logo_image_url,
-      city, // ⬅️ Now included
+      city, 
       location,
       operating_hours
     });
@@ -42,6 +43,16 @@ const getMyTrucks = async (req, res) => {
   try {
     const trucks = await Truck.find({ owner_id: req.user._id });
     res.json(trucks);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getTruckById = async (req, res) => {
+  try {
+    const truck = await Truck.findById(req.params.id);
+    if (!truck) return res.status(404).json({ message: 'Truck not found' });
+    res.status(200).json(truck);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -113,11 +124,31 @@ const getAllPublicTrucks = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+const addUnavailableDate = async (req, res) => {
+  try {
+    const truck = await truckService.addUnavailableDate(req.params.id, req.user._id, req.body.date);
+    res.status(200).json({ message: 'Date marked as unavailable', truck });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+const removeUnavailableDate = async (req, res) => {
+  try {
+    const truck = await truckService.removeUnavailableDate(req.params.id, req.user._id, req.body.date);
+    res.status(200).json({ message: 'Unavailable date removed', truck });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
 
 module.exports = {
   createTruck,
   getMyTrucks,
+  getTruckById,
   updateTruck,
   deleteTruck,
-  getAllPublicTrucks
+  getAllPublicTrucks,
+  addUnavailableDate,
+  removeUnavailableDate
 };

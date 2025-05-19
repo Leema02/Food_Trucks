@@ -21,12 +21,14 @@ const truckRoutes = require('./routes/truckRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const eventBookingRoutes = require('./routes/eventBookingRoutes');
 
 app.use('/api/users', userRoutes);
 app.use('/api/trucks', truckRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/bookings', eventBookingRoutes);
 
 // Make uploads folder public
 app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
