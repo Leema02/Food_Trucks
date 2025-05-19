@@ -150,10 +150,12 @@ class _SignUpPageState extends State<SignUpPage> {
                             controller: _emailController,
                             type: TextInputType.emailAddress,
                             validator: (value) {
-                              if (value == null || value.isEmpty)
+                              if (value == null || value.isEmpty) {
                                 return 'pleaseentervalidemail'.tr();
-                              if (!value.contains('@'))
+                              }
+                              if (!value.contains('@')) {
                                 return 'invalidemailformat'.tr();
+                              }
                               return null;
                             },
                           ),
@@ -162,10 +164,12 @@ class _SignUpPageState extends State<SignUpPage> {
                             hint: 'username_key'.tr(),
                             controller: _usernameController,
                             validator: (value) {
-                              if (value == null || value.isEmpty)
+                              if (value == null || value.isEmpty) {
                                 return 'pleaseenterausername'.tr();
-                              if (value.contains(' '))
+                              }
+                              if (value.contains(' ')) {
                                 return 'usernameshouldnotcontainspaces'.tr();
+                              }
                               return null;
                             },
                           ),
