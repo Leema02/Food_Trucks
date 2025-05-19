@@ -14,8 +14,11 @@ router.post('/', authorizeRoles('truck owner'), TruckController.createTruck); //
 router.get('/my-trucks', authorizeRoles('truck owner'), TruckController.getMyTrucks); // View my trucks
 router.put('/:id', authorizeRoles('truck owner'), TruckController.updateTruck); // Update my truck
 router.delete('/:id', authorizeRoles('truck owner'), TruckController.deleteTruck); // Delete my truck
+router.get('/:id', authorizeRoles('truck owner'), TruckController.getTruckById);
 
-
+// 🔴 Add unavailable date to truck
+router.post('/:id/unavailable', authorizeRoles('truck owner'), TruckController.addUnavailableDate);
+router.delete('/:id/unavailable', authorizeRoles('truck owner'), TruckController.removeUnavailableDate);
 
 module.exports = router;
 

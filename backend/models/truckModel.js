@@ -28,7 +28,8 @@ const truckSchema = new mongoose.Schema({
   operating_hours: {
     open: String,  // e.g., "10:00 AM"
     close: String
-  }
+  },
+   unavailable_dates: [{ type: Date }]
 },{
     timestamps: true,
     toJSON: {
