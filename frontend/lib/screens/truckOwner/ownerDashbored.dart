@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/auth/widgets/auth_background.dart';
+import 'package:myapp/screens/truckOwner/manageAvailability/availability_calendar.dart';
 import 'package:myapp/screens/truckOwner/manageTrucks/addTruck.dart';
 //import 'package:myapp/screens/truckOwner/manageMenu.dart';
 import 'package:myapp/screens/truckOwner/manageTrucks/viewTrucks.dart';
@@ -87,18 +88,18 @@ class TruckOwnerDashboard extends StatelessWidget {
                               builder: (context) => const ViewTrucksScreen()),
                         ),
                       ),
-                      //   _buildActionButton(
-                      //     context,
-                      //     'Manage Menu',
-                      //     Icons.restaurant_menu,
-                      //     Colors.brown,
-                      //     // onPressed: () => Navigator.push(
-                      //     //   context,
-                      //     //   MaterialPageRoute(
-                      //     //       builder: (context) => const ManageMenuPage()),
-                      //     // ),
-                      //  onPressed: () {},
-                      //   ),
+                      _buildActionButton(
+                        context,
+                        'Manage Availability',
+                        Icons.calendar_month,
+                        Colors.deepPurple,
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AvailabilityCalendar(),
+                          ),
+                        ),
+                      ),
                       _buildActionButton(
                         context,
                         'View Orders',
