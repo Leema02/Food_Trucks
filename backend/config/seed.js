@@ -55,7 +55,7 @@ async function seed() {
     phone_num: '0590000001',
     username: 'lemar_customer',
     password: '00',
-    city: 'Nablus',
+    city: 'Qalqilya',
     address: 'Main Street',
     role_id: 'customer'
   });

@@ -3,7 +3,7 @@ import 'home/home.dart';
 import 'explore/explore.dart';
 import 'orders/orders.dart';
 import 'cart/cart.dart';
-import 'account/account.dart';
+import '../account/account.dart';
 
 class CustomerMainContainer extends StatefulWidget {
   const CustomerMainContainer({super.key});
@@ -27,7 +27,7 @@ class _CustomerMainContainerState extends State<CustomerMainContainer> {
     const ExplorePage(),
     const OrdersPage(),
     const CartPage(),
-    const AccountPage(),
+    const AccountPage(role: 'customer'),
   ];
 
   void _onTabTapped(int index) {

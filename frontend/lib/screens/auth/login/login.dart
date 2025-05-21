@@ -80,6 +80,12 @@ class _LoginPageState extends State<LoginPage> {
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', responseData['token']);
+        await prefs.setString('city', responseData['user']['city']);
+        await prefs.setString('user_name',
+            '${responseData['user']['F_name']} ${responseData['user']['L_name']}');
+        await prefs.setString(
+            'user_email', responseData['user']['email_address']);
+        await prefs.setString('role', responseData['user']['role_id']);
 
         if (_rememberMe) {
           await prefs.setString('saved_email', _emailController.text);
