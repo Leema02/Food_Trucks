@@ -17,7 +17,7 @@ class _HomeState extends State<Home> {
   List<dynamic> trucks = [];
   bool isLoading = true;
   String errorMessage = '';
-  String selectedCity = 'Gaza';
+  String selectedCity = 'Qalqilya';
   bool _isMapView = false;
 
   @override

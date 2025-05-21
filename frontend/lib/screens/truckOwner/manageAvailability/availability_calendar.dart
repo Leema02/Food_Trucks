@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'calendar_tile.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/services/availability_service.dart';
 import '../../../../core/services/truckOwner_service.dart';
+import 'calendar_tile.dart';
 
 class AvailabilityCalendar extends StatefulWidget {
   const AvailabilityCalendar({super.key});
@@ -38,15 +38,15 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
       setState(() {
         trucks = result;
         if (trucks.isNotEmpty) {
-          selectedTruckId = trucks[0]['_id'] ?? '';
+          selectedTruckId = trucks[0]['_id'];
           fetchUnavailableDates();
         } else {
           isLoading = false;
         }
       });
     } else {
-      setState(() => isLoading = false);
       print("❌ Error loading trucks: ${response.body}");
+      setState(() => isLoading = false);
     }
   }
 
@@ -57,13 +57,14 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
     try {
       final result =
           await AvailabilityService.getUnavailableDates(selectedTruckId!);
-      setState(() {
-        unavailableDates =
-            result.map((d) => DateTime(d.year, d.month, d.day)).toSet();
-        isLoading = false;
-      });
+
+      unavailableDates = result.map<DateTime>((d) {
+        return DateTime(d.year, d.month, d.day);
+      }).toSet();
+
+      setState(() => isLoading = false);
     } catch (e) {
-      print("❌ Error: $e");
+      print("❌ Error fetching unavailable dates: $e");
       setState(() => isLoading = false);
     }
   }
@@ -86,8 +87,30 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
       } else {
         await AvailabilityService.addUnavailableDate(selectedTruckId!, d);
       }
+
+      // ✅ Re-fetch to sync with backend
+      await fetchUnavailableDates();
+
+      // ✅ Show SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isUnavailable
+                ? 'Marked as Available'.tr()
+                : 'Marked as Unavailable'.tr(),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     } catch (e) {
       print("❌ Toggle date error: $e");
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred'.tr()),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     }
   }
 
@@ -129,10 +152,7 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: DropdownButtonFormField<String>(
-                        value: (selectedTruckId != null &&
-                                trucks.any((t) => t['_id'] == selectedTruckId))
-                            ? selectedTruckId
-                            : null,
+                        value: selectedTruckId,
                         isExpanded: true,
                         decoration: InputDecoration(
                           labelText: 'select_a_Truck'.tr(),
@@ -170,13 +190,20 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
                                 CalendarFormat.month: 'Month',
                               },
                               onDaySelected: (selectedDay, newFocusedDay) {
+                                final today = DateTime.now();
+                                if (selectedDay.isBefore(DateTime(
+                                    today.year, today.month, today.day))) {
+                                  return; // Block past dates
+                                }
+
                                 setState(() {
                                   focusedDay = newFocusedDay;
                                 });
+
                                 toggleDate(selectedDay);
                               },
                               calendarBuilders: CalendarBuilders(
-                                defaultBuilder: (context, day, focusedDay) {
+                                defaultBuilder: (context, day, _) {
                                   return CalendarTile(
                                     date: day,
                                     isUnavailable: isDateUnavailable(day),

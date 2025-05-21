@@ -14,8 +14,10 @@ class AvailabilityService {
     final token = await _getToken();
     final url = Uri.parse('$baseUrl/$truckId');
 
-    final response =
-        await http.get(url, headers: {'Authorization': 'Bearer $token'});
+    final response = await http.get(
+      url,
+      headers: {'Authorization': 'Bearer $token'},
+    );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -30,12 +32,18 @@ class AvailabilityService {
     final token = await _getToken();
     final url = Uri.parse('$baseUrl/$truckId/unavailable');
 
-    final response = await http.post(url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json'
-        },
-        body: jsonEncode({'date': date.toIso8601String()}));
+    final dateString = "${date.year.toString().padLeft(4, '0')}-"
+        "${date.month.toString().padLeft(2, '0')}-"
+        "${date.day.toString().padLeft(2, '0')}";
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'date': dateString}),
+    );
 
     if (response.statusCode != 200) {
       throw Exception('Failed to add unavailable date');
@@ -47,12 +55,18 @@ class AvailabilityService {
     final token = await _getToken();
     final url = Uri.parse('$baseUrl/$truckId/unavailable');
 
-    final response = await http.delete(url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json'
-        },
-        body: jsonEncode({'date': date.toIso8601String()}));
+    final dateString = "${date.year.toString().padLeft(4, '0')}-"
+        "${date.month.toString().padLeft(2, '0')}-"
+        "${date.day.toString().padLeft(2, '0')}";
+
+    final response = await http.delete(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'date': dateString}),
+    );
 
     if (response.statusCode != 200) {
       throw Exception('Failed to remove unavailable date');
