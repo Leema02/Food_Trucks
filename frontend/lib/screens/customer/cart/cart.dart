@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/customer/cart/cart_controller.dart';
 import 'package:myapp/screens/customer/orders/checkout.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -23,6 +24,43 @@ class _CartPageState extends State<CartPage> {
         cart[index]['quantity'] += change;
       }
     });
+  }
+
+  Future<void> handleCheckout() async {
+    final cartItems = CartController.getCartItems();
+
+    final truckId = cartItems.isNotEmpty ? cartItems[0]['truck_id'] : null;
+    final truckCity = cartItems.isNotEmpty ? cartItems[0]['truck_city'] : null;
+
+    final prefs = await SharedPreferences.getInstance();
+    final customerCity = prefs.getString('city') ?? '';
+
+    if (truckId == null || truckCity == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Cannot proceed: Missing truck info")),
+      );
+      return;
+    }
+
+    if (customerCity.trim().toLowerCase() != truckCity.trim().toLowerCase()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("❌ You can only order from trucks in your city."),
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CheckoutPage(
+          truckId: truckId,
+          truckCity: truckCity,
+          customerCity: customerCity,
+        ),
+      ),
+    );
   }
 
   @override
@@ -139,41 +177,7 @@ class _CartPageState extends State<CartPage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        onPressed: () {
-                          final cartItems = CartController.getCartItems();
-
-                          final truckId = cartItems.isNotEmpty
-                              ? cartItems[0]['truck_id'] as String?
-                              : null;
-
-                          final truckCity = cartItems.isNotEmpty
-                              ? cartItems[0]['truck_city'] as String?
-                              : null;
-
-                          // TODO: Replace this with the actual user city from session or profile
-                          final customerCity =
-                              'Nablus'; // 🔁 Replace with real data
-
-                          if (truckId != null && truckCity != null) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => CheckoutPage(
-                                  truckId: truckId,
-                                  truckCity: truckCity,
-                                  customerCity: customerCity,
-                                ),
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content:
-                                    Text("Cannot proceed: Missing truck info"),
-                              ),
-                            );
-                          }
-                        },
+                        onPressed: handleCheckout,
                         child: const Text(
                           "Checkout",
                           style: TextStyle(fontSize: 16, color: Colors.white),

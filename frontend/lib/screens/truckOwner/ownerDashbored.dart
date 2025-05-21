@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:myapp/screens/account/account.dart';
 import 'package:myapp/screens/auth/widgets/auth_background.dart';
 import 'package:myapp/screens/truckOwner/manageAvailability/availability_calendar.dart';
 import 'package:myapp/screens/truckOwner/manageTrucks/addTruck.dart';
@@ -48,6 +49,19 @@ class TruckOwnerDashboard extends StatelessWidget {
                               size: 28, color: Colors.deepOrange),
                           onPressed: () {
                             // Handle notification click here
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.menu,
+                              size: 28, color: Colors.deepOrange),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const AccountPage(role: 'truck owner'),
+                              ),
+                            );
                           },
                         ),
                       ],

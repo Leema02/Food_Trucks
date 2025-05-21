@@ -27,13 +27,36 @@ class _CheckoutPageState extends State<CheckoutPage> {
   void initState() {
     super.initState();
 
-    // Enforce pickup if customer and truck are in different cities
-    if (widget.customerCity != widget.truckCity) {
+    // force pickup if cities don’t match
+    if (!_citiesMatch()) {
       orderType = 'pickup';
     }
   }
 
+  bool _citiesMatch() {
+    return widget.customerCity.trim().toLowerCase() ==
+        widget.truckCity.trim().toLowerCase();
+  }
+
   Future<void> _placeOrder() async {
+    if (!_citiesMatch()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("❌ You can only order from trucks in your city."),
+        ),
+      );
+      return;
+    }
+
+    if (orderType == 'delivery' && deliveryAddress.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("❗ Delivery address is required."),
+        ),
+      );
+      return;
+    }
+
     setState(() => isSubmitting = true);
 
     final cartItems = CartController.getCartItems();
@@ -51,7 +74,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       "items": items,
       "total_price": CartController.getTotal(),
       "order_type": orderType,
-      if (orderType == 'delivery') "delivery_address": deliveryAddress,
+      if (orderType == 'delivery') "delivery_address": deliveryAddress.trim(),
     };
 
     final response = await OrderService.placeOrder(orderData);
@@ -75,7 +98,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   @override
   Widget build(BuildContext context) {
     final total = CartController.getTotal();
-    final citiesMatch = widget.customerCity == widget.truckCity;
+    final citiesMatch = _citiesMatch();
 
     return Scaffold(
       appBar: AppBar(
@@ -106,13 +129,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   groupValue: orderType,
                   onChanged: citiesMatch
                       ? (value) => setState(() => orderType = value!)
-                      : null, // Disable delivery if cities mismatch
+                      : null,
                 ),
                 const Text('Delivery'),
               ],
             ),
-
-            // ❗ Message if delivery not allowed
             if (!citiesMatch)
               const Padding(
                 padding: EdgeInsets.only(top: 8),
@@ -121,8 +142,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   style: TextStyle(color: Colors.red, fontSize: 13),
                 ),
               ),
-
-            // 📦 Address field for delivery
             if (orderType == 'delivery')
               Padding(
                 padding: const EdgeInsets.only(top: 20),
@@ -134,7 +153,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ),
                 ),
               ),
-
             const SizedBox(height: 30),
             Text(
               "Total: ₪${total.toStringAsFixed(2)}",

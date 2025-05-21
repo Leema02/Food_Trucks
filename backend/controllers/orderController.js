@@ -1,10 +1,27 @@
 const Order = require('../models/orderModel');
+const User = require('../models/userModel');
+const Truck = require('../models/truckModel');
+
 
 // 🟢 Place a new order
 const placeOrder = async (req, res) => {
   try {
     const { truck_id, items, total_price, order_type } = req.body;
     const customer_id = req.user._id;
+
+    const customer = await User.findById(customer_id);
+    const truck = await Truck.findById(truck_id);
+
+    if (!customer || !truck) {
+      return res.status(404).json({ message: 'Customer or truck not found' });
+    }
+
+    // ❌ Prevent cross-city ordering
+    if (customer.city !== truck.city) {
+      return res.status(400).json({
+        message: 'You can only order from trucks in your city.',
+      });
+    }
 
     const newOrder = new Order({
       customer_id,
@@ -16,6 +33,7 @@ const placeOrder = async (req, res) => {
 
     const savedOrder = await newOrder.save();
     res.status(201).json(savedOrder);
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
