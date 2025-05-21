@@ -31,5 +31,11 @@
   "resendcode": "Resend Code",
   "4digitcode": "4-digit Code",
   "verifiying": "Verifying...",
-  "verifycode": "Verify Code"
+  "verifycode": "Verify Code",
+  "new_password": "New Password",
+  "confirm_password": "Confirm Password",
+  "passwords_do_not_match": "❌ Passwords do not match",
+  "password_reset_successful": "✅ Password reset successful",
+  "failed_to_reset_password": "❌ Failed to reset password",
+  "confirm": "Confirm"
 }

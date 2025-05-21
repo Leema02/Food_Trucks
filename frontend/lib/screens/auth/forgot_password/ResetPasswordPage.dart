@@ -5,6 +5,7 @@ import 'package:myapp/screens/auth/widgets/auth_buttons.dart';
 import 'package:myapp/screens/auth/widgets/responsive.dart';
 import 'package:myapp/screens/auth/login/login.dart';
 import 'package:myapp/core/services/auth_service.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   final String email; // 👈 Make sure to pass this when navigating
@@ -44,7 +45,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   void _handleResetPassword() async {
     if (_formKey.currentState!.validate()) {
       if (_newPasswordController.text != _confirmPasswordController.text) {
-        _showMessage("❌ Passwords do not match", isError: true);
+        _showMessage("passwords_do_not_match".tr(), isError: true);
         return;
       }
 
@@ -54,7 +55,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       );
 
       if (response.statusCode == 200) {
-        _showMessage("✅ Password reset successful");
+        _showMessage("password_reset_successful".tr());
 
         Navigator.pushAndRemoveUntil(
           context,
@@ -62,7 +63,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           (route) => false,
         );
       } else {
-        _showMessage("❌ Failed to reset password", isError: true);
+        _showMessage("failed_to_reset_password".tr(), isError: true);
       }
     }
   }
@@ -98,8 +99,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          "Reset Password",
+                        Text(
+                          "resetpassword".tr(),
                           style: TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold),
                         ),
@@ -109,7 +110,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         _buildConfirmPasswordField(),
                         const SizedBox(height: 20),
                         AuthButton(
-                          text: "Confirm",
+                          text: "confirm".tr(),
                           onPressed: _handleResetPassword,
                         ),
                       ],
@@ -129,7 +130,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       controller: _newPasswordController,
       obscureText: !_showNewPassword,
       decoration: InputDecoration(
-        hintText: "New Password",
+        hintText: "new_password".tr(),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         suffixIcon: IconButton(
           icon:
@@ -147,7 +148,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       controller: _confirmPasswordController,
       obscureText: !_showConfirmPassword,
       decoration: InputDecoration(
-        hintText: "Confirm Password",
+        hintText: "confirm_password".tr(),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         suffixIcon: IconButton(
           icon: Icon(
