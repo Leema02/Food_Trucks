@@ -1,8 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/auth/widgets/auth_background.dart';
 import 'package:myapp/screens/truckOwner/manageAvailability/availability_calendar.dart';
 import 'package:myapp/screens/truckOwner/manageTrucks/addTruck.dart';
-//import 'package:myapp/screens/truckOwner/manageMenu.dart';
 import 'package:myapp/screens/truckOwner/manageTrucks/viewTrucks.dart';
 import 'package:myapp/screens/truckOwner/owner_orders.dart';
 
@@ -30,13 +30,33 @@ class TruckOwnerDashboard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Image.asset('assets/image/truckLogo.png', height: 80),
-                    const Icon(Icons.notifications_none,
-                        size: 28, color: Colors.deepOrange),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.language,
+                              color: Colors.deepOrange),
+                          onPressed: () {
+                            final currentLocale = context.locale;
+                            final newLocale = currentLocale.languageCode == 'en'
+                                ? const Locale('ar')
+                                : const Locale('en');
+                            context.setLocale(newLocale);
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.notifications_none,
+                              size: 28, color: Colors.deepOrange),
+                          onPressed: () {
+                            // Handle notification click here
+                          },
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'Welcome, Truck Owner!',
+                Text(
+                  'welcome_owner'.tr(),
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -48,14 +68,14 @@ class TruckOwnerDashboard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _buildInfoCard(
-                        'Total Orders', '0', Icons.shopping_cart_outlined),
-                    _buildInfoCard('Bookings', '0', Icons.calendar_today),
-                    _buildInfoCard('Reviews', '0', Icons.star_outline),
+                        'total_orders'.tr(), '0', Icons.shopping_cart_outlined),
+                    _buildInfoCard('bookings'.tr(), '0', Icons.calendar_today),
+                    _buildInfoCard('reviews'.tr(), '0', Icons.star_outline),
                   ],
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'Quick Actions',
+                Text(
+                  'quick_actions'.tr(),
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 10),
@@ -68,7 +88,7 @@ class TruckOwnerDashboard extends StatelessWidget {
                     children: [
                       _buildActionButton(
                         context,
-                        'Add Truck',
+                        'add_truck'.tr(),
                         Icons.add_business,
                         Colors.orange,
                         onPressed: () => Navigator.push(
@@ -79,7 +99,7 @@ class TruckOwnerDashboard extends StatelessWidget {
                       ),
                       _buildActionButton(
                         context,
-                        'View Trucks',
+                        'view_trucks'.tr(),
                         Icons.directions_bus,
                         Colors.deepOrange,
                         onPressed: () => Navigator.push(
@@ -90,7 +110,7 @@ class TruckOwnerDashboard extends StatelessWidget {
                       ),
                       _buildActionButton(
                         context,
-                        'Manage Availability',
+                        'manage_availability'.tr(),
                         Icons.calendar_month,
                         Colors.deepPurple,
                         onPressed: () => Navigator.push(
@@ -102,7 +122,7 @@ class TruckOwnerDashboard extends StatelessWidget {
                       ),
                       _buildActionButton(
                         context,
-                        'View Orders',
+                        'view_orders'.tr(),
                         Icons.receipt_long,
                         Colors.teal,
                         onPressed: () => Navigator.push(
@@ -113,14 +133,14 @@ class TruckOwnerDashboard extends StatelessWidget {
                       ),
                       _buildActionButton(
                         context,
-                        'Event Bookings',
+                        'event_bookings'.tr(),
                         Icons.event,
                         Colors.amber,
                         onPressed: () {},
                       ),
                       _buildActionButton(
                         context,
-                        'Reviews',
+                        'reviews'.tr(),
                         Icons.rate_review,
                         Colors.indigo,
                         onPressed: () {},

@@ -4,7 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:myapp/core/services/order_service.dart';
 import 'package:myapp/core/services/truckOwner_service.dart';
 import 'package:myapp/screens/auth/widgets/auth_background.dart';
-import 'package:intl/intl.dart';
+//import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class OwnerOrdersPage extends StatefulWidget {
   const OwnerOrdersPage({super.key});
@@ -19,7 +20,7 @@ class _OwnerOrdersPageState extends State<OwnerOrdersPage> {
       final dateTime = DateTime.parse(isoDate).toLocal();
       return DateFormat('MMM d, yyyy • hh:mm a').format(dateTime);
     } catch (_) {
-      return 'Unknown time';
+      return 'unknown_time'.tr();
     }
   }
 
@@ -55,7 +56,7 @@ class _OwnerOrdersPageState extends State<OwnerOrdersPage> {
       });
     } else {
       setState(() => isLoading = false);
-      print("❌ Failed to load trucks: ${response.body}");
+      _showMessage('failed_to_load_trucks'.tr());
     }
   }
 
@@ -71,7 +72,7 @@ class _OwnerOrdersPageState extends State<OwnerOrdersPage> {
         isLoading = false;
       });
     } else {
-      print("❌ Failed to fetch orders: ${response.body}");
+      _showMessage('failed_to_fetch_orders'.tr());
       setState(() => isLoading = false);
     }
   }
@@ -81,7 +82,7 @@ class _OwnerOrdersPageState extends State<OwnerOrdersPage> {
     if (response.statusCode == 200) {
       fetchOrdersForTruck();
     } else {
-      _showMessage('❌ Failed to update status.');
+      _showMessage('failed_to_update_status'.tr());
     }
   }
 
@@ -108,16 +109,16 @@ class _OwnerOrdersPageState extends State<OwnerOrdersPage> {
       final lName = customerData['L_name'] ?? '';
       return "$fName $lName".trim();
     }
-    return 'Unknown Customer';
+    return 'unknown_customer'.tr();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Orders by Truck',
-          style: TextStyle(fontSize: 22, color: Colors.black),
+        title: Text(
+          'orders_by_truck'.tr(),
+          style: const TextStyle(fontSize: 22, color: Colors.black),
         ),
         backgroundColor: const Color.fromARGB(255, 255, 136, 0),
       ),
@@ -129,9 +130,9 @@ class _OwnerOrdersPageState extends State<OwnerOrdersPage> {
               child: DropdownButtonFormField<String>(
                 value: selectedTruckId,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Select a Truck',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: 'select_a_Truck'.tr(),
+                  border: const OutlineInputBorder(),
                 ),
                 items: trucks.map<DropdownMenuItem<String>>((truck) {
                   return DropdownMenuItem<String>(
@@ -151,7 +152,7 @@ class _OwnerOrdersPageState extends State<OwnerOrdersPage> {
               child: isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : orders.isEmpty
-                      ? const Center(child: Text('No orders for this truck.'))
+                      ? Center(child: Text('no_orders_for_this_truck'.tr()))
                       : ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           itemCount: orders.length,
@@ -170,7 +171,7 @@ class _OwnerOrdersPageState extends State<OwnerOrdersPage> {
                               ),
                               child: ExpansionTile(
                                 title: Text(
-                                  'Order by $customerName',
+                                  '${'order_by'.tr()} $customerName',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -179,9 +180,10 @@ class _OwnerOrdersPageState extends State<OwnerOrdersPage> {
                                 subtitle: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text("Status: $normalizedStatus"),
                                     Text(
-                                        "Placed on: ${formatOrderTime(order['createdAt'] ?? '')}"),
+                                        '${'status'.tr()}: ${normalizedStatus.tr()}'),
+                                    Text(
+                                        '${'placed_on'.tr()}: ${formatOrderTime(order['createdAt'] ?? '')}'),
                                   ],
                                 ),
                                 children: [
@@ -190,23 +192,22 @@ class _OwnerOrdersPageState extends State<OwnerOrdersPage> {
                                         order['items'].map((item) {
                                       return ListTile(
                                         title: Text(item['name']),
-                                        subtitle:
-                                            Text("Qty: ${item['quantity']}"),
+                                        subtitle: Text(
+                                            '${'qty'.tr()}: ${item['quantity']}'),
                                       );
                                     })),
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: DropdownButtonFormField<String>(
                                       value: normalizedStatus,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Update Status',
-                                        border: OutlineInputBorder(),
+                                      decoration: InputDecoration(
+                                        labelText: 'update_status'.tr(),
+                                        border: const OutlineInputBorder(),
                                       ),
                                       items: statuses
-                                          .toSet()
                                           .map((status) => DropdownMenuItem(
                                                 value: status,
-                                                child: Text(status),
+                                                child: Text(status.tr()),
                                               ))
                                           .toList(),
                                       onChanged: (newStatus) {

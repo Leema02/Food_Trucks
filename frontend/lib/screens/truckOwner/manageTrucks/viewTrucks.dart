@@ -6,6 +6,7 @@ import 'package:myapp/core/utils/url_helper.dart';
 import 'package:myapp/screens/auth/widgets/auth_background.dart';
 import 'package:myapp/screens/truckOwner/manageMenu/viewMenu.dart';
 import 'package:myapp/screens/truckOwner/manageTrucks/editTruck.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ViewTrucksScreen extends StatefulWidget {
   const ViewTrucksScreen({super.key});
@@ -36,11 +37,11 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
           isLoading = false;
         });
       } else {
-        _showMessage('❌ Failed to fetch trucks.');
+        _showMessage('failed_to_fetch_trucks'.tr());
         setState(() => isLoading = false);
       }
     } catch (e) {
-      _showMessage('❌ Error: $e');
+      _showMessage('${'error_occurred'.tr()}: $e');
       setState(() => isLoading = false);
     }
   }
@@ -52,16 +53,16 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Deletion'),
-        content: const Text('Are you sure you want to delete this truck?'),
+        title: Text('confirm_delete_title'.tr()),
+        content: Text('confirm_delete_msg'.tr()),
         actions: [
           TextButton(
-            child: const Text('Cancel'),
+            child: Text('cancel'.tr()),
             onPressed: () => Navigator.of(context).pop(false),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text('delete'.tr()),
             onPressed: () => Navigator.of(context).pop(true),
           ),
         ],
@@ -71,10 +72,10 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
     if (confirmed == true) {
       final response = await TruckOwnerService.deleteTruck(id, token);
       if (response.statusCode == 200) {
-        _showMessage('✅ Truck deleted successfully.');
+        _showMessage('truck_deleted_success'.tr());
         fetchTrucks();
       } else {
-        _showMessage('❌ Failed to delete truck.');
+        _showMessage('failed_to_delete_truck'.tr());
       }
     }
   }
@@ -93,15 +94,15 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Trucks',
-            style: TextStyle(fontSize: 22, color: Colors.black)),
+        title: Text('my_trucks'.tr(),
+            style: const TextStyle(fontSize: 22, color: Colors.black)),
         backgroundColor: const Color.fromARGB(255, 255, 136, 0),
       ),
       body: AuthBackground(
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
             : trucks.isEmpty
-                ? const Center(child: Text('No trucks found.'))
+                ? Center(child: Text('no_trucks_found'.tr()))
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: trucks.length,
@@ -148,13 +149,13 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                      'Cuisine: ${truck['cuisine_type'] ?? ''}'),
+                                      '${'cuisine'.tr()}: ${truck['cuisine_type'] ?? ''}'),
                                   Text(
-                                      'Address: ${truck['location']?['address_string'] ?? ''}'),
+                                      '${'address'.tr()}: ${truck['location']?['address_string'] ?? ''}'),
                                   Text(
-                                      'City: ${truck['city'] ?? 'Not specified'}'),
+                                      '${'city'.tr()}: ${truck['city'] ?? 'not_specified'.tr()}'),
                                   Text(
-                                    'Hours: ${truck['operating_hours']?['open'] ?? '--'} - ${truck['operating_hours']?['close'] ?? '--'}',
+                                    '${'hours'.tr()}: ${truck['operating_hours']?['open'] ?? '--'} - ${truck['operating_hours']?['close'] ?? '--'}',
                                   ),
                                 ],
                               ),
@@ -204,7 +205,7 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
                                     );
                                   },
                                   icon: const Icon(Icons.restaurant_menu),
-                                  label: const Text('Manage Menu'),
+                                  label: Text('manage_menu'.tr()),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.deepOrange,
                                     foregroundColor: Colors.white,

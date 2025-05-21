@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:myapp/core/constants/supported_cities.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:myapp/core/services/truckOwner_service.dart';
 import 'package:http/http.dart' as http;
+import 'package:myapp/core/services/truckOwner_service.dart';
 
 class AddTruckPage extends StatefulWidget {
   const AddTruckPage({super.key});
@@ -40,8 +41,8 @@ class _AddTruckPageState extends State<AddTruckPage> {
     var request = http.MultipartRequest('POST', uri);
     request.files
         .add(await http.MultipartFile.fromPath('file', imageFile.path));
-
     var response = await request.send();
+
     if (response.statusCode == 200) {
       final resBody = await response.stream.bytesToString();
       final resData = jsonDecode(resBody);
@@ -60,7 +61,7 @@ class _AddTruckPageState extends State<AddTruckPage> {
       try {
         final uploadedUrl = await _uploadImage(_selectedImage!);
         if (uploadedUrl == null) {
-          _showMessage('❌ Failed to upload image.');
+          _showMessage('failed_to_add_truck'.tr());
           return;
         }
 
@@ -71,7 +72,7 @@ class _AddTruckPageState extends State<AddTruckPage> {
           "truck_name": _nameController.text.trim(),
           "cuisine_type": _cuisineController.text.trim(),
           "description": _descriptionController.text.trim(),
-          "city": selectedCity, // ✅ include city
+          "city": selectedCity, // store key
           "location": {
             "address_string": _addressController.text.trim(),
           },
@@ -83,18 +84,16 @@ class _AddTruckPageState extends State<AddTruckPage> {
         };
 
         final response = await TruckOwnerService.addTruck(token, truckData);
-
         if (response.statusCode == 201) {
           await _showSuccessPopup();
         } else {
-          _showMessage('❌ Failed to add truck.');
+          _showMessage('failed_to_add_truck'.tr());
         }
       } finally {
         setState(() => isSubmitting = false);
       }
     } else {
-      _showMessage(
-          '❌ Please complete all fields, select a city, and choose a logo.');
+      _showMessage('fill_all_fields_image_city'.tr());
     }
   }
 
@@ -105,13 +104,13 @@ class _AddTruckPageState extends State<AddTruckPage> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Column(
-          children: const [
-            Icon(Icons.check_circle, color: Colors.deepOrange, size: 60),
-            SizedBox(height: 10),
+          children: [
+            const Icon(Icons.check_circle, color: Colors.deepOrange, size: 60),
+            const SizedBox(height: 10),
             Text(
-              'Truck Added Successfully!',
+              'truck_added_successfully'.tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
           ],
         ),
@@ -122,8 +121,7 @@ class _AddTruckPageState extends State<AddTruckPage> {
               backgroundColor: Colors.deepOrange,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
+                  borderRadius: BorderRadius.circular(30)),
             ),
             onPressed: () {
               Navigator.pop(context);
@@ -154,7 +152,7 @@ class _AddTruckPageState extends State<AddTruckPage> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 222, 182),
       appBar: AppBar(
-        title: const Text('Add Truck'),
+        title: Text('add_truck'.tr()),
         backgroundColor: const Color.fromARGB(255, 255, 132, 39),
       ),
       body: Padding(
@@ -163,19 +161,19 @@ class _AddTruckPageState extends State<AddTruckPage> {
           key: _formKey,
           child: ListView(
             children: [
-              _buildTextField(_nameController, 'Truck Name'),
+              _buildTextField(_nameController, 'truck_name'.tr()),
               const SizedBox(height: 12),
-              _buildTextField(_cuisineController, 'Cuisine Type'),
+              _buildTextField(_cuisineController, 'cuisine_type'.tr()),
               const SizedBox(height: 12),
-              _buildTextField(_descriptionController, 'Description'),
+              _buildTextField(_descriptionController, 'description'.tr()),
               const SizedBox(height: 12),
-              _buildTextField(_addressController, 'Address'),
+              _buildTextField(_addressController, 'address'.tr()),
               const SizedBox(height: 12),
-              _buildCityDropdown(), // ✅ City Selector
+              _buildCityDropdown(),
               const SizedBox(height: 12),
-              _buildTimePicker('Opening Time', true),
+              _buildTimePicker('opening_time'.tr(), true),
               const SizedBox(height: 12),
-              _buildTimePicker('Closing Time', false),
+              _buildTimePicker('closing_time'.tr(), false),
               const SizedBox(height: 12),
               _buildImagePicker(),
               const SizedBox(height: 24),
@@ -186,17 +184,14 @@ class _AddTruckPageState extends State<AddTruckPage> {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
+                      borderRadius: BorderRadius.circular(30)),
                 ),
                 child: isSubmitting
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Add Truck',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                    : Text(
+                        'add_truck'.tr(),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
                       ),
               ),
             ],
@@ -213,24 +208,10 @@ class _AddTruckPageState extends State<AddTruckPage> {
         labelText: label,
         filled: true,
         fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      validator: (value) => value == null || value.isEmpty ? 'Required' : null,
-    );
-  }
-
-  Widget _buildTimePicker(String label, bool isOpenTime) {
-    final time = isOpenTime ? _openTime : _closeTime;
-    return ListTile(
-      tileColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      title: Text(time == null ? label : time.format(context)),
-      trailing: const Icon(Icons.access_time),
-      onTap: () => _selectTime(isOpenTime),
+      validator: (value) =>
+          value == null || value.isEmpty ? 'required_field'.tr() : null,
     );
   }
 
@@ -238,24 +219,37 @@ class _AddTruckPageState extends State<AddTruckPage> {
     return DropdownButtonFormField<String>(
       value: selectedCity,
       decoration: InputDecoration(
-        labelText: 'City',
+        labelText: 'city'.tr(),
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      items: supportedCities.map((city) {
-        return DropdownMenuItem(value: city, child: Text(city));
+      items: supportedCities.map((cityKey) {
+        return DropdownMenuItem(
+          value: cityKey,
+          child: Text(cityKey.tr()), // Translated name
+        );
       }).toList(),
       onChanged: (value) => setState(() => selectedCity = value),
-      validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+      validator: (value) =>
+          value == null || value.isEmpty ? 'required_field'.tr() : null,
+    );
+  }
+
+  Widget _buildTimePicker(String label, bool isOpenTime) {
+    final time = isOpenTime ? _openTime : _closeTime;
+    return ListTile(
+      tileColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      title: Text(time == null ? label : time.format(context)),
+      trailing: const Icon(Icons.access_time),
+      onTap: () => _selectTime(isOpenTime),
     );
   }
 
   Future<void> _selectTime(bool isOpenTime) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
+    final picked =
+        await showTimePicker(context: context, initialTime: TimeOfDay.now());
     if (picked != null) {
       setState(() {
         if (isOpenTime) {
@@ -278,7 +272,7 @@ class _AddTruckPageState extends State<AddTruckPage> {
           border: Border.all(color: Colors.grey),
         ),
         child: _selectedImage == null
-            ? const Center(child: Text('Tap to select truck logo'))
+            ? Center(child: Text('tap_to_select_logo'.tr()))
             : ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.file(_selectedImage!, fit: BoxFit.cover),
