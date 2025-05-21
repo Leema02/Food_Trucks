@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'calendar_tile.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/services/availability_service.dart';
 import '../../../../core/services/truckOwner_service.dart';
 
@@ -37,7 +38,7 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
       setState(() {
         trucks = result;
         if (trucks.isNotEmpty) {
-          selectedTruckId = trucks[0]['_id'];
+          selectedTruckId = trucks[0]['_id'] ?? '';
           fetchUnavailableDates();
         } else {
           isLoading = false;
@@ -116,28 +117,31 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Availability'),
+        title: Text('manage_availability'.tr()),
         backgroundColor: Colors.deepPurple,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : trucks.isEmpty
-              ? const Center(child: Text('You don’t have any trucks yet.'))
+              ? Center(child: Text('you_dont_have_trucks'.tr()))
               : Column(
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: DropdownButtonFormField<String>(
-                        value: selectedTruckId,
+                        value: (selectedTruckId != null &&
+                                trucks.any((t) => t['_id'] == selectedTruckId))
+                            ? selectedTruckId
+                            : null,
                         isExpanded: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Select a Truck',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: 'select_a_Truck'.tr(),
+                          border: const OutlineInputBorder(),
                         ),
                         items: trucks.map<DropdownMenuItem<String>>((truck) {
                           return DropdownMenuItem<String>(
                             value: truck['_id'],
-                            child: Text(truck['truck_name']),
+                            child: Text(truck['truck_name'] ?? ''),
                           );
                         }).toList(),
                         onChanged: (value) {
@@ -159,10 +163,11 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
                                   DateTime.now().add(const Duration(days: 180)),
                               focusedDay: focusedDay,
                               calendarStyle: const CalendarStyle(
-                                  outsideDaysVisible: false),
+                                outsideDaysVisible: false,
+                              ),
                               availableGestures: AvailableGestures.all,
                               availableCalendarFormats: const {
-                                CalendarFormat.month: 'Month'
+                                CalendarFormat.month: 'Month',
                               },
                               onDaySelected: (selectedDay, newFocusedDay) {
                                 setState(() {
@@ -185,12 +190,13 @@ class _AvailabilityCalendarState extends State<AvailabilityCalendar> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 _buildLegendItem(
-                                    Colors.redAccent, 'Unavailable'),
+                                    Colors.redAccent, 'Unavailable'.tr()),
                                 const SizedBox(width: 16),
                                 _buildLegendItem(
-                                    Colors.greenAccent, 'Available'),
+                                    Colors.greenAccent, 'Available'.tr()),
                                 const SizedBox(width: 16),
-                                _buildLegendItem(Colors.blueAccent, 'Today'),
+                                _buildLegendItem(
+                                    Colors.blueAccent, 'Today'.tr()),
                               ],
                             ),
                           ],

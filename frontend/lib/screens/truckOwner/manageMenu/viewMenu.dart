@@ -4,6 +4,7 @@ import 'package:myapp/screens/truckOwner/manageMenu/addMenuItem.dart';
 import 'package:myapp/screens/truckOwner/manageMenu/editMenuItem.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/services/menu_service.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ManageMenuPage extends StatefulWidget {
   final String truckId;
@@ -57,12 +58,12 @@ class _ManageMenuPageState extends State<ManageMenuPage> {
     final response = await MenuService.deleteMenuItem(itemId, token!);
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Item deleted")),
+        SnackBar(content: Text("item_deleted".tr())),
       );
       await fetchMenuItems();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to delete item")),
+        SnackBar(content: Text("failed_to_delete_item".tr())),
       );
     }
   }
@@ -74,7 +75,7 @@ class _ManageMenuPageState extends State<ManageMenuPage> {
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 255, 136, 0),
         foregroundColor: Colors.black,
-        title: const Text('My Menu'),
+        title: Text('my_menu'.tr()),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -149,14 +150,14 @@ class _ManageMenuPageState extends State<ManageMenuPage> {
                               deleteMenuItem(item['_id']);
                             }
                           },
-                          itemBuilder: (context) => const [
+                          itemBuilder: (context) => [
                             PopupMenuItem(
                               value: 'edit',
-                              child: Text('Edit'),
+                              child: Text('edit'.tr()),
                             ),
                             PopupMenuItem(
                               value: 'delete',
-                              child: Text('Delete'),
+                              child: Text('delete'.tr()),
                             ),
                           ],
                         ),

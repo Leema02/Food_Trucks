@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/services/menu_service.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class EditMenuItemPage extends StatefulWidget {
   final Map<String, dynamic> item;
@@ -76,7 +77,7 @@ class _EditMenuItemPageState extends State<EditMenuItemPage> {
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all fields.')),
+        SnackBar(content: Text('please_complete_all_fields'.tr())),
       );
       return;
     }
@@ -110,7 +111,7 @@ class _EditMenuItemPageState extends State<EditMenuItemPage> {
       Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update item.')),
+        SnackBar(content: Text('failed_to_update_item'.tr())),
       );
     }
   }
@@ -122,7 +123,7 @@ class _EditMenuItemPageState extends State<EditMenuItemPage> {
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 255, 136, 0),
         foregroundColor: Colors.black,
-        title: const Text('Edit Menu Item'),
+        title: Text('edit_menu_item'.tr()),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -132,25 +133,26 @@ class _EditMenuItemPageState extends State<EditMenuItemPage> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Item Name'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter item name' : null,
+                decoration: InputDecoration(labelText: 'item_name'.tr()),
+                validator: (value) => value == null || value.isEmpty
+                    ? 'enter_item_name'.tr()
+                    : null,
               ),
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Description'),
+                decoration: InputDecoration(labelText: 'description'.tr()),
                 maxLines: 2,
               ),
               TextFormField(
                 controller: _priceController,
-                decoration: const InputDecoration(labelText: 'Price'),
+                decoration: InputDecoration(labelText: 'price'.tr()),
                 keyboardType: TextInputType.number,
                 validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter price' : null,
+                    value == null || value.isEmpty ? 'enter_price'.tr() : null,
               ),
               TextFormField(
                 controller: _categoryController,
-                decoration: const InputDecoration(labelText: 'Category'),
+                decoration: InputDecoration(labelText: 'category'.tr()),
               ),
               const SizedBox(height: 12),
               InkWell(
@@ -175,7 +177,7 @@ class _EditMenuItemPageState extends State<EditMenuItemPage> {
               ),
               const SizedBox(height: 12),
               SwitchListTile(
-                title: const Text('Available'),
+                title: Text('available'.tr()),
                 value: isAvailable,
                 onChanged: (value) {
                   setState(() => isAvailable = value);
@@ -191,8 +193,8 @@ class _EditMenuItemPageState extends State<EditMenuItemPage> {
                 ),
                 child: isSubmitting
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Save Changes'),
-              )
+                    : Text('save_changes'.tr()),
+              ),
             ],
           ),
         ),

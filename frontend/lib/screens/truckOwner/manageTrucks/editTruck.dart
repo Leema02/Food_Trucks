@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:myapp/core/constants/supported_cities.dart';
@@ -75,12 +76,12 @@ class _EditTruckPageState extends State<EditTruckPage> {
           _selectedImage = imageFile;
         });
 
-        _showMessage('✅ Image uploaded successfully.');
+        _showMessage('image_upload_success'.tr());
       } else {
-        _showMessage('❌ Failed to upload image.');
+        _showMessage('image_upload_failed'.tr());
       }
     } catch (e) {
-      _showMessage('❌ Upload failed: ${e.toString()}');
+      _showMessage('${'upload_failed'.tr()}: ${e.toString()}');
     }
   }
 
@@ -110,10 +111,10 @@ class _EditTruckPageState extends State<EditTruckPage> {
       if (response.statusCode == 200) {
         Navigator.pop(context, true);
       } else {
-        _showMessage('❌ Failed to update truck.');
+        _showMessage('failed_to_update_truck'.tr());
       }
     } else {
-      _showMessage('❌ Please complete all required fields.');
+      _showMessage('please_complete_all_fields'.tr());
     }
   }
 
@@ -132,7 +133,7 @@ class _EditTruckPageState extends State<EditTruckPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF7ED),
       appBar: AppBar(
-        title: const Text('Edit Truck'),
+        title: Text('edit_truck'.tr()),
         backgroundColor: const Color.fromARGB(255, 255, 134, 28),
       ),
       body: Padding(
@@ -141,21 +142,19 @@ class _EditTruckPageState extends State<EditTruckPage> {
           key: _formKey,
           child: ListView(
             children: [
-              _buildTextField(_nameController, 'Truck Name'),
+              _buildTextField(_nameController, 'truck_name'.tr()),
               const SizedBox(height: 12),
-              _buildTextField(_cuisineController, 'Cuisine Type'),
+              _buildTextField(_cuisineController, 'cuisine_type'.tr()),
               const SizedBox(height: 12),
-              _buildTextField(_descriptionController, 'Description'),
+              _buildTextField(_descriptionController, 'description'.tr()),
               const SizedBox(height: 12),
-              _buildTextField(_addressController, 'Address'),
+              _buildTextField(_addressController, 'address'.tr()),
               const SizedBox(height: 12),
               _buildCityDropdown(),
               const SizedBox(height: 12),
-              _buildTextField(
-                  _openTimeController, 'Opening Time (e.g., 10:00 AM)'),
+              _buildTextField(_openTimeController, 'opening_time_hint'.tr()),
               const SizedBox(height: 12),
-              _buildTextField(
-                  _closeTimeController, 'Closing Time (e.g., 10:00 PM)'),
+              _buildTextField(_closeTimeController, 'closing_time_hint'.tr()),
               const SizedBox(height: 12),
               _buildImagePicker(),
               const SizedBox(height: 24),
@@ -171,9 +170,9 @@ class _EditTruckPageState extends State<EditTruckPage> {
                 ),
                 child: isUploadingImage
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Save Changes',
-                        style: TextStyle(
+                    : Text(
+                        'save_changes'.tr(),
+                        style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
               )
@@ -195,7 +194,8 @@ class _EditTruckPageState extends State<EditTruckPage> {
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-      validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+      validator: (value) =>
+          value == null || value.isEmpty ? 'required_field'.tr() : null,
     );
   }
 
@@ -203,7 +203,7 @@ class _EditTruckPageState extends State<EditTruckPage> {
     return DropdownButtonFormField<String>(
       value: selectedCity,
       decoration: InputDecoration(
-        labelText: 'City',
+        labelText: 'city'.tr(),
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -212,7 +212,8 @@ class _EditTruckPageState extends State<EditTruckPage> {
         return DropdownMenuItem(value: city, child: Text(city));
       }).toList(),
       onChanged: (value) => setState(() => selectedCity = value),
-      validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+      validator: (value) =>
+          value == null || value.isEmpty ? 'required_field'.tr() : null,
     );
   }
 
@@ -243,7 +244,7 @@ class _EditTruckPageState extends State<EditTruckPage> {
                           fit: BoxFit.cover,
                         ),
                       )
-                    : const Center(child: Text('Tap to select truck logo')),
+                    : Center(child: Text('tap_to_select_logo'.tr())),
       ),
     );
   }
