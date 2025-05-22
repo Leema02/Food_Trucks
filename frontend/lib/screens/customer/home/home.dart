@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/services/truckOwner_service.dart';
 import '../../../core/constants/supported_cities.dart';
 import 'widgets/header_section.dart';
-import 'widgets/search_filter_bar.dart';
+import '../explore/widgets/search_filter_bar.dart';
 import 'widgets/truck_card.dart';
 import 'customer_map.dart';
 

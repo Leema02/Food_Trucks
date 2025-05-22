@@ -16,6 +16,20 @@ const createBooking = async (req, res) => {
       truck_id
     } = req.body;
 
+    // 🚨 Check for conflict: same truck, same date & time, pending or confirmed
+    const existingBooking = await EventBooking.findOne({
+      truck_id,
+      event_date,
+      event_time,
+      status: { $in: ['pending', 'confirmed'] }
+    });
+
+    if (existingBooking) {
+      return res.status(400).json({
+        message: '❌ This truck is already booked for the selected date and time.'
+      });
+    }
+
     const booking = new EventBooking({
       user_id: req.user._id,
       truck_id,
@@ -35,6 +49,7 @@ const createBooking = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 // 🟡 Get my (customer) bookings
 const getMyBookings = async (req, res) => {
@@ -79,27 +94,27 @@ const updateBookingStatus = async (req, res) => {
   }
 };
 
-// 🟣 Optional: Get available trucks by date
-const getAvailableTrucksByDate = async (req, res) => {
-  try {
-    const { event_date } = req.query;
+// // 🟣 Optional: Get available trucks by date
+// const getAvailableTrucksByDate = async (req, res) => {
+//   try {
+//     const { event_date } = req.query;
 
-    const bookedTrucks = await EventBooking.find({ event_date }).distinct('truck_id');
+//     const bookedTrucks = await EventBooking.find({ event_date }).distinct('truck_id');
 
-    const availableTrucks = await Truck.find({
-      _id: { $nin: bookedTrucks }
-    });
+//     const availableTrucks = await Truck.find({
+//       _id: { $nin: bookedTrucks }
+//     });
 
-    res.json(availableTrucks);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
+//     res.json(availableTrucks);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
 
 module.exports = {
   createBooking,
   getMyBookings,
   getTruckBookings,
   updateBookingStatus,
-  getAvailableTrucksByDate
+  //getAvailableTrucksByDate
 };

@@ -1,46 +1,19 @@
 const mongoose = require('mongoose');
 
 const eventBookingSchema = new mongoose.Schema({
-  event_date: {
-    type: Date,
-    required: true
-  },
-  event_time: {
-    type: String,
-    required: true
-  },
-  occasion_type: {
-    type: String,
-    required: true
-  },
-  status: {
-    type: String,
+  event_date: {type: Date,required: true },
+  event_time: {type: String,required: true},
+  occasion_type: {type: String,required: true},
+  status: {type: String,
     enum: ['pending', 'confirmed', 'rejected'],
     default: 'pending'
   },
-  location: {
-    type: String,
-    required: true
-  },
-  city: {
-    type: String,
-    required: true
-  },
-  guest_count: {
-    type: Number,
-    required: true
-  },
-  special_requests: {
-    type: String
-  },
-  deposit: {
-    type: Number,
-    default: 0
-  },
-  total_amount: {
-    type: Number,
-    required: true
-  },
+  location: {type: String,required: true},
+  city: {type: String,required: true},
+  guest_count: {type: Number,required: true},
+  special_requests: {type: String},
+  deposit: {type: Number,default: 0},
+  total_amount: {type: Number,required: true},
   truck_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Truck',
