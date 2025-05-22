@@ -70,7 +70,8 @@ const getTruckBookings = async (req, res) => {
     const truckIds = trucks.map(t => t._id);
 
     const bookings = await EventBooking.find({ truck_id: { $in: truckIds } })
-      .populate('user_id', 'F_name L_name email_address')
+      .populate('user_id', 'F_name L_name email_address phone_num')
+      .populate('truck_id', 'truck_name') 
       .sort({ createdAt: -1 });
 
     res.json(bookings);
@@ -110,6 +111,34 @@ const updateBookingStatus = async (req, res) => {
 //     res.status(500).json({ message: err.message });
 //   }
 // };
+// 🟤 Delete a booking by ID (only if status is pending)
+const deleteBooking = async (req, res) => {
+  try {
+    const booking = await EventBooking.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    // ❌ Only pending bookings can be deleted
+    if (booking.status !== 'pending') {
+      return res.status(400).json({ message: '❌ Only pending bookings can be deleted.' });
+    }
+
+    // 🛡 Only allow delete if requester is customer or truck owner
+    const isCustomer = booking.user_id.toString() === req.user._id.toString();
+    const isTruckOwner = req.user.role_id === 'truck owner';
+
+    if (!isCustomer && !isTruckOwner) {
+      return res.status(403).json({ message: 'Unauthorized to delete this booking' });
+    }
+
+    await booking.deleteOne();
+    res.json({ message: '✅ Booking deleted successfully' });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 module.exports = {
   createBooking,
@@ -117,4 +146,5 @@ module.exports = {
   getTruckBookings,
   updateBookingStatus,
   //getAvailableTrucksByDate
+  deleteBooking
 };

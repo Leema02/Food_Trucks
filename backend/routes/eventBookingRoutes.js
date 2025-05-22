@@ -6,6 +6,7 @@ const {
   getMyBookings,
   getTruckBookings,
   updateBookingStatus,
+  deleteBooking,
   getAvailableTrucksByDate
 } = require('../controllers/eventBookingController');
 
@@ -28,5 +29,8 @@ router.patch('/:id/status', protect, authorizeRoles('truck owner'), updateBookin
 
 // 🟣 Anyone (usually customer) checks available trucks for a date
 //  router.get('/available', protect, getAvailableTrucksByDate);
+
+// 🟤 Delete a booking (customer or owner)
+router.delete('/:id', protect, deleteBooking);
 
 module.exports = router;
