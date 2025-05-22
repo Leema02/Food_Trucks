@@ -32,6 +32,12 @@
   "4digitcode": " رمز من 4 أرقام",
   "verifiying": "التحقق",
   "verifycode": "تم التحقق",
+    "new_password": "كلمة المرور الجديدة",
+  "confirm_password": "تأكيد كلمة المرور",
+  "passwords_do_not_match": "❌ كلمات المرور غير متطابقة",
+  "password_reset_successful": "✅ تم إعادة تعيين كلمة المرور بنجاح",
+  "failed_to_reset_password": "❌فشل إعادة تعيين كلمة المرور",
+  "confirm": "تأكيد"
   "welcome_owner": "مرحباً، مالك الشاحنة!",
   "total_orders": "إجمالي الطلبات",
   "bookings": "الحجوزات",
