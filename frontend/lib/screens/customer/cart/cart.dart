@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/customer/cart/cart_controller.dart';
-import 'package:myapp/screens/customer/orders/checkout.dart';
+import 'package:myapp/screens/customer/checkout/checkout.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CartPage extends StatefulWidget {
