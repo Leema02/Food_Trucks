@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/services/event_booking_service.dart';
 import '../../../core/services/truckOwner_service.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class OwnerBookingsPage extends StatefulWidget {
   const OwnerBookingsPage({super.key});
@@ -107,7 +108,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Manage Bookings"),
+        title: Text("manage_bookings".tr()),
         centerTitle: true,
         backgroundColor: Colors.orange.shade400,
       ),
@@ -119,14 +120,14 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
             child: DropdownButtonFormField<String>(
               value: selectedTruckId,
               isExpanded: true,
-              decoration: const InputDecoration(
-                labelText: "Select a Truck",
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: "select_a_truck".tr(),
+                border: const OutlineInputBorder(),
               ),
               items: trucks.map<DropdownMenuItem<String>>((truck) {
                 return DropdownMenuItem<String>(
                   value: truck['_id'],
-                  child: Text(truck['truck_name'] ?? 'Unnamed Truck'),
+                  child: Text(truck['truck_name'.tr()] ?? 'unnamed_truck'.tr()),
                 );
               }).toList(),
               onChanged: (value) {
@@ -144,7 +145,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
             child: Row(
               children: [
                 ChoiceChip(
-                  label: const Text('Pending'),
+                  label: Text('pending'.tr()),
                   selected: selectedStatus == 'pending',
                   selectedColor: Colors.orange.shade200,
                   onSelected: (_) {
@@ -156,7 +157,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                 ),
                 const SizedBox(width: 10),
                 ChoiceChip(
-                  label: const Text('Confirmed'),
+                  label: Text('confirmed'.tr()),
                   selected: selectedStatus == 'confirmed',
                   selectedColor: Colors.green.shade200,
                   onSelected: (_) {
@@ -168,7 +169,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                 ),
                 const SizedBox(width: 10),
                 ChoiceChip(
-                  label: const Text('Rejected'),
+                  label: Text('rejected'.tr()),
                   selected: selectedStatus == 'rejected',
                   selectedColor: Colors.red.shade200,
                   onSelected: (_) {
@@ -189,7 +190,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : filteredBookings.isEmpty
-                    ? const Center(child: Text("No bookings found."))
+                    ? Center(child: Text("no_bookings_found".tr()))
                     : ListView.builder(
                         itemCount: filteredBookings.length,
                         itemBuilder: (context, index) {
@@ -220,18 +221,18 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          "Event: $date at $time",
+                                          "${'event'.tr()}: $date at $time",
                                           style: const TextStyle(
                                               fontWeight: FontWeight.bold),
                                         ),
                                         const SizedBox(height: 6),
-                                        Text("Guests: $guests"),
+                                        Text("${'guests'.tr()}: $guests"),
                                         Text(
-                                            "Customer: ${customer['F_name']} ${customer['L_name']}"),
+                                            "${'customer'.tr()}: ${customer['F_name']} ${customer['L_name']}"),
                                         Text(
-                                            "Email: ${customer['email_address']}"),
+                                            "${'email'.tr()}: ${customer['email_address']}"),
                                         Text(
-                                            "Phone: ${customer['phone_num'] ?? 'N/A'}"),
+                                            "${'phone'.tr()}: ${customer['phone_num'] ?? 'N/A'}"),
                                       ],
                                     ),
                                   ),
@@ -244,14 +245,14 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                                               icon: const Icon(
                                                   Icons.check_circle,
                                                   color: Colors.green),
-                                              tooltip: 'Approve',
+                                              tooltip: 'approve'.tr(),
                                               onPressed: () => updateStatus(
                                                   b['_id'], 'confirmed'),
                                             ),
                                             IconButton(
                                               icon: const Icon(Icons.cancel,
                                                   color: Colors.red),
-                                              tooltip: 'Reject',
+                                              tooltip: 'reject'.tr(),
                                               onPressed: () => updateStatus(
                                                   b['_id'], 'rejected'),
                                             ),
