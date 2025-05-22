@@ -1,5 +1,6 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+//import 'package:intl/intl.dart';
 import '../../../core/services/event_booking_service.dart';
 
 class BookingsListTab extends StatefulWidget {
@@ -35,9 +36,47 @@ class _BookingsListTabState extends State<BookingsListTab> {
     }
   }
 
-  String formatDate(String isoDate) {
-    final date = DateTime.parse(isoDate);
-    return DateFormat.yMMMd().format(date);
+  Future<void> deleteBooking(String bookingId) async {
+    try {
+      await EventBookingService.deleteBooking(bookingId);
+      fetchBookings();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Failed to delete booking: $e'),
+            backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  void confirmDelete(String bookingId) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Cancel Booking"),
+        content: const Text("Are you sure you want to cancel this booking?"),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context), child: const Text("No")),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              deleteBooking(bookingId);
+            },
+            child: const Text("Yes", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String formatDateTime(String isoDate, String time) {
+    try {
+      final combined = DateFormat("yyyy-MM-dd HH:mm").parse("$isoDate $time");
+      return DateFormat('MMM d, yyyy • h:mm a').format(combined);
+    } catch (_) {
+      return "$isoDate at $time";
+    }
   }
 
   @override
@@ -64,9 +103,16 @@ class _BookingsListTabState extends State<BookingsListTab> {
         final truck = b['truck_id'];
         final truckName = truck['truck_name'] ?? 'Unnamed Truck';
         final city = truck['city'] ?? 'Unknown City';
-        final date = formatDate(b['event_date']);
-        final time = b['event_time'] ?? '';
-        final status = (b['status'] ?? 'pending').toString().toUpperCase();
+        final dateTime = formatDateTime(b['event_date'], b['event_time'] ?? '');
+        final rawStatus = b['status'] ?? 'pending';
+        final status = rawStatus.toString().toUpperCase();
+
+        final statusColor = {
+              'CONFIRMED': Colors.green,
+              'REJECTED': Colors.red,
+              'PENDING': Colors.orange,
+            }[status] ??
+            Colors.orange;
 
         return Container(
           padding: const EdgeInsets.all(14),
@@ -78,28 +124,35 @@ class _BookingsListTabState extends State<BookingsListTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(truckName,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(
+                truckName,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
               const SizedBox(height: 4),
               Text("City: $city"),
-              Text("Date: $date at $time"),
-              const SizedBox(height: 6),
+              Text("Date: $dateTime"),
+              const SizedBox(height: 8),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.info_outline, size: 16),
-                  const SizedBox(width: 6),
-                  Text(
-                    "Status: $status",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: status == 'CONFIRMED'
-                          ? Colors.green
-                          : status == 'REJECTED'
-                              ? Colors.red
-                              : Colors.orange,
-                    ),
+                  Row(
+                    children: [
+                      const Icon(Icons.info_outline, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        "Status: $status",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, color: statusColor),
+                      ),
+                    ],
                   ),
+                  if (status == 'PENDING')
+                    IconButton(
+                      icon: const Icon(Icons.delete_forever, color: Colors.red),
+                      tooltip: 'Cancel Booking',
+                      onPressed: () => confirmDelete(b['_id']),
+                    ),
                 ],
               ),
             ],
