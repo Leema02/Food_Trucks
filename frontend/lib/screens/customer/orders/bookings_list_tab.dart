@@ -1,6 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-//import 'package:intl/intl.dart';
 import '../../../core/services/event_booking_service.dart';
 
 class BookingsListTab extends StatefulWidget {
@@ -43,8 +42,9 @@ class _BookingsListTabState extends State<BookingsListTab> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Failed to delete booking: $e'),
-            backgroundColor: Colors.red),
+          content: Text('Failed to delete booking: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -57,7 +57,9 @@ class _BookingsListTabState extends State<BookingsListTab> {
         content: const Text("Are you sure you want to cancel this booking?"),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text("No")),
+            onPressed: () => Navigator.pop(context),
+            child: const Text("No"),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
@@ -106,6 +108,7 @@ class _BookingsListTabState extends State<BookingsListTab> {
         final dateTime = formatDateTime(b['event_date'], b['event_time'] ?? '');
         final rawStatus = b['status'] ?? 'pending';
         final status = rawStatus.toString().toUpperCase();
+        final totalAmount = b['total_amount']?.toString();
 
         final statusColor = {
               'CONFIRMED': Colors.green,
@@ -132,6 +135,9 @@ class _BookingsListTabState extends State<BookingsListTab> {
               const SizedBox(height: 4),
               Text("City: $city"),
               Text("Date: $dateTime"),
+              if (status == 'CONFIRMED' && totalAmount != null)
+                Text("Total Amount: ₪$totalAmount",
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

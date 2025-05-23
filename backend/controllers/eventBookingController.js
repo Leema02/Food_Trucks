@@ -79,38 +79,33 @@ const getTruckBookings = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-// 🔴 Truck Owner updates booking status
+// 🔴 Truck Owner updates booking status (with total_amount required for confirmation)
 const updateBookingStatus = async (req, res) => {
   try {
     const booking = await EventBooking.findById(req.params.id);
-    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
 
-    booking.status = req.body.status; // 'confirmed' or 'rejected'
+    const { status, total_amount } = req.body;
+
+    // Enforce total_amount for confirmation
+    if (status === 'confirmed') {
+      if (total_amount === undefined || isNaN(total_amount)) {
+        return res.status(400).json({ message: 'Total amount is required and must be a number when confirming a booking.' });
+      }
+      booking.total_amount = total_amount;
+    }
+
+    booking.status = status;
     await booking.save();
 
-    res.json(booking);
+    res.json({ message: `Booking ${status} successfully`, booking });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// // 🟣 Optional: Get available trucks by date
-// const getAvailableTrucksByDate = async (req, res) => {
-//   try {
-//     const { event_date } = req.query;
-
-//     const bookedTrucks = await EventBooking.find({ event_date }).distinct('truck_id');
-
-//     const availableTrucks = await Truck.find({
-//       _id: { $nin: bookedTrucks }
-//     });
-
-//     res.json(availableTrucks);
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
 // 🟤 Delete a booking by ID (only if status is pending)
 const deleteBooking = async (req, res) => {
   try {
@@ -145,6 +140,5 @@ module.exports = {
   getMyBookings,
   getTruckBookings,
   updateBookingStatus,
-  //getAvailableTrucksByDate
   deleteBooking
 };

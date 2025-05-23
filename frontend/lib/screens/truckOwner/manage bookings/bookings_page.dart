@@ -81,13 +81,53 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
     });
   }
 
-  Future<void> updateStatus(String id, String status) async {
+  Future<void> confirmBookingWithAmount(String id) async {
+    final amount = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        final controller = TextEditingController();
+        return AlertDialog(
+          title: const Text('Set Total Amount'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration:
+                const InputDecoration(hintText: 'Enter total amount (₪)'),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel')),
+            TextButton(
+                onPressed: () => Navigator.pop(context, controller.text),
+                child: const Text('Confirm')),
+          ],
+        );
+      },
+    );
+
+    if (amount != null && amount.trim().isNotEmpty) {
+      try {
+        final parsedAmount = double.tryParse(amount.trim());
+        if (parsedAmount == null) throw Exception('Invalid amount');
+
+        await EventBookingService.updateBookingStatus(id, 'confirmed',
+            totalAmount: parsedAmount);
+        showSuccess("Booking confirmed with ₪$parsedAmount");
+        fetchBookings();
+      } catch (e) {
+        showError('Failed to confirm booking');
+      }
+    }
+  }
+
+  Future<void> rejectBooking(String id) async {
     try {
-      await EventBookingService.updateBookingStatus(id, status);
-      showSuccess("Booking $status");
+      await EventBookingService.updateBookingStatus(id, 'rejected');
+      showSuccess("Booking rejected");
       fetchBookings();
     } catch (e) {
-      showError('Failed to update status');
+      showError('Failed to reject booking');
     }
   }
 
@@ -113,7 +153,6 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
       ),
       body: Column(
         children: [
-          // Truck Dropdown
           Padding(
             padding: const EdgeInsets.all(16),
             child: DropdownButtonFormField<String>(
@@ -137,8 +176,6 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
               },
             ),
           ),
-
-          // Status Filters
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -181,10 +218,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
               ],
             ),
           ),
-
           const SizedBox(height: 10),
-
-          // Booking List
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -219,11 +253,9 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          "Event: $date at $time",
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
+                                        Text("Event: $date at $time",
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold)),
                                         const SizedBox(height: 6),
                                         Text("Guests: $guests"),
                                         Text(
@@ -232,6 +264,19 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                                             "Email: ${customer['email_address']}"),
                                         Text(
                                             "Phone: ${customer['phone_num'] ?? 'N/A'}"),
+                                        if (b['status'] == 'confirmed' &&
+                                            b['total_amount'] != null)
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 8.0),
+                                            child: Text(
+                                              "💰 Total Amount: ₪${b['total_amount'].toStringAsFixed(2)}",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.green,
+                                              ),
+                                            ),
+                                          ),
                                       ],
                                     ),
                                   ),
@@ -245,15 +290,16 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                                                   Icons.check_circle,
                                                   color: Colors.green),
                                               tooltip: 'Approve',
-                                              onPressed: () => updateStatus(
-                                                  b['_id'], 'confirmed'),
+                                              onPressed: () =>
+                                                  confirmBookingWithAmount(
+                                                      b['_id']),
                                             ),
                                             IconButton(
                                               icon: const Icon(Icons.cancel,
                                                   color: Colors.red),
                                               tooltip: 'Reject',
-                                              onPressed: () => updateStatus(
-                                                  b['_id'], 'rejected'),
+                                              onPressed: () =>
+                                                  rejectBooking(b['_id']),
                                             ),
                                           ],
                                         )

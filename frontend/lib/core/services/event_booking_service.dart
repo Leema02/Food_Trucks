@@ -58,11 +58,17 @@ class EventBookingService {
     }
   }
 
-  // 🔴 Update booking status (confirm or reject)
+// 🔴 Update booking status (confirm or reject)
   static Future<http.Response> updateBookingStatus(
-      String bookingId, String status) async {
+      String bookingId, String status,
+      {double? totalAmount}) async {
     final token = await _getToken();
     final url = Uri.parse('$baseUrl/$bookingId/status');
+
+    final Map<String, dynamic> body = {'status': status};
+    if (status == 'confirmed' && totalAmount != null) {
+      body['total_amount'] = totalAmount;
+    }
 
     final response = await http.patch(
       url,
@@ -70,7 +76,7 @@ class EventBookingService {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode({'status': status}),
+      body: jsonEncode(body),
     );
 
     return response;

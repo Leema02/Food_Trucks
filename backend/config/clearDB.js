@@ -6,7 +6,7 @@ const User = require('../models/userModel');
 const Truck = require('../models/truckModel');
 const MenuItem = require('../models/menuModel');
 const Order = require('../models/orderModel');
-const EventBooking = require('../models/eventBookingModel'); // ✅ added
+const EventBooking = require('../models/eventBookingModel');
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/foodtrucks';
 
@@ -20,7 +20,7 @@ async function clearDatabase() {
       Truck.deleteMany({}),
       MenuItem.deleteMany({}),
       Order.deleteMany({}),
-      EventBooking.deleteMany({}) // ✅ clear bookings too
+      EventBooking.deleteMany({}) 
     ]);
 
     console.log('✅ All collections cleared.');
