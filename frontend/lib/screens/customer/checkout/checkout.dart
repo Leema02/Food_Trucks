@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/screens/customer/checkout/payment_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../cart/cart_controller.dart';
 import '../../../core/services/order_service.dart';
 
@@ -42,55 +44,83 @@ class _CheckoutPageState extends State<CheckoutPage> {
     if (!_citiesMatch()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("❌ You can only order from trucks in your city."),
-        ),
+            content: Text("❌ You can only order from trucks in your city.")),
       );
       return;
     }
 
     if (orderType == 'delivery' && deliveryAddress.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("❗ Delivery address is required."),
-        ),
+        const SnackBar(content: Text("❗ Delivery address is required.")),
       );
       return;
     }
 
     setState(() => isSubmitting = true);
 
-    final cartItems = CartController.getCartItems();
-    final items = cartItems.map((item) {
-      return {
-        "menu_id": item['menu_id'],
-        "name": item['name'],
-        "quantity": item['quantity'],
-        "price": item['price'],
-      };
-    }).toList();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('user_email') ?? 'guest@example.com';
 
-    final orderData = {
-      "truck_id": widget.truckId,
-      "items": items,
-      "total_price": CartController.getTotal(),
-      "order_type": orderType,
-      if (orderType == 'delivery') "delivery_address": deliveryAddress.trim(),
-    };
+      final cartItems = CartController.getCartItems();
+      final totalNIS = CartController.getTotal();
+      final totalAgorot =
+          (totalNIS * 100).round(); // Convert to agorot for Stripe
 
-    final response = await OrderService.placeOrder(orderData);
-    setState(() => isSubmitting = false);
+      final items = cartItems.map((item) {
+        return {
+          "menu_id": item['menu_id'],
+          "name": item['name'],
+          "quantity": item['quantity'],
+          "price": item['price'],
+        };
+      }).toList();
 
-    if (response.statusCode == 201) {
-      CartController.clearCart();
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ Order placed successfully!")),
-        );
-        Navigator.pop(context);
+      // Step 1: Stripe payment
+      final success = await PaymentService.pay(
+        context,
+        totalAgorot,
+        {
+          "truckId": widget.truckId,
+          "userEmail": email,
+        },
+      );
+
+      if (!success) {
+        setState(() => isSubmitting = false);
+        return;
       }
-    } else {
+
+      // Step 2: Submit order to backend
+      final orderData = {
+        "truck_id": widget.truckId,
+        "items": items,
+        "total_price": totalNIS,
+        "order_type": orderType,
+        if (orderType == 'delivery') "delivery_address": deliveryAddress.trim(),
+        "payment_status": "paid"
+      };
+
+      final response = await OrderService.placeOrder(orderData);
+      setState(() => isSubmitting = false);
+
+      if (response.statusCode == 201) {
+        CartController.clearCart();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("✅ Order placed successfully!")),
+          );
+          Navigator.pop(context);
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("❌ Failed: ${response.body}")),
+        );
+      }
+    } catch (e) {
+      setState(() => isSubmitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Failed: ${response.body}")),
+        SnackBar(content: Text("❌ Error: $e")),
       );
     }
   }
