@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:myapp/screens/auth/login/login.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
+
+  Stripe.publishableKey =
+      "pk_test_51RRdZMIee5pLQ5EwAOSGDbauHv7IMZqJvSg1hQwWc9BbfoPHUXFqN7wDME95xPBat7lBW2vY9yYhYnN9pu6DmU7n00gbcWkxbm"; // From your Stripe dashboard
+  Stripe.instance.applySettings();
 
   runApp(
     EasyLocalization(
