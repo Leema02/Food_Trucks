@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/services/event_booking_service.dart';
 import '../../../core/services/truckOwner_service.dart';
-import 'package:easy_localization/easy_localization.dart';
 
 class OwnerBookingsPage extends StatefulWidget {
   const OwnerBookingsPage({super.key});
@@ -82,13 +81,53 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
     });
   }
 
-  Future<void> updateStatus(String id, String status) async {
+  Future<void> confirmBookingWithAmount(String id) async {
+    final amount = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        final controller = TextEditingController();
+        return AlertDialog(
+          title: const Text('Set Total Amount'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration:
+                const InputDecoration(hintText: 'Enter total amount (₪)'),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel')),
+            TextButton(
+                onPressed: () => Navigator.pop(context, controller.text),
+                child: const Text('Confirm')),
+          ],
+        );
+      },
+    );
+
+    if (amount != null && amount.trim().isNotEmpty) {
+      try {
+        final parsedAmount = double.tryParse(amount.trim());
+        if (parsedAmount == null) throw Exception('Invalid amount');
+
+        await EventBookingService.updateBookingStatus(id, 'confirmed',
+            totalAmount: parsedAmount);
+        showSuccess("Booking confirmed with ₪$parsedAmount");
+        fetchBookings();
+      } catch (e) {
+        showError('Failed to confirm booking');
+      }
+    }
+  }
+
+  Future<void> rejectBooking(String id) async {
     try {
-      await EventBookingService.updateBookingStatus(id, status);
-      showSuccess("Booking $status");
+      await EventBookingService.updateBookingStatus(id, 'rejected');
+      showSuccess("Booking rejected");
       fetchBookings();
     } catch (e) {
-      showError('Failed to update status');
+      showError('Failed to reject booking');
     }
   }
 
@@ -108,26 +147,25 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("manage_bookings".tr()),
+        title: const Text("Manage Bookings"),
         centerTitle: true,
         backgroundColor: Colors.orange.shade400,
       ),
       body: Column(
         children: [
-          // Truck Dropdown
           Padding(
             padding: const EdgeInsets.all(16),
             child: DropdownButtonFormField<String>(
               value: selectedTruckId,
               isExpanded: true,
-              decoration: InputDecoration(
-                labelText: "select_a_truck".tr(),
-                border: const OutlineInputBorder(),
+              decoration: const InputDecoration(
+                labelText: "Select a Truck",
+                border: OutlineInputBorder(),
               ),
               items: trucks.map<DropdownMenuItem<String>>((truck) {
                 return DropdownMenuItem<String>(
                   value: truck['_id'],
-                  child: Text(truck['truck_name'.tr()] ?? 'unnamed_truck'.tr()),
+                  child: Text(truck['truck_name'] ?? 'Unnamed Truck'),
                 );
               }).toList(),
               onChanged: (value) {
@@ -138,14 +176,12 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
               },
             ),
           ),
-
-          // Status Filters
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
                 ChoiceChip(
-                  label: Text('pending'.tr()),
+                  label: const Text('Pending'),
                   selected: selectedStatus == 'pending',
                   selectedColor: Colors.orange.shade200,
                   onSelected: (_) {
@@ -157,7 +193,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                 ),
                 const SizedBox(width: 10),
                 ChoiceChip(
-                  label: Text('confirmed'.tr()),
+                  label: const Text('Confirmed'),
                   selected: selectedStatus == 'confirmed',
                   selectedColor: Colors.green.shade200,
                   onSelected: (_) {
@@ -169,7 +205,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                 ),
                 const SizedBox(width: 10),
                 ChoiceChip(
-                  label: Text('rejected'.tr()),
+                  label: const Text('Rejected'),
                   selected: selectedStatus == 'rejected',
                   selectedColor: Colors.red.shade200,
                   onSelected: (_) {
@@ -182,15 +218,12 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
               ],
             ),
           ),
-
           const SizedBox(height: 10),
-
-          // Booking List
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : filteredBookings.isEmpty
-                    ? Center(child: Text("no_bookings_found".tr()))
+                    ? const Center(child: Text("No bookings found."))
                     : ListView.builder(
                         itemCount: filteredBookings.length,
                         itemBuilder: (context, index) {
@@ -220,19 +253,30 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          "${'event'.tr()}: $date at $time",
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
+                                        Text("Event: $date at $time",
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold)),
                                         const SizedBox(height: 6),
-                                        Text("${'guests'.tr()}: $guests"),
+                                        Text("Guests: $guests"),
                                         Text(
-                                            "${'customer'.tr()}: ${customer['F_name']} ${customer['L_name']}"),
+                                            "Customer: ${customer['F_name']} ${customer['L_name']}"),
                                         Text(
-                                            "${'email'.tr()}: ${customer['email_address']}"),
+                                            "Email: ${customer['email_address']}"),
                                         Text(
-                                            "${'phone'.tr()}: ${customer['phone_num'] ?? 'N/A'}"),
+                                            "Phone: ${customer['phone_num'] ?? 'N/A'}"),
+                                        if (b['status'] == 'confirmed' &&
+                                            b['total_amount'] != null)
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 8.0),
+                                            child: Text(
+                                              "💰 Total Amount: ₪${b['total_amount'].toStringAsFixed(2)}",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.green,
+                                              ),
+                                            ),
+                                          ),
                                       ],
                                     ),
                                   ),
@@ -245,16 +289,17 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                                               icon: const Icon(
                                                   Icons.check_circle,
                                                   color: Colors.green),
-                                              tooltip: 'approve'.tr(),
-                                              onPressed: () => updateStatus(
-                                                  b['_id'], 'confirmed'),
+                                              tooltip: 'Approve',
+                                              onPressed: () =>
+                                                  confirmBookingWithAmount(
+                                                      b['_id']),
                                             ),
                                             IconButton(
                                               icon: const Icon(Icons.cancel,
                                                   color: Colors.red),
-                                              tooltip: 'reject'.tr(),
-                                              onPressed: () => updateStatus(
-                                                  b['_id'], 'rejected'),
+                                              tooltip: 'Reject',
+                                              onPressed: () =>
+                                                  rejectBooking(b['_id']),
                                             ),
                                           ],
                                         )

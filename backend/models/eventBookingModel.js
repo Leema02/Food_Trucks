@@ -12,7 +12,6 @@ const eventBookingSchema = new mongoose.Schema({
   city: {type: String,required: true},
   guest_count: {type: Number,required: true},
   special_requests: {type: String},
-  deposit: {type: Number,default: 0},
   total_amount: {type: Number,required: true},
   truck_id: {
     type: mongoose.Schema.Types.ObjectId,

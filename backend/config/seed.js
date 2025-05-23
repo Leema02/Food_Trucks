@@ -162,8 +162,7 @@ async function seed() {
         guest_count: faker.number.int({ min: 30, max: 150 }),
         special_requests: faker.lorem.words(5),
         total_amount: faker.number.int({ min: 500, max: 2000 }),
-        status: faker.helpers.arrayElement(['pending', 'confirmed', 'rejected']),
-        deposit: faker.number.int({ min: 50, max: 200 })
+        status: faker.helpers.arrayElement(['pending', 'confirmed', 'rejected'])
       });
     }
   }
