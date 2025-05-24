@@ -142,7 +142,7 @@
   "set_total_amount": "تعيين المبلغ الإجمالي",
   "enter_total_amount": "أدخل المبلغ الإجمالي (₪)",
   "total_amount": "المبلغ الإجمالي",
-  "booking_confirmed": "تم تأكيد الحجز بمبلغ ₪{}",
+  "booking_confirmed": "تم تأكيد الحجز بمبلغ (₪)",
   "booking_rejected": "تم رفض الحجز",
   "failed_to_confirm_booking": "فشل في تأكيد الحجز",
   "failed_to_reject_booking": "فشل في رفض الحجز"
