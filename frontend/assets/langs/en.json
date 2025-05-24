@@ -138,5 +138,12 @@
   "event": "Event",
   "guests": "Guests",
   "approve": "Approve",
-  "reject": "Reject"
+  "reject": "Reject",
+  "set_total_amount": "Set Total Amount",
+  "enter_total_amount": "Enter total amount (₪)",
+  "total_amount": "Total Amount",
+  "booking_confirmed": "Booking confirmed with ₪{}",
+  "booking_rejected": "Booking rejected",
+  "failed_to_confirm_booking": "Failed to confirm booking",
+  "failed_to_reject_booking": "Failed to reject booking"
 }
