@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:myapp/screens/auth/login/login.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:myapp/screens/customer/ChatBotPage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +37,7 @@ class MyApp extends StatelessWidget {
       home: const LoginPage(),
       routes: {
         '/login': (context) => const LoginPage(),
+        '/chatbot': (context) => const ChatBotPage(),
       },
     );
   }
