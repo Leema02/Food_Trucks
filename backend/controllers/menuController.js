@@ -1,10 +1,21 @@
 const MenuItem = require('../models/menuModel');
 
-// Create Menu Item
+// ✅ Create Menu Item
 const createMenuItem = async (req, res) => {
   try {
-    const { name, description, price, category, image_url, isAvailable } = req.body;
-    const truckId = req.userTruckId || req.body.truck_id; // depends on your auth middleware
+    const {
+      name,
+      description,
+      price,
+      category,
+      image_url,
+      isAvailable,
+      calories,
+      isVegan,
+      isSpicy
+    } = req.body;
+
+    const truckId = req.userTruckId || req.body.truck_id;
 
     const menuItem = new MenuItem({
       truck_id: truckId,
@@ -13,7 +24,10 @@ const createMenuItem = async (req, res) => {
       price,
       category,
       image_url,
-      isAvailable
+      isAvailable,
+      calories,
+      isVegan,
+      isSpicy
     });
 
     const savedItem = await menuItem.save();
@@ -23,7 +37,7 @@ const createMenuItem = async (req, res) => {
   }
 };
 
-// Get Menu Items for a Truck
+// ✅ Get Menu Items for a Truck
 const getMenuItemsByTruck = async (req, res) => {
   try {
     const items = await MenuItem.find({ truck_id: req.params.truckId });
@@ -33,14 +47,14 @@ const getMenuItemsByTruck = async (req, res) => {
   }
 };
 
-// Update Menu Item
+// ✅ Update Menu Item
 const updateMenuItem = async (req, res) => {
   try {
     const item = await MenuItem.findById(req.params.itemId);
 
     if (!item) return res.status(404).json({ message: 'Menu item not found' });
 
-    Object.assign(item, req.body);
+    Object.assign(item, req.body); // Will auto-update new fields
     const updatedItem = await item.save();
 
     res.json(updatedItem);
@@ -49,7 +63,7 @@ const updateMenuItem = async (req, res) => {
   }
 };
 
-// Delete Menu Item
+// ✅ Delete Menu Item
 const deleteMenuItem = async (req, res) => {
   try {
     const item = await MenuItem.findByIdAndDelete(req.params.itemId);

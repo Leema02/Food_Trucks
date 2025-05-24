@@ -73,6 +73,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
           "name": item['name'],
           "quantity": item['quantity'],
           "price": item['price'],
+          "isVegan": item['isVegan'],
+          "isSpicy": item['isSpicy'],
+          "calories": item['calories'],
         };
       }).toList();
 

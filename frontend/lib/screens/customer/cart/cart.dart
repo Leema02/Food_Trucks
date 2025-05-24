@@ -28,10 +28,8 @@ class _CartPageState extends State<CartPage> {
 
   Future<void> handleCheckout() async {
     final cartItems = CartController.getCartItems();
-
     final truckId = cartItems.isNotEmpty ? cartItems[0]['truck_id'] : null;
     final truckCity = cartItems.isNotEmpty ? cartItems[0]['truck_city'] : null;
-
     final prefs = await SharedPreferences.getInstance();
     final customerCity = prefs.getString('city') ?? '';
 
@@ -44,9 +42,8 @@ class _CartPageState extends State<CartPage> {
 
     if (customerCity.trim().toLowerCase() != truckCity.trim().toLowerCase()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("❌ You can only order from trucks in your city."),
-        ),
+        const SnackBar(
+            content: Text("❌ You can only order from trucks in your city.")),
       );
       return;
     }
@@ -112,6 +109,38 @@ class _CartPageState extends State<CartPage> {
                                         style: const TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w600)),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        if (item['isVegan'] == true)
+                                          const Padding(
+                                            padding: EdgeInsets.only(right: 6),
+                                            child: Text('🌱 Vegan',
+                                                style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.green)),
+                                          ),
+                                        if (item['isSpicy'] == true)
+                                          const Padding(
+                                            padding: EdgeInsets.only(right: 6),
+                                            child: Text('🌶️ Spicy',
+                                                style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.red)),
+                                          ),
+                                        if (item['calories'] != null)
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(right: 6),
+                                            child: Text(
+                                              '${item['calories']} cal',
+                                              style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.orange),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                     const SizedBox(height: 4),
                                     Text(
                                       '\$${item['price']} × ${item['quantity']}',

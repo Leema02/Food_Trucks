@@ -21,6 +21,15 @@ class MenuCard extends StatelessWidget {
             : 'http://10.0.2.2:5000${item['image_url']}')
         : null;
 
+    final bool isVegan = item['isVegan'] == true;
+    final bool isSpicy = item['isSpicy'] == true;
+    final int? calories = item['calories'];
+
+    List<String> tags = [];
+    if (isVegan) tags.add("🌱 Vegan");
+    if (isSpicy) tags.add("🌶️ Spicy");
+    if (calories != null) tags.add("$calories cal");
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -74,6 +83,18 @@ class MenuCard extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                         color: Colors.black87),
                   ),
+                  if (tags.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        tags.join(' • '),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.orange,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -87,7 +108,10 @@ class MenuCard extends StatelessWidget {
                   'price': item['price'],
                   'image_url': item['image_url'],
                   'truck_id': truckId,
-                  'truck_city': truckCity, // ✅ Include truck city
+                  'truck_city': truckCity,
+                  'isVegan': item['isVegan'],
+                  'isSpicy': item['isSpicy'],
+                  'calories': item['calories'],
                 });
 
                 ScaffoldMessenger.of(context).showSnackBar(

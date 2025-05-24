@@ -105,7 +105,28 @@ async function seed() {
     }
 
     const truck = await Truck.create({
-      truck_name: `${faker.company.name()} Truck`,
+      truck_name: faker.helpers.arrayElement([
+  "Taco Tempo",
+  "The Grilled Goat",
+  "Rolling Bites",
+  "Pizza Wheels",
+  "Burger Boulevard",
+  "Wrap & Roll",
+  "Spice Voyage",
+  "The Vegan Van",
+  "Sizzle Station",
+  "Falafel Fusion",
+  "Churro Chariot",
+  "Noodle N Go",
+  "Shawarma Shack",
+  "BBQ Express",
+  "Sushi Street",
+  "Kebab Kingdom",
+  "Sweet Ride",
+  "Urban Bites",
+  "Curry Cruiser",
+  "Waffle Wagon"
+]),
       cuisine_type: faker.helpers.arrayElement(cuisineOptions),
       description: faker.lorem.sentence(),
       owner_id: truckOwner._id,
@@ -125,21 +146,25 @@ async function seed() {
 
     trucks.push(truck);
   }
+console.log('🍔 Seeding fake menu items...');
+for (let i = 0; i < 30; i++) {
+  const truck = faker.helpers.arrayElement(trucks);
 
-  console.log('🍔 Seeding fake menu items...');
-  for (let i = 0; i < 30; i++) {
-    const truck = faker.helpers.arrayElement(trucks);
+  await MenuItem.create({
+    truck_id: truck._id,
+    name: faker.food.dish(),
+    description: faker.lorem.sentence(),
+    price: faker.commerce.price({ min: 5, max: 20 }),
+    category: faker.commerce.department(),
+    isAvailable: true,
+    image_url: faker.image.urlLoremFlickr({ category: 'food' }),
 
-    await MenuItem.create({
-      truck_id: truck._id,
-      name: faker.commerce.productName(),
-      description: faker.lorem.sentence(),
-      price: faker.commerce.price({ min: 5, max: 20 }),
-      category: faker.commerce.department(),
-      isAvailable: true,
-      image_url: faker.image.urlLoremFlickr({ category: 'food' })
-    });
-  }
+    // 🆕 Enhanced fields
+    calories: faker.number.int({ min: 100, max: 800 }),
+    isVegan: faker.datatype.boolean(),
+    isSpicy: faker.datatype.boolean()
+  });
+}
 
   console.log('📅 Seeding fake event bookings...');
   const occasionTypes = ['Wedding', 'Birthday', 'Graduation', 'Corporate'];
