@@ -47,4 +47,9 @@ class MenuService {
       },
     );
   }
+
+  static Future<http.Response> getAllMenusWithTrucks() async {
+    final url = Uri.parse("$baseUrl/all");
+    return await http.get(url);
+  }
 }
