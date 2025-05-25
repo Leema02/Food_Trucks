@@ -1,4 +1,5 @@
 const MenuItem = require('../models/menuModel');
+const Truck = require('../models/truckModel');
 
 // ✅ Create Menu Item
 const createMenuItem = async (req, res) => {
@@ -76,9 +77,33 @@ const deleteMenuItem = async (req, res) => {
   }
 };
 
+// GET /api/menus/all
+const getAllMenus = async (req, res) => {
+  try {
+    const trucks = await Truck.find();
+
+    const results = await Promise.all(
+      trucks.map(async (truck) => {
+        const menu = await MenuItem.find({ truck_id: truck._id });
+        return {
+          truckId: truck._id,
+          truckName: truck.name,
+          menu
+        };
+      })
+    );
+
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
 module.exports = {
   createMenuItem,
   getMenuItemsByTruck,
   updateMenuItem,
-  deleteMenuItem
+  deleteMenuItem,
+  getAllMenus
 };
