@@ -87,7 +87,7 @@ const getAllMenus = async (req, res) => {
         const menu = await MenuItem.find({ truck_id: truck._id });
         return {
           truckId: truck._id,
-          truckName: truck.name,
+          truckName: truck.truck_name,
           menu
         };
       })

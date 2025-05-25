@@ -4,12 +4,13 @@ import 'calendar_tile.dart';
 
 class TruckCalendar extends StatefulWidget {
   final List<DateTime> unavailableDates;
-  final void Function(DateTime selected) onDateSelected;
+  final void Function(DateTime start, DateTime end, bool hasUnavailable)
+      onRangeSelected;
 
   const TruckCalendar({
     super.key,
     required this.unavailableDates,
-    required this.onDateSelected,
+    required this.onRangeSelected,
   });
 
   @override
@@ -18,16 +19,108 @@ class TruckCalendar extends StatefulWidget {
 
 class _TruckCalendarState extends State<TruckCalendar> {
   DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
+  DateTime? _rangeStart;
+  DateTime? _rangeEnd;
 
   bool _isUnavailable(DateTime day) {
     final today = DateTime.now();
     return widget.unavailableDates.any((d) => DateUtils.isSameDay(d, day)) ||
-        DateUtils.isSameDay(day, today); // ❌ block today
+        DateUtils.isSameDay(day, today);
   }
 
   bool _isToday(DateTime day) {
     return DateUtils.isSameDay(day, DateTime.now());
+  }
+
+  bool _isWithinRange(DateTime day) {
+    if (_rangeStart == null || _rangeEnd == null) return false;
+    return day.isAfter(_rangeStart!.subtract(const Duration(days: 1))) &&
+        day.isBefore(_rangeEnd!.add(const Duration(days: 1)));
+  }
+
+  void _handleTap(DateTime selectedDay) {
+    if (_rangeStart == null || (_rangeStart != null && _rangeEnd != null)) {
+      setState(() {
+        _rangeStart = selectedDay;
+        _rangeEnd = null;
+        _focusedDay = selectedDay;
+      });
+    } else {
+      DateTime start = _rangeStart!;
+      DateTime end = selectedDay;
+
+      if (end.isBefore(start)) {
+        final temp = start;
+        start = end;
+        end = temp;
+      }
+      // ⛔ Check max allowed range (7 days)
+      final int days = end.difference(start).inDays + 1;
+      if (days > 7) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("⚠️ Maximum booking range is 7 days."),
+          ),
+        );
+        return;
+      }
+
+      // Trim the range if needed
+      DateTime trimmedEnd = end;
+      DateTime tempDate = start;
+      bool wasTrimmed = false;
+
+      while (!tempDate.isAfter(end)) {
+        if (_isUnavailable(tempDate)) {
+          trimmedEnd = tempDate.subtract(const Duration(days: 1));
+          wasTrimmed = true;
+          break;
+        }
+        tempDate = tempDate.add(const Duration(days: 1));
+      }
+
+      // Special case: single-day selection
+      if (trimmedEnd.isBefore(start)) {
+        if (start == end && !_isUnavailable(start)) {
+          setState(() {
+            _rangeStart = start;
+            _rangeEnd = end;
+            _focusedDay = selectedDay;
+          });
+
+          widget.onRangeSelected(start, end, false);
+          return;
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("❌ All dates in the selected range are unavailable."),
+          ),
+        );
+        setState(() {
+          _rangeStart = null;
+          _rangeEnd = null;
+        });
+        return;
+      }
+
+      if (wasTrimmed) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("⚠️ Range trimmed to avoid unavailable dates."),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+
+      setState(() {
+        _rangeStart = start;
+        _rangeEnd = trimmedEnd;
+        _focusedDay = selectedDay;
+      });
+
+      widget.onRangeSelected(start, trimmedEnd, false);
+    }
   }
 
   Widget _buildLegendItem(Color color, String label) {
@@ -55,44 +148,24 @@ class _TruckCalendarState extends State<TruckCalendar> {
           firstDay: DateTime.now(),
           lastDay: DateTime.now().add(const Duration(days: 90)),
           focusedDay: _focusedDay,
-          selectedDayPredicate: (day) => DateUtils.isSameDay(_selectedDay, day),
-          onDaySelected: (selectedDay, focusedDay) {
-            if (_isUnavailable(selectedDay)) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("❌ This date is unavailable")),
-              );
-              return;
-            }
-
-            setState(() {
-              _selectedDay = selectedDay;
-              _focusedDay = focusedDay;
-            });
-
-            widget.onDateSelected(selectedDay);
-          },
+          rangeStartDay: _rangeStart,
+          rangeEndDay: _rangeEnd,
+          onDaySelected: (selectedDay, focusedDay) => _handleTap(selectedDay),
+          selectedDayPredicate: (day) =>
+              DateUtils.isSameDay(day, _rangeStart) ||
+              DateUtils.isSameDay(day, _rangeEnd),
           availableCalendarFormats: const {
             CalendarFormat.month: 'Month',
           },
-          calendarStyle: const CalendarStyle(
-            outsideDaysVisible: false,
-          ),
+          calendarStyle: const CalendarStyle(outsideDaysVisible: false),
           calendarBuilders: CalendarBuilders(
             defaultBuilder: (context, day, _) {
               return CalendarTile(
                 date: day,
                 isUnavailable: _isUnavailable(day),
-                isSelected: DateUtils.isSameDay(_selectedDay, day),
+                isSelected: _isWithinRange(day),
                 isToday: _isToday(day),
-                onTap: () {
-                  if (!_isUnavailable(day)) {
-                    setState(() {
-                      _selectedDay = day;
-                      _focusedDay = day;
-                    });
-                    widget.onDateSelected(day);
-                  }
-                },
+                onTap: () => _handleTap(day),
               );
             },
           ),
@@ -103,7 +176,7 @@ class _TruckCalendarState extends State<TruckCalendar> {
           children: [
             _buildLegendItem(Colors.redAccent, 'Unavailable'),
             const SizedBox(width: 16),
-            _buildLegendItem(Colors.green.shade400, 'Available'),
+            _buildLegendItem(Colors.green.shade400, 'Selected Range'),
             const SizedBox(width: 16),
             _buildLegendItem(Colors.blue, 'Today'),
           ],
