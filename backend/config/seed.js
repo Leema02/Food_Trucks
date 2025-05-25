@@ -166,31 +166,59 @@ for (let i = 0; i < 30; i++) {
   });
 }
 
-  console.log('📅 Seeding fake event bookings...');
-  const occasionTypes = ['Wedding', 'Birthday', 'Graduation', 'Corporate'];
-  for (const truck of trucks) {
-    const numBookings = faker.number.int({ min: 1, max: 3 });
+console.log('📅 Seeding fake event bookings...');
+const occasionTypes = ['Wedding', 'Birthday', 'Graduation', 'Corporate'];
 
-    for (let k = 0; k < numBookings; k++) {
-      const daysFromNow = faker.number.int({ min: 5, max: 90 });
-      const eventDate = new Date();
-      eventDate.setDate(eventDate.getDate() + daysFromNow);
+for (const truck of trucks) {
+  const numBookings = faker.number.int({ min: 1, max: 3 });
 
-      await EventBooking.create({
-        truck_id: truck._id,
-        user_id: customer._id,
-        event_date: eventDate,
-        event_time: '18:00',
-        occasion_type: faker.helpers.arrayElement(occasionTypes),
-        location: faker.location.streetAddress(),
-        city: truck.city,
-        guest_count: faker.number.int({ min: 30, max: 150 }),
-        special_requests: faker.lorem.words(5),
-        total_amount: faker.number.int({ min: 500, max: 2000 }),
-        status: faker.helpers.arrayElement(['pending', 'confirmed', 'rejected'])
-      });
+  for (let k = 0; k < numBookings; k++) {
+    const daysFromNow = faker.number.int({ min: 5, max: 90 });
+    const duration = faker.number.int({ min: 1, max: 3 });
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() + daysFromNow);
+
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + duration);
+
+    await EventBooking.create({
+      truck_id: truck._id,
+      user_id: customer._id,
+      event_start_date: startDate,
+      event_end_date: endDate,
+      event_time: '18:00',
+      occasion_type: faker.helpers.arrayElement(occasionTypes),
+      location: faker.location.streetAddress(),
+      city: truck.city,
+      guest_count: faker.number.int({ min: 30, max: 150 }),
+      special_requests: faker.lorem.words(5),
+      total_amount: faker.number.int({ min: 500, max: 2000 }),
+      status: faker.helpers.arrayElement(['pending', 'confirmed', 'rejected'])
+    });
+
+    // 🛑 Block all days in the booking range
+    const blockedDates = [];
+    const tempDate = new Date(startDate);
+    while (tempDate <= endDate) {
+      blockedDates.push(new Date(tempDate));
+      tempDate.setDate(tempDate.getDate() + 1);
     }
+
+    // Avoid duplicates
+    const currentTruck = await Truck.findById(truck._id);
+    const updatedBlocked = [
+      ...new Set([
+        ...currentTruck.unavailable_dates.map(d => d.toISOString().split('T')[0]),
+        ...blockedDates.map(d => d.toISOString().split('T')[0])
+      ])
+    ].map(dateStr => new Date(dateStr));
+
+    currentTruck.unavailable_dates = updatedBlocked;
+    await currentTruck.save();
   }
+}
+
 
   console.log('✅ Seed complete.');
   process.exit();

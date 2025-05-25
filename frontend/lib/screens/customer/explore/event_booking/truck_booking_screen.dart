@@ -12,7 +12,8 @@ class TruckBookingScreen extends StatefulWidget {
 }
 
 class _TruckBookingScreenState extends State<TruckBookingScreen> {
-  DateTime? selectedDate;
+  DateTimeRange? selectedDateRange;
+  bool hasUnavailableInSelection = false;
   List<DateTime> unavailableDates = [];
 
   @override
@@ -22,15 +23,15 @@ class _TruckBookingScreenState extends State<TruckBookingScreen> {
   }
 
   void _loadUnavailableDates() {
-    final List<String> raw =
-        List<String>.from(widget.truck['unavailable_dates'] ?? []);
-    unavailableDates = raw.map((dateStr) => DateTime.parse(dateStr)).toList();
+    final rawDates = List<String>.from(widget.truck['unavailable_dates'] ?? []);
+    unavailableDates =
+        rawDates.map((dateStr) => DateTime.parse(dateStr)).toList();
   }
 
   void _onContinue() {
-    if (selectedDate == null) {
+    if (selectedDateRange == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select a date")),
+        const SnackBar(content: Text("Please select a date range.")),
       );
       return;
     }
@@ -40,7 +41,7 @@ class _TruckBookingScreenState extends State<TruckBookingScreen> {
       MaterialPageRoute(
         builder: (_) => FinalBookingForm(
           truck: widget.truck,
-          selectedDate: selectedDate!,
+          selectedDateRange: selectedDateRange!,
         ),
       ),
     );
@@ -55,53 +56,85 @@ class _TruckBookingScreenState extends State<TruckBookingScreen> {
         title: Text(truck['truck_name'] ?? 'Truck Booking'),
         backgroundColor: Colors.orange,
       ),
-      body: Column(
-        children: [
-          // 🛻 Truck Summary
-          Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.orange.shade50,
-              borderRadius: BorderRadius.circular(16),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // 🛻 Truck Info
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    truck['truck_name'] ?? '',
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text("Cuisine: ${truck['cuisine_type'] ?? 'N/A'}"),
+                  Text("City: ${truck['city'] ?? 'N/A'}"),
+                ],
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  truck['truck_name'] ?? '',
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text("Cuisine: ${truck['cuisine_type'] ?? 'N/A'}"),
-                Text("City: ${truck['city'] ?? 'N/A'}"),
-              ],
-            ),
-          ),
 
-          // 📅 Calendar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TruckCalendar(
+            const SizedBox(height: 16),
+
+            // 📅 Calendar
+            TruckCalendar(
               unavailableDates: unavailableDates,
-              onDateSelected: (date) => setState(() => selectedDate = date),
+              onRangeSelected: (start, end, hasUnavailable) {
+                setState(() {
+                  selectedDateRange = DateTimeRange(start: start, end: end);
+                  hasUnavailableInSelection = hasUnavailable;
+                });
+              },
             ),
-          ),
 
-          const SizedBox(height: 18),
-          ElevatedButton(
-            onPressed: _onContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 255, 195, 98),
-              foregroundColor: Colors.black, // 🖤 force button text to black
-              padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+            // 📌 Selected Range Display
+            if (selectedDateRange != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Column(
+                  children: [
+                    Text(
+                      'Selected: ${selectedDateRange!.start.toString().split(" ")[0]} → ${selectedDateRange!.end.toString().split(" ")[0]}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    if (hasUnavailableInSelection)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 6),
+                        child: Text(
+                          "⚠️ Your selected range includes unavailable dates.",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+            const SizedBox(height: 24),
+
+            // 🔘 Continue Button
+            ElevatedButton(
+              onPressed: _onContinue,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(255, 255, 195, 98),
+                foregroundColor: Colors.black,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text("Continue to Booking"),
             ),
-            child: const Text("Continue to Booking"),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
