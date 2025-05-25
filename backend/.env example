@@ -6,7 +6,7 @@ JWT_SECRET=supersecretkey123
 JWT_EXPIRES_IN=1h
 
 EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
+EMAIL_PORT=587 
 EMAIL_USER=foodtruck.team0@gmail.com
 EMAIL_PASS= ywpv sska umvt cbqu
 
