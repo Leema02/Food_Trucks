@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
 class SearchFilterBar extends StatelessWidget {
-  const SearchFilterBar({super.key});
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged; // Callback for text changes
+
+  const SearchFilterBar({
+    super.key,
+    required this.controller,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,10 +30,12 @@ class SearchFilterBar extends StatelessWidget {
         children: [
           const Icon(Icons.search, color: Colors.grey),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: TextField(
-              decoration: InputDecoration(
-                hintText: "Search food or trucks",
+              controller: controller,
+              onChanged: onChanged, // Call onChanged when text input changes
+              decoration: const InputDecoration(
+                hintText: "Search food or trucks (e.g., vegan burger)",
                 border: InputBorder.none,
               ),
             ),
