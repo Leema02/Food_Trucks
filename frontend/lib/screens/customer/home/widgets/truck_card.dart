@@ -3,8 +3,9 @@ import 'package:myapp/screens/customer/menu/truck_menu.dart';
 
 class TruckCard extends StatelessWidget {
   final dynamic truck;
+  final List<String> activeSearchTerms;
 
-  const TruckCard({super.key, required this.truck});
+  const TruckCard({super.key, required this.truck,required this.activeSearchTerms});
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +87,7 @@ class TruckCard extends StatelessWidget {
                           builder: (_) => TruckMenuPage(
                             truckId: truck['_id'],
                             truckCity: truck['city'], // ✅ required!
+                            activeSearchTerms: activeSearchTerms,
                           ),
                         ),
                       );

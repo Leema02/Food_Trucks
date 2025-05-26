@@ -28,10 +28,18 @@ class CartController {
       _cartItems[index]['quantity'] += 1;
     } else {
       _cartItems.add({
-        ...item,
-        'quantity': 1,
+        'menu_id': item['menu_id'],
+        'name': item['name'],
+        'price': item['price'],
+        'image_url': item['image_url'],
         'truck_id': truckId,
         'truck_city': truckCity,
+        'quantity': 1,
+
+        // 🆕 Enhanced fields
+        'isVegan': item['isVegan'] ?? false,
+        'isSpicy': item['isSpicy'] ?? false,
+        'calories': item['calories'],
       });
     }
 

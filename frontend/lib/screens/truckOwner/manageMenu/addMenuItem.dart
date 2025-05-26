@@ -17,12 +17,15 @@ class AddMenuItemPage extends StatefulWidget {
 
 class _AddMenuItemPageState extends State<AddMenuItemPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _categoryController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _categoryController = TextEditingController();
+  final _caloriesController = TextEditingController();
   File? _selectedImage;
   bool isAvailable = true;
+  bool isVegan = false;
+  bool isSpicy = false;
   bool isSubmitting = false;
   final ImagePicker _picker = ImagePicker();
 
@@ -33,9 +36,7 @@ class _AddMenuItemPageState extends State<AddMenuItemPage> {
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
+      setState(() => _selectedImage = File(pickedFile.path));
     }
   }
 
@@ -85,6 +86,9 @@ class _AddMenuItemPageState extends State<AddMenuItemPage> {
       "category": _categoryController.text.trim(),
       "image_url": uploadedUrl,
       "isAvailable": isAvailable,
+      "calories": int.tryParse(_caloriesController.text),
+      "isVegan": isVegan,
+      "isSpicy": isSpicy,
     };
 
     final response = await MenuService.addMenuItem(token, data);
@@ -137,6 +141,26 @@ class _AddMenuItemPageState extends State<AddMenuItemPage> {
                 controller: _categoryController,
                 decoration: InputDecoration(labelText: 'category'.tr()),
               ),
+              TextFormField(
+                controller: _caloriesController,
+                decoration: InputDecoration(labelText: 'Calories'),
+                keyboardType: TextInputType.number,
+              ),
+              SwitchListTile(
+                title: Text('Vegan'),
+                value: isVegan,
+                onChanged: (val) => setState(() => isVegan = val),
+              ),
+              SwitchListTile(
+                title: Text('Spicy'),
+                value: isSpicy,
+                onChanged: (val) => setState(() => isSpicy = val),
+              ),
+              SwitchListTile(
+                title: Text('available'.tr()),
+                value: isAvailable,
+                onChanged: (val) => setState(() => isAvailable = val),
+              ),
               const SizedBox(height: 12),
               InkWell(
                 onTap: _pickImage,
@@ -154,14 +178,6 @@ class _AddMenuItemPageState extends State<AddMenuItemPage> {
                           child: Image.file(_selectedImage!, fit: BoxFit.cover),
                         ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              SwitchListTile(
-                title: Text('available'.tr()),
-                value: isAvailable,
-                onChanged: (value) {
-                  setState(() => isAvailable = value);
-                },
               ),
               const SizedBox(height: 20),
               ElevatedButton(

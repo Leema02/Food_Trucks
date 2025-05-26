@@ -1,17 +1,16 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/core/services/event_booking_service.dart';
 
 class FinalBookingForm extends StatefulWidget {
   final Map<String, dynamic> truck;
-  final DateTime selectedDate;
+  final DateTimeRange selectedDateRange;
 
   const FinalBookingForm({
     super.key,
     required this.truck,
-    required this.selectedDate,
+    required this.selectedDateRange,
   });
 
   @override
@@ -19,10 +18,12 @@ class FinalBookingForm extends StatefulWidget {
 }
 
 class _FinalBookingFormState extends State<FinalBookingForm> {
+  final _formKey = GlobalKey<FormState>();
+
   TimeOfDay? selectedTime;
-  final TextEditingController locationController = TextEditingController();
-  final TextEditingController guestsController = TextEditingController();
-  final TextEditingController requestsController = TextEditingController();
+  final locationController = TextEditingController();
+  final guestsController = TextEditingController();
+  final requestsController = TextEditingController();
 
   Future<void> _pickTime() async {
     final time = await showTimePicker(
@@ -33,38 +34,36 @@ class _FinalBookingFormState extends State<FinalBookingForm> {
   }
 
   void _submit() async {
-    if (selectedTime == null ||
-        locationController.text.isEmpty ||
-        guestsController.text.isEmpty) {
+    if (!_formKey.currentState!.validate() || selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill all required fields")),
+        const SnackBar(content: Text("Please complete all required fields.")),
       );
       return;
     }
 
     final data = {
       "truck_id": widget.truck["_id"],
-      "event_date": widget.selectedDate.toIso8601String(),
+      "event_start_date": widget.selectedDateRange.start.toIso8601String(),
+      "event_end_date": widget.selectedDateRange.end.toIso8601String(),
       "event_time": selectedTime!.format(context),
       "occasion_type": "N/A",
-      "location": locationController.text,
+      "location": locationController.text.trim(),
       "city": widget.truck["city"],
-      "guest_count": int.tryParse(guestsController.text),
-      "special_requests": requestsController.text,
-      "total_amount": 0
+      "guest_count": int.tryParse(guestsController.text.trim()),
+      "special_requests": requestsController.text.trim(),
+      "total_amount": 0,
     };
 
     try {
       final response = await EventBookingService.submitBooking(data);
-
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("✅ Booking submitted successfully!")),
         );
-        Navigator.pop(context); // or push confirmation screen
+        Navigator.pop(context);
       } else {
         final message =
-            jsonDecode(response.body)['message'] ?? 'Something went wrong';
+            jsonDecode(response.body)['message'] ?? 'Something went wrong.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("❌ $message")),
         );
@@ -79,6 +78,8 @@ class _FinalBookingFormState extends State<FinalBookingForm> {
   @override
   Widget build(BuildContext context) {
     final truck = widget.truck;
+    final start = DateFormat.yMMMd().format(widget.selectedDateRange.start);
+    final end = DateFormat.yMMMd().format(widget.selectedDateRange.end);
 
     return Scaffold(
       appBar: AppBar(
@@ -87,51 +88,63 @@ class _FinalBookingFormState extends State<FinalBookingForm> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Truck Summary
-            Text(
-              truck['truck_name'] ?? '',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text("Date: ${DateFormat.yMMMd().format(widget.selectedDate)}"),
-
-            const SizedBox(height: 16),
-            GestureDetector(
-              onTap: _pickTime,
-              child: AbsorbPointer(
-                child: _buildField(
-                  label: "Event Time",
-                  hint: "Select Time",
-                  controller: TextEditingController(
-                    text: selectedTime?.format(context) ?? '',
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              Text(
+                truck['truck_name'] ?? '',
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text("Dates: $start → $end"),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: _pickTime,
+                child: AbsorbPointer(
+                  child: _buildField(
+                    label: "Event Time",
+                    hint: "Select time",
+                    controller: TextEditingController(
+                      text: selectedTime?.format(context) ?? '',
+                    ),
+                    validator: (_) =>
+                        selectedTime == null ? 'Please select a time' : null,
                   ),
                 ),
               ),
-            ),
-            _buildField(label: "Location", controller: locationController),
-            _buildField(
-              label: "Guest Count",
-              controller: guestsController,
-              keyboardType: TextInputType.number,
-            ),
-            _buildField(
-              label: "Special Requests (optional)",
-              controller: requestsController,
-              maxLines: 3,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepOrange.shade200,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              _buildField(
+                label: "Location",
+                controller: locationController,
+                validator: (val) =>
+                    val == null || val.trim().isEmpty ? "Required" : null,
               ),
-              child: const Text("Submit Booking"),
-            ),
-          ],
+              _buildField(
+                label: "Guest Count",
+                controller: guestsController,
+                keyboardType: TextInputType.number,
+                validator: (val) => val == null || int.tryParse(val) == null
+                    ? "Enter a valid number"
+                    : null,
+              ),
+              _buildField(
+                label: "Special Requests (optional)",
+                controller: requestsController,
+                maxLines: 3,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepOrange.shade200,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                ),
+                child: const Text("Submit Booking"),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -143,13 +156,15 @@ class _FinalBookingFormState extends State<FinalBookingForm> {
     TextEditingController? controller,
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
+    String? Function(String?)? validator,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: TextField(
+      child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
         maxLines: maxLines,
+        validator: validator,
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,

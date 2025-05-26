@@ -21,15 +21,15 @@ class _EditMenuItemPageState extends State<EditMenuItemPage> {
   late TextEditingController _descriptionController;
   late TextEditingController _priceController;
   late TextEditingController _categoryController;
+  late TextEditingController _caloriesController;
+
   File? _selectedImage;
   bool isAvailable = true;
+  bool isVegan = false;
+  bool isSpicy = false;
   bool isSubmitting = false;
-  final ImagePicker _picker = ImagePicker();
   String? token;
-
-  String getFullImageUrl(String path) {
-    return path.startsWith('http') ? path : 'http://10.0.2.2:5000$path';
-  }
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -40,21 +40,27 @@ class _EditMenuItemPageState extends State<EditMenuItemPage> {
     _priceController =
         TextEditingController(text: widget.item['price'].toString());
     _categoryController = TextEditingController(text: widget.item['category']);
+    _caloriesController =
+        TextEditingController(text: widget.item['calories']?.toString() ?? '');
     isAvailable = widget.item['isAvailable'] ?? true;
+    isVegan = widget.item['isVegan'] ?? false;
+    isSpicy = widget.item['isSpicy'] ?? false;
     _loadToken();
   }
 
   Future<void> _loadToken() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
+  }
+
+  String getFullImageUrl(String path) {
+    return path.startsWith('http') ? path : 'http://10.0.2.2:5000$path';
   }
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
+      setState(() => _selectedImage = File(pickedFile.path));
     }
   }
 
@@ -69,9 +75,8 @@ class _EditMenuItemPageState extends State<EditMenuItemPage> {
       final resBody = await response.stream.bytesToString();
       final resData = jsonDecode(resBody);
       return getFullImageUrl(resData['url']);
-    } else {
-      return null;
     }
+    return null;
   }
 
   Future<void> _submitForm() async {
@@ -89,9 +94,7 @@ class _EditMenuItemPageState extends State<EditMenuItemPage> {
 
     if (_selectedImage != null) {
       final uploadedUrl = await _uploadImage(_selectedImage!);
-      if (uploadedUrl != null) {
-        imageUrl = uploadedUrl;
-      }
+      if (uploadedUrl != null) imageUrl = uploadedUrl;
     }
 
     final data = {
@@ -99,6 +102,9 @@ class _EditMenuItemPageState extends State<EditMenuItemPage> {
       "description": _descriptionController.text.trim(),
       "price": double.tryParse(_priceController.text) ?? 0.0,
       "category": _categoryController.text.trim(),
+      "calories": int.tryParse(_caloriesController.text),
+      "isVegan": isVegan,
+      "isSpicy": isSpicy,
       "image_url": imageUrl,
       "isAvailable": isAvailable,
     };
@@ -154,6 +160,26 @@ class _EditMenuItemPageState extends State<EditMenuItemPage> {
                 controller: _categoryController,
                 decoration: InputDecoration(labelText: 'category'.tr()),
               ),
+              TextFormField(
+                controller: _caloriesController,
+                decoration: InputDecoration(labelText: 'Calories'),
+                keyboardType: TextInputType.number,
+              ),
+              SwitchListTile(
+                title: Text('Vegan'),
+                value: isVegan,
+                onChanged: (val) => setState(() => isVegan = val),
+              ),
+              SwitchListTile(
+                title: Text('Spicy'),
+                value: isSpicy,
+                onChanged: (val) => setState(() => isSpicy = val),
+              ),
+              SwitchListTile(
+                title: Text('available'.tr()),
+                value: isAvailable,
+                onChanged: (value) => setState(() => isAvailable = value),
+              ),
               const SizedBox(height: 12),
               InkWell(
                 onTap: _pickImage,
@@ -174,14 +200,6 @@ class _EditMenuItemPageState extends State<EditMenuItemPage> {
                           fit: BoxFit.cover,
                         ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              SwitchListTile(
-                title: Text('available'.tr()),
-                value: isAvailable,
-                onChanged: (value) {
-                  setState(() => isAvailable = value);
-                },
               ),
               const SizedBox(height: 20),
               ElevatedButton(

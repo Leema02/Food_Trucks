@@ -11,7 +11,11 @@ const menuItemSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   category: { type: String, required: true },
   image_url: { type: String },
-  isAvailable: { type: Boolean, default: true }
+  isAvailable: { type: Boolean, default: true },
+    // New fields
+  calories: { type: Number },
+  isVegan: { type: Boolean, default: false },
+  isSpicy: { type: Boolean, default: false }
 }, {
   timestamps: true,
   toJSON: {

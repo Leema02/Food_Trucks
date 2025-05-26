@@ -57,11 +57,13 @@ class HeaderSection extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.phone, color: Colors.orange),
+            icon: const CircleAvatar(
+              radius: 18,
+              backgroundColor: Color.fromARGB(255, 244, 155, 54),
+              child: Icon(Icons.support_agent, color: Colors.white, size: 20),
+            ),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Call us feature coming soon")),
-              );
+              Navigator.pushNamed(context, '/chatbot');
             },
           ),
         ],
