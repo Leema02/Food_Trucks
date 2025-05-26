@@ -24,7 +24,7 @@ class _ExplorePageState extends State<ExplorePage> {
               const SizedBox(height: 8),
 
               // 🍊 Search + Filter Bar
-              const SearchFilterBar(),
+              //SearchFilterBar(),
 
               const SizedBox(height: 4),
 

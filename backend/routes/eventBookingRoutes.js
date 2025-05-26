@@ -27,9 +27,6 @@ router.get('/owner', protect, authorizeRoles('truck owner'), getTruckBookings);
 // 🔴 Truck owner updates booking status (approve/reject)
 router.patch('/:id/status', protect, authorizeRoles('truck owner'), updateBookingStatus);
 
-// 🟣 Anyone (usually customer) checks available trucks for a date
-//  router.get('/available', protect, getAvailableTrucksByDate);
-
 // 🟤 Delete a booking (customer or owner)
 router.delete('/:id', protect, deleteBooking);
 

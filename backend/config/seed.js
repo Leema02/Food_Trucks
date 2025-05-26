@@ -105,7 +105,28 @@ async function seed() {
     }
 
     const truck = await Truck.create({
-      truck_name: `${faker.company.name()} Truck`,
+      truck_name: faker.helpers.arrayElement([
+  "Taco Tempo",
+  "The Grilled Goat",
+  "Rolling Bites",
+  "Pizza Wheels",
+  "Burger Boulevard",
+  "Wrap & Roll",
+  "Spice Voyage",
+  "The Vegan Van",
+  "Sizzle Station",
+  "Falafel Fusion",
+  "Churro Chariot",
+  "Noodle N Go",
+  "Shawarma Shack",
+  "BBQ Express",
+  "Sushi Street",
+  "Kebab Kingdom",
+  "Sweet Ride",
+  "Urban Bites",
+  "Curry Cruiser",
+  "Waffle Wagon"
+]),
       cuisine_type: faker.helpers.arrayElement(cuisineOptions),
       description: faker.lorem.sentence(),
       owner_id: truckOwner._id,
@@ -125,47 +146,79 @@ async function seed() {
 
     trucks.push(truck);
   }
+console.log('🍔 Seeding fake menu items...');
+for (let i = 0; i < 30; i++) {
+  const truck = faker.helpers.arrayElement(trucks);
 
-  console.log('🍔 Seeding fake menu items...');
-  for (let i = 0; i < 30; i++) {
-    const truck = faker.helpers.arrayElement(trucks);
+  await MenuItem.create({
+    truck_id: truck._id,
+    name: faker.food.dish(),
+    description: faker.lorem.sentence(),
+    price: faker.commerce.price({ min: 5, max: 20 }),
+    category: faker.commerce.department(),
+    isAvailable: true,
+    image_url: faker.image.urlLoremFlickr({ category: 'food' }),
 
-    await MenuItem.create({
+    // 🆕 Enhanced fields
+    calories: faker.number.int({ min: 100, max: 800 }),
+    isVegan: faker.datatype.boolean(),
+    isSpicy: faker.datatype.boolean()
+  });
+}
+
+console.log('📅 Seeding fake event bookings...');
+const occasionTypes = ['Wedding', 'Birthday', 'Graduation', 'Corporate'];
+
+for (const truck of trucks) {
+  const numBookings = faker.number.int({ min: 1, max: 3 });
+
+  for (let k = 0; k < numBookings; k++) {
+    const daysFromNow = faker.number.int({ min: 5, max: 90 });
+    const duration = faker.number.int({ min: 1, max: 3 });
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() + daysFromNow);
+
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + duration);
+
+    await EventBooking.create({
       truck_id: truck._id,
-      name: faker.commerce.productName(),
-      description: faker.lorem.sentence(),
-      price: faker.commerce.price({ min: 5, max: 20 }),
-      category: faker.commerce.department(),
-      isAvailable: true,
-      image_url: faker.image.urlLoremFlickr({ category: 'food' })
+      user_id: customer._id,
+      event_start_date: startDate,
+      event_end_date: endDate,
+      event_time: '18:00',
+      occasion_type: faker.helpers.arrayElement(occasionTypes),
+      location: faker.location.streetAddress(),
+      city: truck.city,
+      guest_count: faker.number.int({ min: 30, max: 150 }),
+      special_requests: faker.lorem.words(5),
+      total_amount: faker.number.int({ min: 500, max: 2000 }),
+      status: faker.helpers.arrayElement(['pending', 'confirmed', 'rejected'])
     });
-  }
 
-  console.log('📅 Seeding fake event bookings...');
-  const occasionTypes = ['Wedding', 'Birthday', 'Graduation', 'Corporate'];
-  for (const truck of trucks) {
-    const numBookings = faker.number.int({ min: 1, max: 3 });
-
-    for (let k = 0; k < numBookings; k++) {
-      const daysFromNow = faker.number.int({ min: 5, max: 90 });
-      const eventDate = new Date();
-      eventDate.setDate(eventDate.getDate() + daysFromNow);
-
-      await EventBooking.create({
-        truck_id: truck._id,
-        user_id: customer._id,
-        event_date: eventDate,
-        event_time: '18:00',
-        occasion_type: faker.helpers.arrayElement(occasionTypes),
-        location: faker.location.streetAddress(),
-        city: truck.city,
-        guest_count: faker.number.int({ min: 30, max: 150 }),
-        special_requests: faker.lorem.words(5),
-        total_amount: faker.number.int({ min: 500, max: 2000 }),
-        status: faker.helpers.arrayElement(['pending', 'confirmed', 'rejected'])
-      });
+    // 🛑 Block all days in the booking range
+    const blockedDates = [];
+    const tempDate = new Date(startDate);
+    while (tempDate <= endDate) {
+      blockedDates.push(new Date(tempDate));
+      tempDate.setDate(tempDate.getDate() + 1);
     }
+
+    // Avoid duplicates
+    const currentTruck = await Truck.findById(truck._id);
+    const updatedBlocked = [
+      ...new Set([
+        ...currentTruck.unavailable_dates.map(d => d.toISOString().split('T')[0]),
+        ...blockedDates.map(d => d.toISOString().split('T')[0])
+      ])
+    ].map(dateStr => new Date(dateStr));
+
+    currentTruck.unavailable_dates = updatedBlocked;
+    await currentTruck.save();
   }
+}
+
 
   console.log('✅ Seed complete.');
   process.exit();

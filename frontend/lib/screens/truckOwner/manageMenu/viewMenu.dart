@@ -103,6 +103,22 @@ class _ManageMenuPageState extends State<ManageMenuPage> {
                   itemCount: menuItems.length,
                   itemBuilder: (context, index) {
                     final item = menuItems[index];
+
+                    final bool isVegan = item['isVegan'] == true;
+                    final bool isSpicy = item['isSpicy'] == true;
+                    final int? calories = item['calories'];
+
+                    // Subtitle content builder
+                    List<String> tags = [];
+                    if (isVegan) tags.add('🌱 Vegan');
+                    if (isSpicy) tags.add('🌶️ Spicy');
+                    if (calories != null) tags.add('$calories cal');
+
+                    final subtitle = [
+                      "${item['category']} • \$${item['price'].toString()}",
+                      if (tags.isNotEmpty) tags.join(' • ')
+                    ].join('\n');
+
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       shape: RoundedRectangleBorder(
@@ -129,7 +145,7 @@ class _ManageMenuPageState extends State<ManageMenuPage> {
                           ),
                         ),
                         subtitle: Text(
-                          "${item['category']} • \$${item['price'].toString()}",
+                          subtitle,
                           style: const TextStyle(fontSize: 14),
                         ),
                         trailing: PopupMenuButton<String>(
@@ -142,9 +158,7 @@ class _ManageMenuPageState extends State<ManageMenuPage> {
                                       EditMenuItemPage(item: item),
                                 ),
                               ).then((result) {
-                                if (result == true) {
-                                  fetchMenuItems();
-                                }
+                                if (result == true) fetchMenuItems();
                               });
                             } else if (value == 'delete') {
                               deleteMenuItem(item['_id']);
