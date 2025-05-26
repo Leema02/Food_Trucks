@@ -1,0 +1,111 @@
+/* ========= Admin Table ========= */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+  font-size: 14px;
+}
+
+.admin-table th {
+  background-color: #3e95cd; /* Blue header row */
+  color: #fff;
+}
+
+.admin-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* ========= Layout ========= */
+.dashboard-container {
+  display: flex;
+  font-family: "Segoe UI", sans-serif;
+  background-color: #f5f6fa;
+}
+
+.main-panel {
+  flex: 1;
+  padding: 2rem;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* ========= Buttons ========= */
+.edit-btn,
+.delete-btn {
+  padding: 6px 10px;
+  margin: 2px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  color: white;
+}
+
+.edit-btn {
+  background-color: #3e95cd;
+}
+.edit-btn:hover {
+  background-color: #337ab7;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+}
+
+.delete-btn:hover {
+  background-color: #b52a3c;
+}
+
+/* ========= Edit User Form ========= */
+.edit-user-form {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.edit-user-form form {
+  display: grid;
+  gap: 12px;
+}
+
+.edit-user-form input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.form-buttons button {
+  padding: 8px 16px;
+  border: none;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.form-buttons button:first-child {
+  background-color: #3e95cd;
+  color: white;
+}
+
+.form-buttons button:last-child {
+  background-color: #dc3545;
+  color: white;
+}

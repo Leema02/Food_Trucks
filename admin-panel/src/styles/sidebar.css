@@ -1,0 +1,61 @@
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  background-color: #3e95cd; /* Blue like stat number */
+  padding: 2rem 1.5rem;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.03);
+  color: white;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sidebar li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 1rem 0;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.sidebar li:hover {
+  color: #ffd6ba;
+}
+
+.sidebar h2 {
+  display: flex;
+  align-items: center;
+  font-size: 1.7rem;
+  margin-bottom: 2rem;
+  color: white;
+}
+
+.sidebar-logo {
+  width: 70px; /* 🎯 Adjusted to be more proportional */
+  height: 60px;
+  margin-right: 12px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+/* Icon inside li */
+.sidebar li svg {
+  font-size: 1.4rem; /* ⬆️ Bigger icon */
+}
+
+/* ========= Stat Card ========= */
+.stat-card {
+  flex: 1;
+  min-width: 160px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 1.2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
