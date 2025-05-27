@@ -8,7 +8,9 @@ router.post("/signup", UserController.signupUser);
 router.post("/login", UserController.loginUser);
 router.get("/verify-email", UserController.verifyEmail);
 router.post("/forgot-password", UserController.forgotPassword);
-router.post("/verify-reset-code", UserController.verifyResetCode);
+//1- Email matched a user in the DB 2-Token was generated 3- Reset link was sent to the user's email
+router.post("/verify-reset-code", UserController.verifyResetCode); 
+ //Generate a code,,,Store it securely,,,Send it to the user’s email
 router.post("/reset-password", UserController.resetPassword);
 
 router.use(protect);

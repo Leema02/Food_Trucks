@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 
 // Import your UI components (adjust paths as necessary)
-import 'components/MessageLine.dart';
+//import 'components/MessageLine.dart';
 import 'components/chat_app_bar.dart';
 import 'components/message_list.dart';
 import 'components/message_input_bar.dart';
@@ -29,12 +29,13 @@ class ChatBotScreenState extends State<ChatBotScreen> {
   final List<Map<String, dynamic>> messages = [];
 
   // TODO: Replace with your actual user token retrieval logic
-  final String _userToken = "YOUR_USER_TOKEN_IF_NEEDED";
+  //final String _userToken = "YOUR_USER_TOKEN_IF_NEEDED";
 
   @override
   void initState() {
     super.initState();
-    _addBotMessage("👋 Hi! I'm your Foodie Fleet assistant. How can I help you today?");
+    _addBotMessage(
+        "👋 Hi! I'm your Foodie Fleet assistant. How can I help you today?");
   }
 
   void _addBotMessage(String text, {bool isLoading = false}) {
@@ -103,9 +104,11 @@ class ChatBotScreenState extends State<ChatBotScreen> {
       if (mounted) {
         setState(() {
           // Remove the "Thinking..." message
-          messages.removeWhere((msg) => msg['isLoading'] == true && msg['sender'] == 'bot');
+          messages.removeWhere(
+              (msg) => msg['isLoading'] == true && msg['sender'] == 'bot');
         });
-        _addBotMessage(botResponse ?? "Sorry, I couldn't process that right now.");
+        _addBotMessage(
+            botResponse ?? "Sorry, I couldn't process that right now.");
         // _scrollToBottom(); // _addBotMessage already calls this
       }
     }
@@ -115,7 +118,8 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     if (_scrollController.hasClients && messages.isNotEmpty) {
       // Add a small delay to ensure the new message is laid out before scrolling
       Future.delayed(const Duration(milliseconds: 100), () {
-        if (_scrollController.hasClients) { // Check again in case disposed during delay
+        if (_scrollController.hasClients) {
+          // Check again in case disposed during delay
           _scrollController.animateTo(
             0.0, // Scroll to the "top" because the list is reversed
             duration: const Duration(milliseconds: 300),
@@ -132,42 +136,71 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     try {
       final response = await OrderService.getMyOrders(); // Pass token
       if (response.statusCode == 200) {
-        try { jsonDecode(response.body) as List; return response.body; } catch (_) { return "[]"; }
-      } return "[]";
-    } catch (e) { print("Error fetching orders: $e"); return "[]"; }
+        try {
+          jsonDecode(response.body) as List;
+          return response.body;
+        } catch (_) {
+          return "[]";
+        }
+      }
+      return "[]";
+    } catch (e) {
+      print("Error fetching orders: $e");
+      return "[]";
+    }
   }
 
   Future<List<dynamic>> _fetchTrucksListData() async {
     try {
       return await TruckOwnerService.getPublicTrucks();
-    } catch (e) { print("Error fetching trucks list: $e"); return []; }
+    } catch (e) {
+      print("Error fetching trucks list: $e");
+      return [];
+    }
   }
 
   Future<String> _fetchAllMenusData() async {
     try {
       final response = await MenuService.getAllMenusWithTrucks();
       if (response.statusCode == 200) {
-        try { jsonDecode(response.body) as List; return response.body; } catch (_) { return "[]"; }
-      } return "[]";
-    } catch (e) { print("Error fetching all menus: $e"); return "[]"; }
+        try {
+          jsonDecode(response.body) as List;
+          return response.body;
+        } catch (_) {
+          return "[]";
+        }
+      }
+      return "[]";
+    } catch (e) {
+      print("Error fetching all menus: $e");
+      return "[]";
+    }
   }
 
-  List<dynamic> _filterMenuItems(List<dynamic> allMenus, {bool? isVegan, bool? isSpicy}) {
-    return allMenus.map((truckMenu) {
-      final filteredItems = (truckMenu['menu'] as List).where((item) {
-        bool matches = true;
-        if (isVegan != null) matches &= item['isVegan'] == isVegan;
-        if (isSpicy != null) matches &= item['isSpicy'] == isSpicy;
-        return matches;
-      }).toList();
-      return {...truckMenu, 'menu': filteredItems};
-    }).where((truckMenu) => (truckMenu['menu'] as List).isNotEmpty).toList();
-  }
+  // List<dynamic> _filterMenuItems(List<dynamic> allMenus,
+  //     {bool? isVegan, bool? isSpicy}) {
+  //   return allMenus
+  //       .map((truckMenu) {
+  //         final filteredItems = (truckMenu['menu'] as List).where((item) {
+  //           bool matches = true;
+  //           if (isVegan != null) matches &= item['isVegan'] == isVegan;
+  //           if (isSpicy != null) matches &= item['isSpicy'] == isSpicy;
+  //           return matches;
+  //         }).toList();
+  //         return {...truckMenu, 'menu': filteredItems};
+  //       })
+  //       .where((truckMenu) => (truckMenu['menu'] as List).isNotEmpty)
+  //       .toList();
+  // }
 
-  List<dynamic> _filterTrucksByCuisine(List<dynamic> trucks, String cuisineType) {
-    return trucks.where((truck) =>
-        truck['cuisine_type'].toString().toLowerCase().contains(cuisineType.toLowerCase())
-    ).toList();
+  List<dynamic> _filterTrucksByCuisine(
+      List<dynamic> trucks, String cuisineType) {
+    return trucks
+        .where((truck) => truck['cuisine_type']
+            .toString()
+            .toLowerCase()
+            .contains(cuisineType.toLowerCase()))
+        .toList();
   }
 
   // List<dynamic> _filterTrucksByCity(List<dynamic> trucks, String city) {
@@ -261,7 +294,9 @@ class ChatBotScreenState extends State<ChatBotScreen> {
 
     // Handle month-only queries
     if (queriedDate == null) {
-      final monthMatch = RegExp(r'\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\b', caseSensitive: false)
+      final monthMatch = RegExp(
+              r'\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\b',
+              caseSensitive: false)
           .firstMatch(userQuery);
       if (monthMatch != null) {
         try {
@@ -274,7 +309,9 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     }
 
     // ====== CITY FILTER ======
-    final cityMatch = RegExp(r'\b(tulkarm|ramallah|salfit|nablus|jenin|qalqilya)\b').firstMatch(userQuery.toLowerCase());
+    final cityMatch =
+        RegExp(r'\b(tulkarm|ramallah|salfit|nablus|jenin|qalqilya)\b')
+            .firstMatch(userQuery.toLowerCase());
     if (cityMatch != null) {
       targetCity = cityMatch.group(0)!;
       filteredTrucks = _filterTrucksByCity(filteredTrucks, targetCity);
@@ -284,47 +321,60 @@ class ChatBotScreenState extends State<ChatBotScreen> {
     // ====== DATE AVAILABILITY ======
     if (queriedDate != null) {
       filteredTrucks = _getAvailableTrucksForDate(filteredTrucks, queriedDate);
-      customFiltersNote += "Available on ${DateFormat('MMMM d, yyyy').format(queriedDate)}. ";
+      customFiltersNote +=
+          "Available on ${DateFormat('MMMM d, yyyy').format(queriedDate)}. ";
     } else if (queriedMonth != null) {
-      filteredTrucks = _getAvailableTrucksForMonth(filteredTrucks, DateTime.now().year, queriedMonth);
-      customFiltersNote += "Available throughout ${DateFormat('MMMM').format(DateTime(2024, queriedMonth))}. ";
+      filteredTrucks = _getAvailableTrucksForMonth(
+          filteredTrucks, DateTime.now().year, queriedMonth);
+      customFiltersNote +=
+          "Available throughout ${DateFormat('MMMM').format(DateTime(2024, queriedMonth))}. ";
     }
 
     // ====== CUISINE FILTER ======
-    final cuisineMatch = RegExp(r'\b(coffee|desserts|mexican|asian|vegan|fried chicken|falafel|ice cream)\b')
+    final cuisineMatch = RegExp(
+            r'\b(coffee|desserts|mexican|asian|vegan|fried chicken|falafel|ice cream)\b')
         .firstMatch(userQuery.toLowerCase());
     if (cuisineMatch != null) {
-      filteredTrucks = _filterTrucksByCuisine(filteredTrucks, cuisineMatch.group(0)!);
+      filteredTrucks =
+          _filterTrucksByCuisine(filteredTrucks, cuisineMatch.group(0)!);
       customFiltersNote += "${cuisineMatch.group(0)} cuisine. ";
     }
 
     // ====== MENU FILTERING ======
     if (intent == "MENU_INQUIRY") {
       // Get truck IDs from filtered trucks
-      final truckIds = filteredTrucks.map<String>((t) => t['_id'].toString()).toList();
+      final truckIds =
+          filteredTrucks.map<String>((t) => t['_id'].toString()).toList();
 
       // Filter menus to only include trucks from filteredTrucks
-      filteredMenus = (allMenusList as List).where((menu) => truckIds.contains(menu['truckId'].toString())).toList();
+      filteredMenus = (allMenusList as List)
+          .where((menu) => truckIds.contains(menu['truckId'].toString()))
+          .toList();
 
       // Apply dietary filters
       isVegan = userQuery.toLowerCase().contains('vegan');
       isSpicy = userQuery.toLowerCase().contains('spicy');
 
       if (isVegan || isSpicy) {
-        filteredMenus = filteredMenus.map((menu) {
-          final filteredItems = (menu['menu'] as List).where((item) {
-            bool match = true;
-            if (isVegan) match = match && (item['isVegan'] == true);
-            if (isSpicy) match = match && (item['isSpicy'] == true);
-            return match;
-          }).toList();
-          return {...menu, 'menu': filteredItems};
-        }).where((menu) => (menu['menu'] as List).isNotEmpty).toList();
-      }    }
+        filteredMenus = filteredMenus
+            .map((menu) {
+              final filteredItems = (menu['menu'] as List).where((item) {
+                bool match = true;
+                if (isVegan) match = match && (item['isVegan'] == true);
+                if (isSpicy) match = match && (item['isSpicy'] == true);
+                return match;
+              }).toList();
+              return {...menu, 'menu': filteredItems};
+            })
+            .where((menu) => (menu['menu'] as List).isNotEmpty)
+            .toList();
+      }
+    }
 
     // ====== BUILD AI PROMPT ======
     const apiKey = 'AIzaSyCsfzNXk_nP9V5my0gqNc5wV0-kPcPZ9YU';
-    final url = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=$apiKey');
+    final url = Uri.parse(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=$apiKey');
 
     final prompt = """
 **You are Foodie Fleet Assistant** - Comprehensive Response System
@@ -374,20 +424,29 @@ Assistant Response:""";
 
     // Send to AI
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'contents': [{'parts': [{'text': prompt}]}],
-          "generationConfig": {
-            "temperature": 0.3,
-            "topP": 0.95,
-            "maxOutputTokens": 1024
-          }
-        }),
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'contents': [
+                {
+                  'parts': [
+                    {'text': prompt}
+                  ]
+                }
+              ],
+              "generationConfig": {
+                "temperature": 0.3,
+                "topP": 0.95,
+                "maxOutputTokens": 1024
+              }
+            }),
+          )
+          .timeout(const Duration(seconds: 30));
 
-      return _parseAIResponse(response) ?? "I couldn't process that. Please try again.";
+      return _parseAIResponse(response) ??
+          "I couldn't process that. Please try again.";
     } catch (e) {
       return "Sorry, I'm having trouble right now. Please try again later.";
     }
@@ -396,9 +455,10 @@ Assistant Response:""";
 // ====== HELPER FUNCTIONS ======
   List<dynamic> _filterTrucksByCity(List<dynamic> trucks, String city) {
     final lowerCity = city.trim().toLowerCase();
-    return trucks.where((truck) =>
-    truck['city'].toString().trim().toLowerCase() == lowerCity
-    ).toList();
+    return trucks
+        .where((truck) =>
+            truck['city'].toString().trim().toLowerCase() == lowerCity)
+        .toList();
   }
 
   // List<dynamic> _filterMenuItems(List<dynamic> menus, {bool? isVegan, bool? isSpicy}) {
@@ -414,62 +474,69 @@ Assistant Response:""";
   // }
 
   String _formatTruckList(List<dynamic> trucks) {
-    return trucks.map((t) =>
-    "- ${t['truck_name']} (${t['cuisine_type']}) | ID: ${t['_id']} | City: ${t['city']}"
-    ).join('\n');
+    return trucks
+        .map((t) =>
+            "- ${t['truck_name']} (${t['cuisine_type']}) | ID: ${t['_id']} | City: ${t['city']}")
+        .join('\n');
   }
 
   String _formatMenuList(List<dynamic> menus) {
-    return menus.map((m) =>
-    "Truck: ${m['truckName']} (${m['truckId']})\n" +
-        (m['menu'] as List).map((item) =>
-        "  • ${item['name']} - \$${item['price']} | " +
-            "Vegan: ${item['isVegan']} | Spicy: ${item['isSpicy']}"
-        ).join('\n')
-    ).join('\n\n');
+    return menus
+        .map((m) =>
+            "Truck: ${m['truckName']} (${m['truckId']})\n${(m['menu'] as List).map((item) => "  • ${item['name']} - \$${item['price']} | " + "Vegan: ${item['isVegan']} | Spicy: ${item['isSpicy']}").join('\n')}")
+        .join('\n\n');
   }
 
   int _countMenuItems(List<dynamic> menus) {
     return menus.fold(0, (sum, menu) => sum + (menu['menu'] as List).length);
   }
-  List<dynamic> _getAvailableTrucksForDate(List<dynamic> trucks, DateTime date) {
+
+  List<dynamic> _getAvailableTrucksForDate(
+      List<dynamic> trucks, DateTime date) {
     final dateStr = DateFormat('yyyy-MM-dd').format(date);
     return trucks.where((truck) {
       final unavailable = (truck['unavailable_dates'] as List<dynamic>?)
-          ?.whereType<String>()
-          .map((d) => d.substring(0, 10))
-          .toList() ?? [];
+              ?.whereType<String>()
+              .map((d) => d.substring(0, 10))
+              .toList() ??
+          [];
       return !unavailable.contains(dateStr);
     }).toList();
   }
 
-  List<dynamic> _getAvailableTrucksForMonth(List<dynamic> trucks, int year, int month) {
+  List<dynamic> _getAvailableTrucksForMonth(
+      List<dynamic> trucks, int year, int month) {
     return trucks.where((truck) {
       final unavailableMonths = (truck['unavailable_dates'] as List<dynamic>?)
-          ?.map((d) => DateTime.parse(d as String))
-          .where((dt) => dt.year == year && dt.month == month)
-          .toList() ?? [];
+              ?.map((d) => DateTime.parse(d as String))
+              .where((dt) => dt.year == year && dt.month == month)
+              .toList() ??
+          [];
       return unavailableMonths.isEmpty;
     }).toList();
   }
+
   // ========== ENHANCED INTENT CLASSIFICATION ==========
   Future<String> _classifyUserIntent(String userQuery) async {
     final query = userQuery.toLowerCase();
 
     // Orders Intent
-    if (RegExp(r'(order|purchase|status)\b.*(status|track|where|when)').hasMatch(query) ||
+    if (RegExp(r'(order|purchase|status)\b.*(status|track|where|when)')
+            .hasMatch(query) ||
         RegExp(r'\b(my orders?)\b').hasMatch(query)) {
       return "ORDERS_INQUIRY";
     }
 
     // Trucks Intent
-    if (RegExp(r'\b(truck|available|open|close|schedule|hours|location|address|cuisine|city)\b').hasMatch(query) ||
+    if (RegExp(r'\b(truck|available|open|close|schedule|hours|location|address|cuisine|city)\b')
+            .hasMatch(query) ||
         RegExp(r'(where is|when does|operating hours)').hasMatch(query)) {
       return "TRUCKS_INQUIRY";
     }
 
     // Menu Intent
-    if (RegExp(r'\b(menu|food|dish|meal|item|vegan|spicy|vegetarian|calorie|price|calories)\b').hasMatch(query) ||
+    if (RegExp(r'\b(menu|food|dish|meal|item|vegan|spicy|vegetarian|calorie|price|calories)\b')
+            .hasMatch(query) ||
         RegExp(r'(what to eat|options for|find.*food)').hasMatch(query)) {
       return "MENU_INQUIRY";
     }
@@ -487,15 +554,18 @@ Assistant Response:""";
   String? _parseAIResponse(http.Response response) {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['candidates']?[0]?['content']?['parts']?[0]?['text'] as String?;
+      return data['candidates']?[0]?['content']?['parts']?[0]?['text']
+          as String?;
     }
     return null;
   }
 
   String _handleGreetings(String query) {
     query = query.toLowerCase();
-    if (query.startsWith("hi") || query.startsWith("hello")) return "Hello! Ready to explore food trucks?";
-    if (query.contains("thank")) return "You're welcome! Let me know if you need anything else.";
+    if (query.startsWith("hi") || query.startsWith("hello"))
+      return "Hello! Ready to explore food trucks?";
+    if (query.contains("thank"))
+      return "You're welcome! Let me know if you need anything else.";
     return "How can I assist with your food truck experience today?";
   }
 }

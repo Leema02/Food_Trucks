@@ -40,14 +40,14 @@ class SearchFilterBar extends StatelessWidget {
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.orange),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Filters coming soon")),
-              );
-            },
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.filter_list, color: Colors.orange),
+          //   onPressed: () {
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       const SnackBar(content: Text("Filters coming soon")),
+          //     );
+          //   },
+          // ),
         ],
       ),
     );
