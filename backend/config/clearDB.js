@@ -1,12 +1,14 @@
 // clearDB.js
 const mongoose = require('mongoose');
-require('dotenv').config({ path: '../.env' }); 
+require('dotenv').config({ path: '../.env' });
 
 const User = require('../models/userModel');
 const Truck = require('../models/truckModel');
 const MenuItem = require('../models/menuModel');
 const Order = require('../models/orderModel');
 const EventBooking = require('../models/eventBookingModel');
+const TruckReview = require('../models/truckReviewModel');
+const MenuItemReview = require('../models/menuItemReviewModel');
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/foodtrucks';
 
@@ -20,7 +22,9 @@ async function clearDatabase() {
       Truck.deleteMany({}),
       MenuItem.deleteMany({}),
       Order.deleteMany({}),
-      EventBooking.deleteMany({}) 
+      EventBooking.deleteMany({}),
+      TruckReview.deleteMany({}),
+      MenuItemReview.deleteMany({})
     ]);
 
     console.log('✅ All collections cleared.');

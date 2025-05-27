@@ -7,6 +7,9 @@ const User = require('../models/userModel');
 const Truck = require('../models/truckModel');
 const MenuItem = require('../models/menuModel');
 const EventBooking = require('../models/eventBookingModel');
+const Order = require('../models/orderModel');
+const TruckReview = require('../models/truckReviewModel');
+const MenuItemReview = require('../models/menuItemReviewModel');
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/foodtrucks';
 
@@ -44,7 +47,10 @@ async function seed() {
     User.deleteMany({}),
     Truck.deleteMany({}),
     MenuItem.deleteMany({}),
-    EventBooking.deleteMany({})
+    EventBooking.deleteMany({}),
+    Order.deleteMany({}),
+    TruckReview.deleteMany({}),
+    MenuItemReview.deleteMany({}),
   ]);
 
   console.log('🧑 Seeding real users...');
@@ -226,6 +232,50 @@ for (const truck of trucks) {
     currentTruck.unavailable_dates = updatedBlocked;
     await currentTruck.save();
   }
+}
+
+console.log('🧾 Seeding fake orders + reviews...');
+
+for (let i = 0; i < 10; i++) {
+  const truck = faker.helpers.arrayElement(trucks);
+  const items = await MenuItem.find({ truck_id: truck._id }).limit(3);
+  if (!items.length) continue;
+
+const orderedItems = items.map(item => ({
+  menu_id: item._id,
+  name: item.name,
+  quantity: faker.number.int({ min: 1, max: 3 }),
+  price: item.price
+}));
+
+const order = await Order.create({
+  customer_id: customer._id,
+  truck_id: truck._id,
+  items: orderedItems,
+  total_price: orderedItems.reduce((sum, it) => sum + (it.price * it.quantity), 0),
+  status: 'Completed', // ✅ use a valid enum value
+  order_type: faker.helpers.arrayElement(['pickup', 'delivery'])
+});
+
+  // Truck Review
+  await TruckReview.create({
+    customer_id: customer._id,
+    truck_id: truck._id,
+    rating: faker.number.int({ min: 3, max: 5 }),
+    comment: faker.helpers.arrayElement(['Great truck!', 'Loved it!', 'Would order again.'])
+  });
+
+  // Menu Item Reviews
+for (const ordered of orderedItems) {
+  await MenuItemReview.create({
+    customer_id: customer._id,
+    menu_item_id: ordered.menu_id, // ✅ this is correct
+    order_id: order._id,
+    rating: faker.number.int({ min: 3, max: 5 }),
+    comment: faker.helpers.arrayElement(['Tasty!', 'Too spicy.', 'Perfectly cooked.'])
+  });
+}
+
 }
 
   console.log('✅ Seed complete.');
