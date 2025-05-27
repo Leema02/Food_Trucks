@@ -43,6 +43,24 @@ class _FinalBookingFormState extends State<FinalBookingForm> {
     }
   }
 
+  List<String> getDailyBookingBreakdown() {
+    final start = widget.selectedDateRange.start;
+    final end = widget.selectedDateRange.end;
+    if (startTime == null || endTime == null) return [];
+
+    final entries = <String>[];
+    DateTime current = start;
+
+    while (!current.isAfter(end)) {
+      final dateStr = DateFormat('MMM d, yyyy').format(current);
+      entries.add(
+          "$dateStr: ${startTime!.format(context)} → ${endTime!.format(context)}");
+      current = current.add(const Duration(days: 1));
+    }
+
+    return entries;
+  }
+
 //avg menu price of the selected truck × guest count
   Future<void> calculateEstimatedTotal(int guestCount) async {
     try {
@@ -157,6 +175,21 @@ class _FinalBookingFormState extends State<FinalBookingForm> {
                   ),
                 ),
               ),
+              if (startTime != null && endTime != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Daily Booking Schedule:",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      ...getDailyBookingBreakdown().map((entry) => Text(entry)),
+                    ],
+                  ),
+                ),
               _buildField(
                 label: "Location",
                 controller: locationController,
