@@ -13,24 +13,44 @@ class BookingCard extends StatelessWidget {
     this.onReject,
   });
 
+  List<String> getDailySchedule(BuildContext context) {
+    final startDate = DateTime.tryParse(booking['event_start_date'] ?? '');
+    final endDate = DateTime.tryParse(booking['event_end_date'] ?? '');
+    final startTime = booking['start_time'];
+    final endTime = booking['end_time'];
+
+    if (startDate == null ||
+        endDate == null ||
+        startTime == null ||
+        endTime == null) return [];
+
+    final entries = <String>[];
+    DateTime current = startDate;
+
+    while (!current.isAfter(endDate)) {
+      final dateStr = DateFormat('MMM d, yyyy').format(current);
+      entries.add("🕒 $dateStr: $startTime → $endTime");
+      current = current.add(const Duration(days: 1));
+    }
+
+    return entries;
+  }
+
   @override
   Widget build(BuildContext context) {
     final customer = booking['user_id'];
-    final startDate = DateTime.tryParse(booking['event_start_date'] ?? '');
-    final endDate = DateTime.tryParse(booking['event_end_date'] ?? '');
-    final startTime = booking['start_time'] ?? '';
-    final endTime = booking['end_time'] ?? '';
     final guests = booking['guest_count']?.toString() ?? '0';
     final totalAmount = booking['total_amount'];
     final status = booking['status'];
 
+    final startDate = DateTime.tryParse(booking['event_start_date'] ?? '');
+    final endDate = DateTime.tryParse(booking['event_end_date'] ?? '');
     final duration = (startDate != null && endDate != null)
         ? "${endDate.difference(startDate).inDays + 1} ${'days'.tr()}"
         : "N/A";
 
-    final dateRange = (startDate != null && endDate != null)
-        ? "${startDate.toString().split('T').first} • $startTime → ${endDate.toString().split('T').first} • $endTime"
-        : "N/A";
+    final isPending = status == 'pending';
+    final isConfirmed = status == 'confirmed';
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -50,35 +70,29 @@ class BookingCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "${'event'.tr()}: $dateRange",
+                    "${'duration'.tr()}: $duration",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
-                  Text("${'duration'.tr()}: $duration"),
+                  ...getDailySchedule(context).map((line) => Text(line)),
+                  const SizedBox(height: 6),
                   Text("${'guests'.tr()}: $guests"),
                   Text(
                       "${'customer'.tr()}: ${customer['F_name']} ${customer['L_name']}"),
                   Text("${'email'.tr()}: ${customer['email_address']}"),
                   Text("${'phone'.tr()}: ${customer['phone_num'] ?? 'N/A'}"),
-                  if (status == 'pending' && totalAmount != null)
+                  if (totalAmount != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 6.0),
                       child: Text(
-                        "💡 ${'estimated_total'.tr()}: ₪${totalAmount.toStringAsFixed(2)}",
-                        style: const TextStyle(
-                          color: Colors.orange,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  if (status == 'confirmed' && totalAmount != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        "💰 ${'total_amount'.tr()}: ₪${totalAmount.toStringAsFixed(2)}",
-                        style: const TextStyle(
+                        "₪${totalAmount.toStringAsFixed(2)}",
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                          color: isConfirmed
+                              ? Colors.green
+                              : isPending
+                                  ? Colors.orange
+                                  : Colors.black87,
                         ),
                       ),
                     ),
@@ -86,7 +100,7 @@ class BookingCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            status == 'pending'
+            isPending
                 ? Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
