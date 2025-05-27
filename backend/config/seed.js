@@ -269,7 +269,7 @@ const order = await Order.create({
 for (const ordered of orderedItems) {
   await MenuItemReview.create({
     customer_id: customer._id,
-    menu_item_id: ordered.menu_id, // ✅ this is correct
+    menu_item_id: ordered.menu_id, 
     order_id: order._id,
     rating: faker.number.int({ min: 3, max: 5 }),
     comment: faker.helpers.arrayElement(['Tasty!', 'Too spicy.', 'Perfectly cooked.'])
