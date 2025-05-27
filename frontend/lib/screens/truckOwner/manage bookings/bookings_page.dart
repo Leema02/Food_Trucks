@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/services/event_booking_service.dart';
 import '../../../core/services/truckOwner_service.dart';
-
-import 'package:easy_localization/easy_localization.dart';
+import 'widgets/booking_card.dart';
+import 'widgets/status_filter_chips.dart';
+import 'widgets/truck_selector_dropdown.dart';
 
 class OwnerBookingsPage extends StatefulWidget {
   const OwnerBookingsPage({super.key});
@@ -77,7 +79,8 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
       filteredBookings = allBookings.where((b) {
         final truck = b['truck_id'];
         final matchTruck = truck is Map && truck['_id'] == selectedTruckId;
-        final matchStatus = b['status'] == selectedStatus;
+        final matchStatus = (b['status'] ?? '').toString().toLowerCase() ==
+            selectedStatus.toLowerCase();
         return matchTruck && matchStatus;
       }).toList();
     });
@@ -160,70 +163,24 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: DropdownButtonFormField<String>(
-              value: selectedTruckId,
-              isExpanded: true,
-              decoration: InputDecoration(
-                labelText: "select_a_truck".tr(),
-                border: const OutlineInputBorder(),
-              ),
-              items: trucks.map<DropdownMenuItem<String>>((truck) {
-                return DropdownMenuItem<String>(
-                  value: truck['_id'],
-                  child: Text(truck['truck_name'] ?? "unnamed_truck".tr()),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedTruckId = value;
-                  filterBookings();
-                });
-              },
-            ),
+          TruckSelectorDropdown(
+            trucks: trucks,
+            selectedTruckId: selectedTruckId,
+            onChanged: (value) {
+              setState(() {
+                selectedTruckId = value;
+                filterBookings();
+              });
+            },
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                ChoiceChip(
-                  label: Text('pending'.tr()),
-                  selected: selectedStatus == 'pending',
-                  selectedColor: Colors.orange.shade200,
-                  onSelected: (_) {
-                    setState(() {
-                      selectedStatus = 'pending';
-                      filterBookings();
-                    });
-                  },
-                ),
-                const SizedBox(width: 10),
-                ChoiceChip(
-                  label: Text('confirmed'.tr()),
-                  selected: selectedStatus == 'confirmed',
-                  selectedColor: Colors.green.shade200,
-                  onSelected: (_) {
-                    setState(() {
-                      selectedStatus = 'confirmed';
-                      filterBookings();
-                    });
-                  },
-                ),
-                const SizedBox(width: 10),
-                ChoiceChip(
-                  label: Text('rejected'.tr()),
-                  selected: selectedStatus == 'rejected',
-                  selectedColor: Colors.red.shade200,
-                  onSelected: (_) {
-                    setState(() {
-                      selectedStatus = 'rejected';
-                      filterBookings();
-                    });
-                  },
-                ),
-              ],
-            ),
+          StatusFilterChips(
+            selectedStatus: selectedStatus,
+            onStatusChanged: (status) {
+              setState(() {
+                selectedStatus = status;
+                filterBookings();
+              });
+            },
           ),
           const SizedBox(height: 10),
           Expanded(
@@ -234,88 +191,12 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                     : ListView.builder(
                         itemCount: filteredBookings.length,
                         itemBuilder: (context, index) {
-                          final b = filteredBookings[index];
-                          final customer = b['user_id'];
-                          final date =
-                              b['event_date']?.toString().split('T').first ??
-                                  '';
-                          final time = b['event_time'] ?? '';
-                          final guests = b['guest_count']?.toString() ?? '0';
-
-                          return Card(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Icon(Icons.event, color: Colors.orange),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text("${'event'.tr()}: $date at $time",
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.bold)),
-                                        const SizedBox(height: 6),
-                                        Text("${'guests'.tr()}: $guests"),
-                                        Text(
-                                            "${'customer'.tr()}: ${customer['F_name']} ${customer['L_name']}"),
-                                        Text(
-                                            "${'email'.tr()}: ${customer['email_address']}"),
-                                        Text(
-                                            "${'phone'.tr()}: ${customer['phone_num'] ?? 'N/A'}"),
-                                        if (b['status'] == 'confirmed' &&
-                                            b['total_amount'] != null)
-                                          Padding(
-                                            padding:
-                                                const EdgeInsets.only(top: 8.0),
-                                            child: Text(
-                                              "💰 ${'total_amount'.tr()}: ₪${b['total_amount'].toStringAsFixed(2)}",
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.green,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  selectedStatus == 'pending'
-                                      ? Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(
-                                                  Icons.check_circle,
-                                                  color: Colors.green),
-                                              tooltip: 'approve'.tr(),
-                                              onPressed: () =>
-                                                  confirmBookingWithAmount(
-                                                      b['_id']),
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(Icons.cancel,
-                                                  color: Colors.red),
-                                              tooltip: 'reject'.tr(),
-                                              onPressed: () =>
-                                                  rejectBooking(b['_id']),
-                                            ),
-                                          ],
-                                        )
-                                      : const Icon(Icons.info_outline,
-                                          color: Colors.grey),
-                                ],
-                              ),
-                            ),
+                          final booking = filteredBookings[index];
+                          return BookingCard(
+                            booking: booking,
+                            onApprove: () =>
+                                confirmBookingWithAmount(booking['_id']),
+                            onReject: () => rejectBooking(booking['_id']),
                           );
                         },
                       ),
