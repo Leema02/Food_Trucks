@@ -8,7 +8,7 @@ const {
   addMenuItemReview,
   getMenuItemReviews
 } = require('../controllers/menuItemReviewController');
-const protect = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
 // TRUCK REVIEWS
 router.post('/truck', protect, addTruckReview);
