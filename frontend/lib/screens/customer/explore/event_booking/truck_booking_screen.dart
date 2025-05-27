@@ -57,12 +57,12 @@ class _TruckBookingScreenState extends State<TruckBookingScreen> {
         backgroundColor: Colors.orange,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(10),
         child: Column(
           children: [
             // 🛻 Truck Info
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(16),
@@ -73,9 +73,9 @@ class _TruckBookingScreenState extends State<TruckBookingScreen> {
                   Text(
                     truck['truck_name'] ?? '',
                     style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
+                        fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Text("Cuisine: ${truck['cuisine_type'] ?? 'N/A'}"),
                   Text("City: ${truck['city'] ?? 'N/A'}"),
                 ],

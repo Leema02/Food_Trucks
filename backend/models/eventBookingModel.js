@@ -9,7 +9,11 @@ const eventBookingSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
-  event_time: {
+  start_time: {
+    type: String,
+    required: true
+  },
+  end_time: {
     type: String,
     required: true
   },
