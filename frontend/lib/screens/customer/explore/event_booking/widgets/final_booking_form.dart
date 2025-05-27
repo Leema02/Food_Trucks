@@ -80,7 +80,7 @@ class _FinalBookingFormState extends State<FinalBookingForm> {
       "city": widget.truck["city"],
       "guest_count": int.tryParse(guestsController.text.trim()),
       "special_requests": requestsController.text.trim(),
-      "total_amount": 0,
+      "total_amount": estimatedTotal ?? 0,
     };
 
     try {

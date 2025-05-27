@@ -127,7 +127,6 @@ const updateBookingStatus = async (req, res) => {
       booking.total_amount = total_amount;
     }
 
-    // 🔓 Unblock dates if booking is being rejected
     if (status === 'rejected' && booking.status !== 'rejected') {
       const truck = await Truck.findById(booking.truck_id);
       const start = new Date(booking.event_start_date);
@@ -147,6 +146,7 @@ const updateBookingStatus = async (req, res) => {
       await truck.save();
     }
 
+    // ✅ Always update status here (even for rejected)
     booking.status = status;
     await booking.save();
 
@@ -155,6 +155,7 @@ const updateBookingStatus = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 
 // 🟤 Delete a booking by ID (only if status is pending)

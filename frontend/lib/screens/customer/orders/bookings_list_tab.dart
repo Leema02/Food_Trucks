@@ -73,28 +73,29 @@ class _BookingsListTabState extends State<BookingsListTab> {
     );
   }
 
+  List<dynamic> get filteredBookings {
+    if (selectedFilter == 'ALL') return bookings;
+    return bookings.where((b) {
+      final status = (b['status'] ?? '').toString().toUpperCase();
+      return status == selectedFilter;
+    }).toList();
+  }
+
   String formatDateRange(Map b) {
     try {
       final startDate = DateTime.tryParse(b['event_start_date'] ?? '');
       final endDate = DateTime.tryParse(b['event_end_date'] ?? '');
       final startTime = b['start_time'] ?? '';
       final endTime = b['end_time'] ?? '';
+
       if (startDate == null || endDate == null) return "Unknown date";
 
-      final formattedStartDate = DateFormat('MMM d, yyyy').format(startDate);
-      final formattedEndDate = DateFormat('MMM d, yyyy').format(endDate);
-      return "$formattedStartDate • $startTime → $formattedEndDate • $endTime";
+      final formattedStart = DateFormat('MMM d, yyyy').format(startDate);
+      final formattedEnd = DateFormat('MMM d, yyyy').format(endDate);
+      return "$formattedStart • $startTime → $formattedEnd • $endTime";
     } catch (_) {
       return "Unknown date";
     }
-  }
-
-  List<dynamic> get filteredBookings {
-    if (selectedFilter == 'ALL') return bookings;
-    return bookings
-        .where((b) =>
-            (b['status'] ?? '').toLowerCase() == selectedFilter.toLowerCase())
-        .toList();
   }
 
   Widget _buildFilterChips() {
@@ -110,9 +111,7 @@ class _BookingsListTabState extends State<BookingsListTab> {
             label: Text(status),
             selected: isSelected,
             selectedColor: Colors.orange,
-            onSelected: (_) {
-              setState(() => selectedFilter = status);
-            },
+            onSelected: (_) => setState(() => selectedFilter = status),
             labelStyle: TextStyle(
               color: isSelected ? Colors.white : Colors.black87,
               fontWeight: FontWeight.w500,
@@ -156,17 +155,16 @@ class _BookingsListTabState extends State<BookingsListTab> {
                     final truck = b['truck_id'];
                     final truckName = truck['truck_name'] ?? 'Unnamed Truck';
                     final city = truck['city'] ?? 'Unknown City';
-                    final dateTime = formatDateRange(b);
+                    final dateRange = formatDateRange(b);
                     final status =
-                        (b['status'] ?? 'pending').toString().toUpperCase();
-                    final totalAmount = b['total_amount']?.toString();
-
+                        (b['status'] ?? 'PENDING').toString().toUpperCase();
+                    final totalAmount = b['total_amount'];
                     final statusColor = {
                           'CONFIRMED': Colors.green,
                           'REJECTED': Colors.red,
                           'PENDING': Colors.orange,
                         }[status] ??
-                        Colors.orange;
+                        Colors.grey;
 
                     return Container(
                       padding: const EdgeInsets.all(14),
@@ -185,11 +183,19 @@ class _BookingsListTabState extends State<BookingsListTab> {
                           ),
                           const SizedBox(height: 4),
                           Text("City: $city"),
-                          Text("Date: $dateTime"),
-                          if (status == 'CONFIRMED' && totalAmount != null)
-                            Text("Total Amount: ₪$totalAmount",
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold)),
+                          Text("Date: $dateRange"),
+                          if (totalAmount != null)
+                            Text(
+                              status == 'CONFIRMED'
+                                  ? "Total Amount: ₪${totalAmount.toStringAsFixed(2)}"
+                                  : "Estimated Total: ₪${totalAmount.toStringAsFixed(2)}",
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: status == 'CONFIRMED'
+                                    ? Colors.green
+                                    : Colors.orange.shade800,
+                              ),
+                            ),
                           const SizedBox(height: 8),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
