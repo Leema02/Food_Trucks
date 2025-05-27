@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/customer/explore/event_booking/widgets/event_booking_selector.dart';
 import 'widgets/explore_tab_bar.dart';
-import 'widgets/search_filter_bar.dart';
 import 'widgets/category.dart';
 
 class ExplorePage extends StatefulWidget {

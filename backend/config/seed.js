@@ -182,20 +182,21 @@ for (const truck of trucks) {
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + duration);
 
-    await EventBooking.create({
-      truck_id: truck._id,
-      user_id: customer._id,
-      event_start_date: startDate,
-      event_end_date: endDate,
-      event_time: '18:00',
-      occasion_type: faker.helpers.arrayElement(occasionTypes),
-      location: faker.location.streetAddress(),
-      city: truck.city,
-      guest_count: faker.number.int({ min: 30, max: 150 }),
-      special_requests: faker.lorem.words(5),
-      total_amount: faker.number.int({ min: 500, max: 2000 }),
-      status: faker.helpers.arrayElement(['pending', 'confirmed', 'rejected'])
-    });
+await EventBooking.create({
+  truck_id: truck._id,
+  user_id: customer._id,
+  event_start_date: startDate,
+  event_end_date: endDate,
+  start_time: `${faker.number.int({ min: 10, max: 17 })}:00`,
+  end_time: `${faker.number.int({ min: 18, max: 23 })}:00`,
+  occasion_type: faker.helpers.arrayElement(occasionTypes),
+  location: faker.location.streetAddress(),
+  city: truck.city,
+  guest_count: faker.number.int({ min: 30, max: 150 }),
+  special_requests: faker.lorem.words(5),
+  total_amount: faker.number.int({ min: 500, max: 2000 }),
+  status: faker.helpers.arrayElement(['pending', 'confirmed', 'rejected'])
+});
 
     // 🛑 Block all days in the booking range
     const blockedDates = [];

@@ -4,18 +4,20 @@ const Truck = require('../models/truckModel');
 // 🟢 Create a new booking (multi-day)
 const createBooking = async (req, res) => {
   try {
-    const {
-      event_start_date,
-      event_end_date,
-      event_time,
-      occasion_type,
-      location,
-      city,
-      guest_count,
-      special_requests,
-      total_amount,
-      truck_id
-    } = req.body;
+const {
+  event_start_date,
+  event_end_date,
+  start_time,
+  end_time,
+  occasion_type,
+  location,
+  city,
+  guest_count,
+  special_requests,
+  total_amount,
+  truck_id
+} = req.body;
+
 
     if (!event_start_date || !event_end_date || new Date(event_start_date) > new Date(event_end_date)) {
       return res.status(400).json({ message: 'Invalid start or end date.' });
@@ -38,20 +40,21 @@ const createBooking = async (req, res) => {
         message: '❌ This truck is already booked for part of the selected date range.'
       });
     }
+const booking = new EventBooking({
+  user_id: req.user._id,
+  truck_id,
+  event_start_date,
+  event_end_date,
+  start_time,
+  end_time,
+  occasion_type,
+  location,
+  city,
+  guest_count,
+  special_requests,
+  total_amount
+});
 
-    const booking = new EventBooking({
-      user_id: req.user._id,
-      truck_id,
-      event_start_date,
-      event_end_date,
-      event_time,
-      occasion_type,
-      location,
-      city,
-      guest_count,
-      special_requests,
-      total_amount
-    });
 
     const saved = await booking.save();
 

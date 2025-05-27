@@ -9,7 +9,7 @@ import '../../../core/services/menu_service.dart';
 import '../../../core/services/truckOwner_service.dart';
 import '../../../core/constants/supported_cities.dart';
 import 'widgets/header_section.dart';
-import '../explore/widgets/search_filter_bar.dart'; // Updated path
+import 'widgets/search_filter_bar.dart'; // Updated path
 import 'widgets/truck_card.dart';
 import 'customer_map.dart';
 
@@ -33,12 +33,12 @@ class _HomeState extends State<Home> {
   bool _isAISearching = false; // To show loading for AI processing
   List<String> _currentSearchTerms = [];
 
-
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
 
   // Gemini API Configuration
-  static const String _geminiApiKey = 'AIzaSyCsfzNXk_nP9V5my0gqNc5wV0-kPcPZ9YU'; // YOUR_GEMINI_API_KEY
+  static const String _geminiApiKey =
+      'AIzaSyCsfzNXk_nP9V5my0gqNc5wV0-kPcPZ9YU'; // YOUR_GEMINI_API_KEY
   static final Uri _geminiUrl = Uri.parse(
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$_geminiApiKey', // Using gemini-pro as gemini-2.0-flash might not be public yet
   );
@@ -62,7 +62,6 @@ class _HomeState extends State<Home> {
     super.dispose();
   }
 
-
   Future<void> _fetchTrucksAndMenus() async {
     setState(() {
       _isLoading = true;
@@ -72,7 +71,8 @@ class _HomeState extends State<Home> {
     });
 
     try {
-      final trucksData = await TruckOwnerService.getPublicTrucks(city: _selectedCity);
+      final trucksData =
+          await TruckOwnerService.getPublicTrucks(city: _selectedCity);
       List<Map<String, dynamic>> tempTrucksWithMenus = [];
 
       for (var truck in trucksData) {
@@ -81,33 +81,39 @@ class _HomeState extends State<Home> {
 
           try {
             // 1. Await the http.Response from the MenuService
-            final http.Response menuResponse = await MenuService.getMenuItems(truck['_id'] as String); // *** CORRECTED SERVICE CALL ***
+            final http.Response menuResponse = await MenuService.getMenuItems(
+                truck['_id'] as String); // *** CORRECTED SERVICE CALL ***
 
             // 2. Check the status code and parse if successful
             if (menuResponse.statusCode == 200) {
               final decodedBody = jsonDecode(menuResponse.body);
-              if (decodedBody is List) { // Ensure the decoded body is a List
+              if (decodedBody is List) {
+                // Ensure the decoded body is a List
                 parsedMenuItems = decodedBody;
               } else {
-                print("Warning: Menu items for truck ${truck['_id']} not in expected List format. Body: ${menuResponse.body}");
+                print(
+                    "Warning: Menu items for truck ${truck['_id']} not in expected List format. Body: ${menuResponse.body}");
                 // parsedMenuItems remains an empty list
               }
             } else if (menuResponse.statusCode == 404) {
-              print("Menu not found for truck ${truck['_id']} (404). Assigning empty menu.");
+              print(
+                  "Menu not found for truck ${truck['_id']} (404). Assigning empty menu.");
               // parsedMenuItems remains an empty list, which is fine.
-            }
-            else {
-              print("Error fetching menu for truck ${truck['_id']}: Status ${menuResponse.statusCode}, Body: ${menuResponse.body}");
+            } else {
+              print(
+                  "Error fetching menu for truck ${truck['_id']}: Status ${menuResponse.statusCode}, Body: ${menuResponse.body}");
               // parsedMenuItems remains an empty list
             }
           } catch (e) {
-            print("Exception during menu fetch or parse for truck ${truck['_id']}: $e");
+            print(
+                "Exception during menu fetch or parse for truck ${truck['_id']}: $e");
             // parsedMenuItems remains an empty list
           }
 
           // 3. Augment truck data with the (potentially empty) parsed menu
           Map<String, dynamic> truckWithMenu = Map.from(truck);
-          truckWithMenu['menu_items'] = parsedMenuItems; // THIS IS NOW GUARANTEED TO BE A List<dynamic>
+          truckWithMenu['menu_items'] =
+              parsedMenuItems; // THIS IS NOW GUARANTEED TO BE A List<dynamic>
           tempTrucksWithMenus.add(truckWithMenu);
         }
       }
@@ -133,9 +139,6 @@ class _HomeState extends State<Home> {
     }
     setState(() => _isAISearching = true);
 
-
-
-
     // More specific prompt for Gemini
     final prompt = """
     Analyze the following user query for finding food trucks: "$rawQuery".
@@ -154,19 +157,31 @@ class _HomeState extends State<Home> {
         _geminiUrl,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'contents': [{'parts': [{'text': prompt}]}]
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt}
+              ]
+            }
+          ]
         }),
       );
 
       setState(() => _isAISearching = false);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final content = data['candidates']?[0]?['content']?['parts']?[0]?['text'] as String?;
+        final content = data['candidates']?[0]?['content']?['parts']?[0]
+            ?['text'] as String?;
         final termsString = content?.trim() ?? rawQuery.toLowerCase();
         // Update _currentSearchTerms here
         setState(() {
-          _currentSearchTerms = termsString.split(',').map((t) => t.trim().toLowerCase()).where((t) => t.isNotEmpty).toList();
-          if (_currentSearchTerms.isEmpty && rawQuery.trim().isNotEmpty) { // Fallback if AI gives nothing
+          _currentSearchTerms = termsString
+              .split(',')
+              .map((t) => t.trim().toLowerCase())
+              .where((t) => t.isNotEmpty)
+              .toList();
+          if (_currentSearchTerms.isEmpty && rawQuery.trim().isNotEmpty) {
+            // Fallback if AI gives nothing
             _currentSearchTerms.add(rawQuery.trim().toLowerCase());
           }
         });
@@ -176,7 +191,11 @@ class _HomeState extends State<Home> {
         print('Gemini API error: ${response.statusCode} - ${response.body}');
         final fallbackTermsString = rawQuery.toLowerCase();
         setState(() {
-          _currentSearchTerms = fallbackTermsString.split(',').map((t) => t.trim().toLowerCase()).where((t) => t.isNotEmpty).toList();
+          _currentSearchTerms = fallbackTermsString
+              .split(',')
+              .map((t) => t.trim().toLowerCase())
+              .where((t) => t.isNotEmpty)
+              .toList();
           if (_currentSearchTerms.isEmpty && rawQuery.trim().isNotEmpty) {
             _currentSearchTerms.add(rawQuery.trim().toLowerCase());
           }
@@ -203,7 +222,8 @@ class _HomeState extends State<Home> {
     _performLocalSearch(aiProcessedQuery);
   }
 
-  void _performLocalSearch(String processedQueryString) { // Parameter name clarified
+  void _performLocalSearch(String processedQueryString) {
+    // Parameter name clarified
     // Use _currentSearchTerms for filtering logic if it's populated,
     // otherwise, parse processedQueryString as before.
     // This ensures consistency. The primary source of terms is now _currentSearchTerms.
@@ -222,24 +242,27 @@ class _HomeState extends State<Home> {
       return;
     }
 
-
     final filteredTrucks = _allTrucksWithMenusData.where((truck) {
       final truckName = (truck['truck_name'] as String?)?.toLowerCase() ?? '';
-      final cuisineType = (truck['cuisine_type'] as String?)?.toLowerCase() ?? '';
+      final cuisineType =
+          (truck['cuisine_type'] as String?)?.toLowerCase() ?? '';
       final menuItems = truck['menu_items'] as List<dynamic>? ?? [];
 
-      return termsToUse.every((term) { // <--- Use termsToUse
+      return termsToUse.every((term) {
+        // <--- Use termsToUse
         if (truckName.contains(term) || cuisineType.contains(term)) {
           return true;
         }
         for (var item in menuItems) {
           if (item is Map<String, dynamic>) {
             final itemName = (item['name'] as String?)?.toLowerCase() ?? '';
-            final itemDescription = (item['description'] as String?)?.toLowerCase() ?? '';
+            final itemDescription =
+                (item['description'] as String?)?.toLowerCase() ?? '';
             final isVegan = item['isVegan'] as bool? ?? false;
             final isSpicy = item['isSpicy'] as bool? ?? false;
 
-            if (itemName.contains(term) || itemDescription.contains(term)) return true;
+            if (itemName.contains(term) || itemDescription.contains(term))
+              return true;
             if (term == 'vegan' && isVegan) return true;
             if (term == 'spicy' && isSpicy) return true;
           }
@@ -253,14 +276,14 @@ class _HomeState extends State<Home> {
     });
   }
 
-
   Widget _buildToggleButton(String label, bool value) {
     final isSelected = value == _isMapView;
     return GestureDetector(
       onTap: () async {
         if (value != _isMapView) {
           setState(() => _isMapView = value);
-          if (value) { // Map View selected
+          if (value) {
+            // Map View selected
             await Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const CustomerMapPage()),
@@ -274,7 +297,8 @@ class _HomeState extends State<Home> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.transparent, // isSelected ? Colors.orange.withOpacity(0.2) : Colors.transparent,
+          color: Colors
+              .transparent, // isSelected ? Colors.orange.withOpacity(0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Text(
@@ -304,7 +328,7 @@ class _HomeState extends State<Home> {
             city: _selectedCity,
             supportedCities: supportedCities,
             onCityChange: (newCity) {
-              if (newCity != null && newCity != _selectedCity) {
+              if (newCity != _selectedCity) {
                 setState(() => _selectedCity = newCity);
                 _searchController.clear(); // Clear search when city changes
                 _fetchTrucksAndMenus();
@@ -325,7 +349,11 @@ class _HomeState extends State<Home> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.orange)),
+                  SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.orange)),
                   SizedBox(width: 8),
                   Text("Thinking...", style: TextStyle(color: Colors.orange)),
                 ],
@@ -338,32 +366,47 @@ class _HomeState extends State<Home> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: const [
-                  BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0,1)),
+                  BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 6,
+                      offset: Offset(0, 1)),
                 ],
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildToggleButton('List View', false), // false represents list view
-                  Container(height: 20, child: const VerticalDivider(width: 1, thickness: 1, color: Colors.black26)),
-                  _buildToggleButton('Map View', true),   // true represents map view
+                  _buildToggleButton(
+                      'List View', false), // false represents list view
+                  SizedBox(
+                      height: 20,
+                      child: const VerticalDivider(
+                          width: 1, thickness: 1, color: Colors.black26)),
+                  _buildToggleButton(
+                      'Map View', true), // true represents map view
                 ],
               ),
             ),
           ),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Colors.orange))
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.orange))
                 : _errorMessage.isNotEmpty
-                ? Center(child: Text(_errorMessage))
-                : _displayedTrucks.isEmpty
-                ? Center(child: Text(_searchController.text.isEmpty ? "No food trucks found in $_selectedCity 😢" : "No matches for '${_searchController.text}'  શોધ😕"))
-                : ListView.builder(
-              itemCount: _displayedTrucks.length,
-              itemBuilder: (context, index) {
-                return TruckCard(truck: _displayedTrucks[index],activeSearchTerms: _currentSearchTerms,);
-              },
-            ),
+                    ? Center(child: Text(_errorMessage))
+                    : _displayedTrucks.isEmpty
+                        ? Center(
+                            child: Text(_searchController.text.isEmpty
+                                ? "No food trucks found in $_selectedCity 😢"
+                                : "No matches for '${_searchController.text}'  શોધ😕"))
+                        : ListView.builder(
+                            itemCount: _displayedTrucks.length,
+                            itemBuilder: (context, index) {
+                              return TruckCard(
+                                truck: _displayedTrucks[index],
+                                activeSearchTerms: _currentSearchTerms,
+                              );
+                            },
+                          ),
           ),
         ],
       ),

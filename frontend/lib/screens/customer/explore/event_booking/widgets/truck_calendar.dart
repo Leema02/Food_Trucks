@@ -170,7 +170,16 @@ class _TruckCalendarState extends State<TruckCalendar> {
             },
           ),
         ),
-        const SizedBox(height: 12),
+        const Padding(
+          padding: EdgeInsets.only(top: 12.0, bottom: 4.0),
+          child: Text(
+            "Tip: Tap once to select a start date, then again to select the end date.",
+            style:
+                TextStyle(fontSize: 13, color: Color.fromARGB(255, 96, 96, 96)),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
