@@ -1,22 +1,42 @@
-const User = require('../models/userModel');
-const generateToken = require('../utils/generateToken');
-const jwt = require('jsonwebtoken');
-const sendEmail = require('../utils/sendEmail');
-const crypto = require('crypto'); 
-const bcrypt = require('bcrypt');
+const User = require("../models/userModel");
+const generateToken = require("../utils/generateToken");
+const jwt = require("jsonwebtoken");
+const sendEmail = require("../utils/sendEmail");
+const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 
 const signupUser = async (req, res) => {
-  const { F_name, L_name, email_address, phone_num, username, password, role_id, city, address } = req.body;
+  const {
+    F_name,
+    L_name,
+    email_address,
+    phone_num,
+    username,
+    password,
+    role_id,
+    city,
+    address,
+  } = req.body;
 
   try {
     const existingUser = await User.findOne({ email_address });
     if (existingUser) {
-      return res.status(409).json({ message: 'Email already exists.' });
+      return res.status(409).json({ message: "Email already exists." });
     }
     const token = jwt.sign(
-      { F_name, L_name, email_address, phone_num, username, password, role_id, city, address },
+      {
+        F_name,
+        L_name,
+        email_address,
+        phone_num,
+        username,
+        password,
+        role_id,
+        city,
+        address,
+      },
       process.env.JWT_SECRET,
-      { expiresIn: '10m' }
+      { expiresIn: "10m" }
     );
 
     const verifyUrl = `${process.env.API_URL}/api/users/verify-email?token=${token}`;
@@ -29,28 +49,24 @@ const signupUser = async (req, res) => {
       <p>This link expires in 10 minutes.</p>
     `;
 
-    await sendEmail(email_address, 'Verify your email - Food Trucks', message);
+    await sendEmail(email_address, "Verify your email - Food Trucks", message);
 
     res.status(200).json({
-      message: 'Verification email sent. Please check your inbox.'
+      message: "Verification email sent. Please check your inbox.",
     });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
 
-
 const getAllUsers = async (req, res) => {
-    try {
-      const users = await User.find().select('-password -__v'); // exclude sensitive fields
-      res.json(users);
-    } catch (err) {
-      res.status(500).json({ message: err.message });
-    }
-  };
-
-
- 
+  try {
+    const users = await User.find().select("-password -__v");
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 const loginUser = async (req, res) => {
   const { email_address, password } = req.body;
@@ -63,12 +79,11 @@ const loginUser = async (req, res) => {
     if (user && (await bcrypt.compare(password, user.password))) {
       res.status(200).json({
         user, // 🧼 your schema handles hiding password in toJSON
-        token: generateToken(user._id)
+        token: generateToken(user._id),
       });
     } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      res.status(401).json({ message: "Invalid email or password" });
     }
-    
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -82,9 +97,11 @@ const verifyEmail = async (req, res) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const existingUser = await User.findOne({ email_address: decoded.email_address });
+    const existingUser = await User.findOne({
+      email_address: decoded.email_address,
+    });
     if (existingUser) {
-      return res.status(400).send('❌ Account already verified.');
+      return res.status(400).send("❌ Account already verified.");
     }
 
     const newUser = await User.create({
@@ -96,13 +113,12 @@ const verifyEmail = async (req, res) => {
       password: decoded.password,
       role_id: decoded.role_id,
       city: decoded.city,
-      address: decoded.address
+      address: decoded.address,
     });
 
-    res.status(201).json({ message: '✅ Email verified and account created.' });
-
+    res.status(201).json({ message: "✅ Email verified and account created." });
   } catch (err) {
-    res.status(400).send('❌ Invalid or expired token.');
+    res.status(400).send("❌ Invalid or expired token.");
   }
 };
 
@@ -112,7 +128,7 @@ const forgotPassword = async (req, res) => {
   try {
     const user = await User.findOne({ email_address });
     if (!user) {
-      return res.status(404).json({ message: 'Email not found' });
+      return res.status(404).json({ message: "Email not found" });
     }
 
     // Generate 4-digit numeric code
@@ -132,14 +148,17 @@ const forgotPassword = async (req, res) => {
       <p>This code will expire in 10 minutes.</p>
     `;
 
-    await sendEmail(user.email_address, 'Your Password Reset Code - Food Trucks', message);
+    await sendEmail(
+      user.email_address,
+      "Your Password Reset Code - Food Trucks",
+      message
+    );
 
-    res.status(200).json({ message: 'Reset code sent to your email.' });
+    res.status(200).json({ message: "Reset code sent to your email." });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-  
 
 const verifyResetCode = async (req, res) => {
   const { email_address, code } = req.body;
@@ -148,23 +167,22 @@ const verifyResetCode = async (req, res) => {
     const user = await User.findOne({ email_address });
 
     if (!user || !user.resetCode || !user.resetCodeExpires) {
-      return res.status(400).json({ message: 'Invalid or expired code.' });
+      return res.status(400).json({ message: "Invalid or expired code." });
     }
 
     if (user.resetCode !== code) {
-      return res.status(400).json({ message: 'Incorrect reset code.' });
+      return res.status(400).json({ message: "Incorrect reset code." });
     }
 
     if (Date.now() > user.resetCodeExpires) {
-      return res.status(400).json({ message: 'Reset code has expired.' });
+      return res.status(400).json({ message: "Reset code has expired." });
     }
 
-    return res.status(200).json({ message: 'Code verified successfully.' });
+    return res.status(200).json({ message: "Code verified successfully." });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 const resetPassword = async (req, res) => {
   const { email_address, password } = req.body;
@@ -173,11 +191,11 @@ const resetPassword = async (req, res) => {
     const user = await User.findOne({ email_address });
 
     if (!user || !user.resetCode || !user.resetCodeExpires) {
-      return res.status(400).json({ message: 'No active reset request.' });
+      return res.status(400).json({ message: "No active reset request." });
     }
 
     if (Date.now() > user.resetCodeExpires) {
-      return res.status(400).json({ message: 'Reset code has expired.' });
+      return res.status(400).json({ message: "Reset code has expired." });
     }
 
     user.password = password;
@@ -188,19 +206,79 @@ const resetPassword = async (req, res) => {
 
     await user.save();
 
-    res.status(200).json({ message: '✅ Password has been reset successfully.' });
+    res
+      .status(200)
+      .json({ message: "✅ Password has been reset successfully." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const updateUser = async (req, res) => {
+  const { id } = req.params;
+  const {
+    F_name,
+    L_name,
+    email_address,
+    phone_num,
+    username,
+    password,
+    role_id,
+    city,
+    address,
+  } = req.body;
+
+  try {
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Optional fields — update only if provided
+    if (F_name) user.F_name = F_name;
+    if (L_name) user.L_name = L_name;
+    if (email_address) user.email_address = email_address;
+    if (phone_num) user.phone_num = phone_num;
+    if (username) user.username = username;
+    if (role_id) user.role_id = role_id;
+    if (city) user.city = city;
+    if (address) user.address = address;
+
+    // If new password provided, hash it
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    }
+
+    const updatedUser = await user.save();
+    res.status(200).json({
+      message: "✅ User updated successfully",
+      user: updatedUser,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const deleteUser = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ message: "🗑️ User deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-  module.exports = {
-    signupUser,
-    getAllUsers,
-    loginUser,
-    verifyEmail,
-    forgotPassword,
-    resetPassword,
-    verifyResetCode
-  };
-  
+module.exports = {
+  signupUser,
+  getAllUsers,
+  loginUser,
+  verifyEmail,
+  forgotPassword,
+  resetPassword,
+  verifyResetCode,
+  updateUser,
+  deleteUser,
+};
