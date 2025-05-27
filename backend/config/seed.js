@@ -174,7 +174,7 @@ for (const truck of trucks) {
 
   for (let k = 0; k < numBookings; k++) {
     const daysFromNow = faker.number.int({ min: 5, max: 90 });
-    const duration = faker.number.int({ min: 1, max: 3 });
+    const duration = faker.number.int({ min: 1, max: 3 }); // number of days
 
     const startDate = new Date();
     startDate.setDate(startDate.getDate() + daysFromNow);
@@ -182,21 +182,30 @@ for (const truck of trucks) {
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + duration);
 
-await EventBooking.create({
-  truck_id: truck._id,
-  user_id: customer._id,
-  event_start_date: startDate,
-  event_end_date: endDate,
-  start_time: `${faker.number.int({ min: 10, max: 17 })}:00`,
-  end_time: `${faker.number.int({ min: 18, max: 23 })}:00`,
-  occasion_type: faker.helpers.arrayElement(occasionTypes),
-  location: faker.location.streetAddress(),
-  city: truck.city,
-  guest_count: faker.number.int({ min: 30, max: 150 }),
-  special_requests: faker.lorem.words(5),
-  total_amount: faker.number.int({ min: 500, max: 2000 }),
-  status: faker.helpers.arrayElement(['pending', 'confirmed', 'rejected'])
-});
+    const startHour = faker.number.int({ min: 10, max: 15 });
+    const endHour = faker.number.int({ min: 16, max: 22 });
+
+    const startTime = `${startHour}:00`;
+    const endTime = `${endHour}:00`;
+
+    const guestCount = faker.number.int({ min: 30, max: 150 });
+    const totalAmount = faker.number.int({ min: 500, max: 2000 }); // or avg menu × guests
+
+    await EventBooking.create({
+      truck_id: truck._id,
+      user_id: customer._id,
+      event_start_date: startDate,
+      event_end_date: endDate,
+      start_time: startTime,
+      end_time: endTime,
+      occasion_type: faker.helpers.arrayElement(occasionTypes),
+      location: faker.location.streetAddress(),
+      city: truck.city,
+      guest_count: guestCount,
+      special_requests: faker.lorem.words(5),
+      total_amount: totalAmount,
+      status: faker.helpers.arrayElement(['pending', 'confirmed', 'rejected']),
+    });
 
     // 🛑 Block all days in the booking range
     const blockedDates = [];
@@ -206,20 +215,18 @@ await EventBooking.create({
       tempDate.setDate(tempDate.getDate() + 1);
     }
 
-    // Avoid duplicates
     const currentTruck = await Truck.findById(truck._id);
     const updatedBlocked = [
       ...new Set([
         ...currentTruck.unavailable_dates.map(d => d.toISOString().split('T')[0]),
-        ...blockedDates.map(d => d.toISOString().split('T')[0])
-      ])
+        ...blockedDates.map(d => d.toISOString().split('T')[0]),
+      ]),
     ].map(dateStr => new Date(dateStr));
 
     currentTruck.unavailable_dates = updatedBlocked;
     await currentTruck.save();
   }
 }
-
 
   console.log('✅ Seed complete.');
   process.exit();
