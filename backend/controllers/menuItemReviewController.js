@@ -71,5 +71,22 @@ const getMenuItemReviews = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+// GET /api/reviews/menu/check/:orderId/:itemId
+const checkMenuItemRated = async (req, res) => {
+  const { orderId, itemId } = req.params;
+  const customerId = req.user._id;
 
-module.exports = { addMenuItemReview, getMenuItemReviews };
+  try {
+    const existing = await MenuItemReview.findOne({
+      customer_id: customerId,
+      order_id: orderId,
+      menu_item_id: itemId
+    });
+
+    res.status(200).json({ isRated: !!existing });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { addMenuItemReview, getMenuItemReviews, checkMenuItemRated};
