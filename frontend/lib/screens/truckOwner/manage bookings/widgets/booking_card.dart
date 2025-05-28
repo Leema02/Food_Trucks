@@ -22,7 +22,9 @@ class BookingCard extends StatelessWidget {
     if (startDate == null ||
         endDate == null ||
         startTime == null ||
-        endTime == null) return [];
+        endTime == null) {
+      return [];
+    }
 
     final entries = <String>[];
     DateTime current = startDate;

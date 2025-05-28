@@ -261,8 +261,9 @@ class _HomeState extends State<Home> {
             final isVegan = item['isVegan'] as bool? ?? false;
             final isSpicy = item['isSpicy'] as bool? ?? false;
 
-            if (itemName.contains(term) || itemDescription.contains(term))
+            if (itemName.contains(term) || itemDescription.contains(term)) {
               return true;
+            }
             if (term == 'vegan' && isVegan) return true;
             if (term == 'spicy' && isSpicy) return true;
           }

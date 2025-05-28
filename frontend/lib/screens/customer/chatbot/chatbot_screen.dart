@@ -483,7 +483,7 @@ Assistant Response:""";
   String _formatMenuList(List<dynamic> menus) {
     return menus
         .map((m) =>
-            "Truck: ${m['truckName']} (${m['truckId']})\n${(m['menu'] as List).map((item) => "  • ${item['name']} - \$${item['price']} | " + "Vegan: ${item['isVegan']} | Spicy: ${item['isSpicy']}").join('\n')}")
+            "Truck: ${m['truckName']} (${m['truckId']})\n${(m['menu'] as List).map((item) => "  • ${item['name']} - \$${item['price']} | " "Vegan: ${item['isVegan']} | Spicy: ${item['isSpicy']}").join('\n')}")
         .join('\n\n');
   }
 
@@ -562,10 +562,12 @@ Assistant Response:""";
 
   String _handleGreetings(String query) {
     query = query.toLowerCase();
-    if (query.startsWith("hi") || query.startsWith("hello"))
+    if (query.startsWith("hi") || query.startsWith("hello")) {
       return "Hello! Ready to explore food trucks?";
-    if (query.contains("thank"))
+    }
+    if (query.contains("thank")) {
       return "You're welcome! Let me know if you need anything else.";
+    }
     return "How can I assist with your food truck experience today?";
   }
 }
