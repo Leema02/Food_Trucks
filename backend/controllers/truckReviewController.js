@@ -41,11 +41,13 @@ const response = await axios.post(
 
 // 🚀 POST /api/reviews/truck
 const addTruckReview = async (req, res) => {
-  const { truck_id, rating, comment } = req.body;
+  const { truck_id, rating, comment, order_id } = req.body; 
+
   const customer_id = req.user._id;
 
   try {
-    const existing = await TruckReview.findOne({ customer_id, truck_id });
+    const existing = await TruckReview.findOne({ customer_id, truck_id, order_id });
+
     if (existing) {
       return res.status(400).json({ message: "You already reviewed this truck." });
     }
@@ -55,6 +57,7 @@ const addTruckReview = async (req, res) => {
     const review = await TruckReview.create({
       customer_id,
       truck_id,
+      order_id,
       rating,
       comment,
       sentiment,
@@ -78,4 +81,23 @@ const getTruckReviews = async (req, res) => {
   }
 };
 
-module.exports = { addTruckReview, getTruckReviews };
+// ✅ GET /api/reviews/truck/check/:orderId/:truckId
+const checkTruckRated = async (req, res) => {
+  const { orderId, truckId } = req.params;
+  const customer_id = req.user._id;
+
+  try {
+    const existing = await TruckReview.findOne({
+      customer_id,
+      truck_id: truckId,
+      order_id: orderId
+    });
+
+    res.status(200).json({ isRated: !!existing });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+module.exports = { addTruckReview, getTruckReviews,checkTruckRated };
