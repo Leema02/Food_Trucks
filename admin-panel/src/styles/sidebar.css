@@ -1,9 +1,7 @@
 .sidebar {
   width: 240px;
-  height: 100vh;
-  background-color: #3e95cd; /* Blue like stat number */
+  background-color: #3e95cd;
   padding: 2rem 1.5rem;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.03);
   color: white;
 }
 
@@ -45,7 +43,8 @@
 
 /* Icon inside li */
 .sidebar li svg {
-  font-size: 1.4rem; /* ⬆️ Bigger icon */
+  font-size: 2rem;
+  margin-right: 10px;
 }
 
 /* ========= Stat Card ========= */
@@ -58,4 +57,10 @@
   padding: 1.2rem;
   text-align: center;
   transition: all 0.3s ease;
+}
+html,
+body,
+.dashboard-container {
+  height: 100%;
+  margin: 0;
 }

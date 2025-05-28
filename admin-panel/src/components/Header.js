@@ -7,9 +7,14 @@ import { useNavigate } from "react-router-dom";
 const Header = () => {
   const navigate = useNavigate();
 
+  // ✅ Get user from localStorage
+  const storedUser = JSON.parse(localStorage.getItem("adminUser"));
+  const userName = storedUser ? `${storedUser.F_name}` : "Admin";
+
   const handleLogout = () => {
-    localStorage.removeItem("adminToken"); // 🧼 Clear token or session
-    navigate("/login"); // 🔁 Redirect to login page
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminUser"); // ✅ clear stored user
+    navigate("/login");
   };
 
   return (
@@ -25,12 +30,12 @@ const Header = () => {
         </button>
 
         <button className="icon-button" onClick={handleLogout}>
-          <FaSignOutAlt /> {/* ✅ Logout icon */}
+          <FaSignOutAlt />
         </button>
 
         <div className="user-info">
           <span className="greeting">
-            Hi, <strong>Samantha</strong>
+            Hi, <strong>{userName}</strong>
           </span>
           <img src={userAvatar} alt="User Avatar" className="avatar" />
         </div>
