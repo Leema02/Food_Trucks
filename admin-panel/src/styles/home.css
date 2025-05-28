@@ -20,15 +20,16 @@
 /* ========= Dashboard Layout ========= */
 .dashboard-container {
   display: flex;
-  font-family: "Segoe UI", sans-serif;
-  background-color: #f5f6fa;
+  height: 100vh;
+  overflow: hidden; /* 🛑 prevent body scroll */
 }
 
 .main-panel {
   flex: 1;
+  height: 100vh;
+  overflow-y: auto; /* ✅ this is where content scrolls */
   padding: 2rem;
-  background-color: #f5f5f5;
-  min-height: 100vh;
+  background-color: #f7f7f7;
 }
 
 .stats-grid {
@@ -141,4 +142,72 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden; /* 🔥 prevents unwanted scroll */
+}
+
+.charts-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+  flex: 1 1 45%;
+  max-width: 45%;
+  height: 350px;
+}
+.order-status-card {
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 360px;
+  font-family: sans-serif;
+}
+
+.order-status-card h3 {
+  margin-bottom: 1rem;
+  font-size: 18px;
+  color: #333;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.8rem 0;
+  font-size: 14px;
+}
+
+.status-row strong {
+  flex: 1;
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.progress-bar-container {
+  flex: 2;
+  height: 8px;
+  background-color: #eee;
+  border-radius: 4px;
+  margin: 0 10px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.status-row span {
+  width: 35px;
+  text-align: right;
+  font-weight: 500;
 }
