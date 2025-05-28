@@ -11,6 +11,11 @@ const truckReviewSchema = new mongoose.Schema({
     ref: 'Truck',
     required: true
   },
+  order_id: { // ✅ REQUIRED to track per order rating
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Order',
+    required: true
+  },
   rating: {
     type: Number,
     min: 1,
@@ -21,18 +26,18 @@ const truckReviewSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-    // 🧠 New for sentiment AI
-  sentiment: {   //What Gemini classifies the review as
+  sentiment: {
     type: String,
     enum: ['positive', 'neutral', 'negative'],
     default: 'neutral'
   },
-  sentiment_score: { //how confident Gemini is (0–1) or polarity from -1 to 1
+  sentiment_score: {
     type: Number,
     default: 0
   }
-}, { timestamps: true,
-      toJSON: {
+}, {
+  timestamps: true,
+  toJSON: {
     transform: (doc, ret) => {
       delete ret.__v;
       delete ret.createdAt;
@@ -40,6 +45,6 @@ const truckReviewSchema = new mongoose.Schema({
       return ret;
     }
   }
- });
+});
 
 module.exports = mongoose.model('TruckReview', truckReviewSchema);
