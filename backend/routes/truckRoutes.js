@@ -10,11 +10,11 @@ router.get('/public', TruckController.getAllPublicTrucks);// View trucks for cus
 router.use(protect);
 
 // 🚚 Only accessible by truck owners
-router.post('/', authorizeRoles('truck owner'), TruckController.createTruck); // Add new truck
-router.get('/my-trucks', authorizeRoles('truck owner'), TruckController.getMyTrucks); // View my trucks
-router.put('/:id', authorizeRoles('truck owner'), TruckController.updateTruck); // Update my truck
-router.delete('/:id', authorizeRoles('truck owner'), TruckController.deleteTruck); // Delete my truck
-router.get('/:id', authorizeRoles('truck owner'), TruckController.getTruckById);
+router.post('/', authorizeRoles('truck owner', 'admin'), TruckController.createTruck); // Add new truck
+router.get('/my-trucks', authorizeRoles('truck owner', 'admin'), TruckController.getMyTrucks); // View my trucks
+router.put('/:id', authorizeRoles('truck owner', 'admin'), TruckController.updateTruck); // Update my truck
+router.delete('/:id', authorizeRoles('truck owner', 'admin'), TruckController.deleteTruck); // Delete my truck
+router.get('/:id', authorizeRoles('truck owner', 'admin'), TruckController.getTruckById);
 
 // 🔴 Add unavailable date to truck
 router.post('/:id/unavailable', authorizeRoles('truck owner'), TruckController.addUnavailableDate);

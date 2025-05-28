@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/account/account.dart';
 import 'package:myapp/screens/auth/widgets/auth_background.dart';
+import 'package:myapp/screens/truckOwner/check%20Reviews/owner_reviews_page.dart';
 import 'package:myapp/screens/truckOwner/manage%20bookings/bookings_page.dart';
 import 'package:myapp/screens/truckOwner/manageAvailability/availability_calendar.dart';
 import 'package:myapp/screens/truckOwner/manageTrucks/addTruck.dart';
@@ -162,7 +163,11 @@ class TruckOwnerDashboard extends StatelessWidget {
                         'reviews'.tr(),
                         Icons.rate_review,
                         Colors.indigo,
-                        onPressed: () {},
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const OwnerReviewsPage()),
+                        ),
                       ),
                     ],
                   ),
