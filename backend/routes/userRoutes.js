@@ -23,7 +23,7 @@ router.get(
   authorizeRoles("admin"),
   UserController.getTotalUsers
 );
-router.get("/", protect, authorizeRoles("admin"), UserController.getAllUsers);
+
 // ✅ DELETE USER
 router.delete("/:id", authorizeRoles("admin"), UserController.deleteUser);
 
