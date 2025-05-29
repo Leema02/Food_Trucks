@@ -208,6 +208,79 @@ const getOrderStatusSummary = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+// Admin: Get all orders with pagination, filtering, and sorting
+const getAllOrders = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const query = {};
+    if (req.query.status) {
+      query.status = new RegExp(req.query.status, "i"); // Case-insensitive status filter
+    }
+    if (req.query.customer_id) {
+      query.customer_id = req.query.customer_id;
+    }
+    if (req.query.truck_id) {
+      query.truck_id = req.query.truck_id;
+    }
+    if (req.query.order_type) {
+      query.order_type = new RegExp(req.query.order_type, "i");
+    }
+
+    const sort = {};
+    if (req.query.sortBy && req.query.orderBy) {
+      sort[req.query.sortBy] = req.query.orderBy === "desc" ? -1 : 1;
+    } else {
+      sort.createdAt = -1; // Default sort by newest first
+    }
+
+    const orders = await Order.find(query)
+      .populate("customer_id", "F_name L_name email") // Populate customer info
+      .populate("truck_id", "truck_name") // Populate truck info
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
+
+    const totalOrders = await Order.countDocuments(query);
+
+    res.status(200).json({
+      orders,
+      totalPages: Math.ceil(totalOrders / limit),
+      currentPage: page,
+      totalOrders,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate("customer_id", "F_name L_name email phone")
+      .populate("truck_id", "truck_name location contact_email");
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    res.status(200).json(order);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const deleteOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    await order.deleteOne(); // Use deleteOne() or deleteMany() depending on Mongoose version
+    res.status(200).json({ message: "Order deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 module.exports = {
   placeOrder,
@@ -220,4 +293,7 @@ module.exports = {
   getOrdersByCity,
   getPopularCuisines,
   getOrderStatusSummary,
+  getAllOrders,
+  getOrderById,
+  deleteOrder,
 };
