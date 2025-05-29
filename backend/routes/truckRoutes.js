@@ -1,24 +1,61 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const TruckController = require('../controllers/truckController');
-const { protect } = require('../middleware/authMiddleware');
-const { authorizeRoles } = require('../middleware/roleMiddleware');
+const TruckController = require("../controllers/truckController");
+const { protect } = require("../middleware/authMiddleware");
+const { authorizeRoles } = require("../middleware/roleMiddleware");
 
-router.get('/public', TruckController.getAllPublicTrucks);// View trucks for customer
+router.get("/public", TruckController.getAllPublicTrucks);
 
-// 🛡️ All routes below require authentication
 router.use(protect);
 
-// 🚚 Only accessible by truck owners
-router.post('/', authorizeRoles('truck owner', 'admin'), TruckController.createTruck); // Add new truck
-router.get('/my-trucks', authorizeRoles('truck owner', 'admin'), TruckController.getMyTrucks); // View my trucks
-router.put('/:id', authorizeRoles('truck owner', 'admin'), TruckController.updateTruck); // Update my truck
-router.delete('/:id', authorizeRoles('truck owner', 'admin'), TruckController.deleteTruck); // Delete my truck
-router.get('/:id', authorizeRoles('truck owner', 'admin'), TruckController.getTruckById);
+router.get("/admin", authorizeRoles("admin"), TruckController.getAllTrucks);
+router.put(
+  "/admin/:id",
+  authorizeRoles("admin"),
+  TruckController.adminUpdateTruck
+);
+router.delete(
+  "/admin/:id",
+  authorizeRoles("admin"),
+  TruckController.adminDeleteTruck
+);
+router.get("/total", authorizeRoles("admin"), TruckController.getTotalTrucks); // Admin gets total truck count
 
-// 🔴 Add unavailable date to truck
-router.post('/:id/unavailable', authorizeRoles('truck owner'), TruckController.addUnavailableDate);
-router.delete('/:id/unavailable', authorizeRoles('truck owner'), TruckController.removeUnavailableDate);
+router.post(
+  "/",
+  authorizeRoles("truck owner", "admin"),
+  TruckController.createTruck
+);
+router.get(
+  "/my-trucks",
+  authorizeRoles("truck owner", "admin"),
+  TruckController.getMyTrucks
+);
+router.get(
+  "/:id",
+  authorizeRoles("truck owner", "admin"),
+  TruckController.getTruckById
+);
+router.put(
+  "/:id",
+  authorizeRoles("truck owner", "admin"),
+  TruckController.updateTruck
+);
+router.delete(
+  "/:id",
+  authorizeRoles("truck owner", "admin"),
+  TruckController.deleteTruck
+);
+
+router.post(
+  "/:id/unavailable",
+  authorizeRoles("truck owner"),
+  TruckController.addUnavailableDate
+);
+router.delete(
+  "/:id/unavailable",
+  authorizeRoles("truck owner"),
+  TruckController.removeUnavailableDate
+);
 
 module.exports = router;
-

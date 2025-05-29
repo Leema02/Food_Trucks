@@ -10,6 +10,9 @@ const {
   getOrdersByCity,
   getPopularCuisines,
   getOrderStatusSummary,
+  getAllOrders,
+  getOrderById,
+  deleteOrder,
 } = require("../controllers/orderController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -66,5 +69,7 @@ router.get(
   authorizeRoles("admin"),
   getOrderStatusSummary
 );
-
+router.get("/", protect, authorizeRoles("admin"), getAllOrders);
+router.get("/:id", protect, authorizeRoles("admin"), getOrderById);
+router.delete("/:id", protect, authorizeRoles("admin"), deleteOrder);
 module.exports = router;
