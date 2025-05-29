@@ -270,6 +270,14 @@ const deleteUser = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+const getTotalUsers = async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    res.status(200).json({ totalUsers });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 module.exports = {
   signupUser,
@@ -281,4 +289,5 @@ module.exports = {
   verifyResetCode,
   updateUser,
   deleteUser,
+  getTotalUsers,
 };
