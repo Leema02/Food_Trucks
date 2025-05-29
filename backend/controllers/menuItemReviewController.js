@@ -1,4 +1,36 @@
+const axios = require('axios');
 const MenuItemReview = require('../models/menuItemReviewModel');
+
+// Helper to analyze sentiment via Gemini
+const analyzeSentimentWithGemini = async (text) => {
+  try {
+    const response = await axios.post(
+      
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        contents: [
+          {
+            parts: [
+              {
+                text: `Only reply with one of these words: Positive, Neutral, or Negative.\n\nReview: "${text}"`
+              }
+            ]
+          }
+        ]
+      }
+    );
+
+    const raw = response.data.candidates?.[0]?.content?.parts?.[0]?.text?.toLowerCase() || 'neutral';
+    let sentiment = 'neutral';
+    if (raw.includes('positive')) sentiment = 'positive';
+    else if (raw.includes('negative')) sentiment = 'negative';
+
+    return { sentiment, sentiment_score: 1 }; // Optional: you can parse score if supported
+  } catch (err) {
+    console.error('Sentiment analysis failed:', err.message);
+    return { sentiment: 'neutral', sentiment_score: 0 };
+  }
+};
 
 // POST /api/reviews/menu
 const addMenuItemReview = async (req, res) => {
@@ -11,7 +43,18 @@ const addMenuItemReview = async (req, res) => {
       return res.status(400).json({ message: "You already reviewed this item in this order." });
     }
 
-    const review = await MenuItemReview.create({ customer_id, menu_item_id, order_id, rating, comment });
+    const { sentiment, sentiment_score } = await analyzeSentimentWithGemini(comment || '');
+
+    const review = await MenuItemReview.create({
+      customer_id,
+      menu_item_id,
+      order_id,
+      rating,
+      comment,
+      sentiment,
+      sentiment_score
+    });
+
     res.status(201).json(review);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -28,5 +71,22 @@ const getMenuItemReviews = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+// GET /api/reviews/menu/check/:orderId/:itemId
+const checkMenuItemRated = async (req, res) => {
+  const { orderId, itemId } = req.params;
+  const customerId = req.user._id;
 
-module.exports = { addMenuItemReview, getMenuItemReviews };
+  try {
+    const existing = await MenuItemReview.findOne({
+      customer_id: customerId,
+      order_id: orderId,
+      menu_item_id: itemId
+    });
+
+    res.status(200).json({ isRated: !!existing });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { addMenuItemReview, getMenuItemReviews, checkMenuItemRated};

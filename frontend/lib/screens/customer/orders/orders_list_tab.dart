@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:myapp/core/services/order_service.dart';
 import 'package:myapp/core/services/truckOwner_service.dart';
+import 'package:myapp/core/services/review_service.dart';
+import 'package:myapp/screens/customer/review/rate_truck_page.dart';
 
 class OrdersListTab extends StatefulWidget {
   const OrdersListTab({super.key});
@@ -99,9 +102,37 @@ class _OrdersListTabState extends State<OrdersListTab> {
     if (selectedStatus == 'All') return orders;
     return orders
         .where((o) =>
-            (o['status'] ?? '').toString().toLowerCase() ==
-            selectedStatus.toLowerCase())
+            (o['status'] ?? '').toLowerCase() == selectedStatus.toLowerCase())
         .toList();
+  }
+
+  Future<bool> _isOrderAlreadyRated(
+      String orderId, String truckId, List items) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) return false;
+
+      final isTruckRated = await ReviewService.checkIfTruckRated(
+        token: token,
+        orderId: orderId,
+        truckId: truckId,
+      );
+
+      for (final item in items) {
+        final itemId = item['menu_id'] ?? item['item_id'] ?? '';
+        final isItemRated = await ReviewService.checkIfMenuItemRated(
+          token: token,
+          orderId: orderId,
+          itemId: itemId,
+        );
+        if (!isItemRated) return false;
+      }
+
+      return isTruckRated;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -192,22 +223,64 @@ class _OrdersListTabState extends State<OrdersListTab> {
                                           const SizedBox(height: 12),
                                           Align(
                                             alignment: Alignment.centerRight,
-                                            child: OutlinedButton.icon(
-                                              onPressed: () {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text(
-                                                        "⭐ Rate feature coming soon"),
-                                                  ),
-                                                );
-                                              },
-                                              icon: const Icon(
-                                                  Icons.star_outline),
-                                              label: const Text("Rate"),
-                                            ),
+                                            child: FutureBuilder<bool>(
+                                                future: _isOrderAlreadyRated(
+                                                  order['_id'],
+                                                  order['truck_id'],
+                                                  items,
+                                                ),
+                                                builder: (context, snapshot) {
+                                                  final alreadyRated =
+                                                      snapshot.data ?? false;
+
+                                                  // ✅ Only allow rating if order is COMPLETED
+                                                  if ((order['status'] ?? '')
+                                                          .toString()
+                                                          .toLowerCase() !=
+                                                      'completed') {
+                                                    return const Text(
+                                                      "Rating available after completion",
+                                                      style: TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors.grey),
+                                                    );
+                                                  }
+
+                                                  return OutlinedButton.icon(
+                                                    onPressed: alreadyRated
+                                                        ? null
+                                                        : () async {
+                                                            final result =
+                                                                await Navigator
+                                                                    .push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                builder: (_) =>
+                                                                    RateTruckPage(
+                                                                  orderId: order[
+                                                                      '_id'],
+                                                                  truckId: order[
+                                                                      'truck_id'],
+                                                                  items: items,
+                                                                ),
+                                                              ),
+                                                            );
+
+                                                            if (result ==
+                                                                true) {
+                                                              fetchOrdersAndTrucks();
+                                                            }
+                                                          },
+                                                    icon: Icon(alreadyRated
+                                                        ? Icons.check_circle
+                                                        : Icons.star_outline),
+                                                    label: Text(alreadyRated
+                                                        ? "Rated"
+                                                        : "Rate"),
+                                                  );
+                                                }),
                                           ),
-                                        ],
+                                        ]
                                       ],
                                     ),
                                   ),
@@ -215,7 +288,7 @@ class _OrdersListTabState extends State<OrdersListTab> {
                               );
                             },
                           ),
-                  )
+                  ),
                 ],
               );
   }

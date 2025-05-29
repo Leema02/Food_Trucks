@@ -25,6 +25,16 @@ const menuItemReviewSchema = new mongoose.Schema({
   comment: {
     type: String,
     default: ''
+  },
+      // 🧠 New for sentiment AI
+  sentiment: {   //What Gemini classifies the review as
+    type: String,
+    enum: ['positive', 'neutral', 'negative'],
+    default: 'neutral'
+  },
+  sentiment_score: { //how confident Gemini is (0–1) or polarity from -1 to 1
+    type: Number,
+    default: 0
   }
 }, { timestamps: true,
       toJSON: {
