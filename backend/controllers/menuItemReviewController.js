@@ -214,6 +214,19 @@ const getMenuItemReviewStatsAdmin = async (req, res) => {
     });
   }
 };
+const getMyMenuItemReviews = async (req, res) => {
+  try {
+    const customer_id = req.user._id;
+
+    const reviews = await MenuItemReview.find({ customer_id })
+      .populate('customer_id', 'F_name L_name email_address') // 👤 customer info
+      .populate('menu_item_id', 'name'); // 🍽 menu item info
+
+    res.status(200).json(reviews);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 
 module.exports = {
@@ -224,4 +237,5 @@ module.exports = {
   getAllMenuItemReviewsAdmin,
   deleteMenuItemReviewAdmin,
   getMenuItemReviewStatsAdmin,
+  getMyMenuItemReviews
 };
