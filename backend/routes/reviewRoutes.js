@@ -17,6 +17,7 @@ const {
   getAllMenuItemReviewsAdmin,
   deleteMenuItemReviewAdmin,
   getMenuItemReviewStatsAdmin,
+  getMyMenuItemReviews,
 } = require('../controllers/menuItemReviewController'); 
 const { protect } = require('../middleware/authMiddleware'); 
 const { authorizeRoles } = require("../middleware/roleMiddleware"); 
@@ -31,11 +32,15 @@ router.get('/truck/:truckId', getTruckReviews);
 router.get('/truck/check/:orderId/:truckId', checkTruckRated); 
 
 // ===== MENU ITEM REVIEWS =====
+router.get('/menu/my', protect, getMyMenuItemReviews);
+
 router.post('/menu', addMenuItemReview); 
 router.get('/menu/:menuItemId', getMenuItemReviews); 
 
 // ✅ Check if customer already rated a menu item for a specific order
 router.get('/menu/check/:orderId/:itemId', checkMenuItemRated); 
+
+
 
 // TRUCK REVIEWS ADMIN
 router.get("/admin/trucks", authorizeRoles("admin"), getAllTruckReviewsAdmin); 
