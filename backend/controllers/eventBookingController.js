@@ -213,13 +213,45 @@ const deleteBooking = async (req, res) => {
   }
 };
 // 🟣 Admin gets all bookings (for calendar view)
+// 🟣 Admin gets all bookings (with optional date filter)
 const getAllBookings = async (req, res) => {
-  try {
-    const bookings = await EventBooking.find()
-      .populate("user_id", "F_name L_name")
-      .populate("truck_id", "truck_name");
+  try {
+ const { date } = req.query; // Extracts the date string (e.g., "2025-07-22")
 
-    res.status(200).json(bookings);
+    const query = {}; // Initialize an empty query object for MongoDB
+
+    if (date) {
+      const searchDateStr = date; // Incoming date string, e.g., "YYYY-MM-DD"
+
+      // ⭐ CRITICAL FIX: Ensure correct UTC date range for the search day
+      // These dates will represent the entire 24-hour period of the search day in UTC.
+      const searchDayStart = new Date(searchDateStr);
+      searchDayStart.setUTCHours(0, 0, 0, 0); // Set to midnight UTC of the search date
+
+      const searchDayEnd = new Date(searchDateStr);
+      searchDayEnd.setUTCHours(23, 59, 59, 999); // Set to just before midnight UTC of the *next* day
+
+
+ query.$and = [
+ { event_start_date: { $lte: searchDayEnd } },
+ { event_end_date: { $gte: searchDayStart } },
+    ];
+ }
+const bookings = await EventBooking.find(query) // <-- Pass the 'query' object here
+      .populate("user_id", "F_name L_name")
+      .populate("truck_id", "truck_name");
+
+    res.status(200).json(bookings);
+  } catch (err) {
+    console.error("Error in getAllBookings (Admin):", err); // Keep this for debugging!
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getTotalBookings = async (req, res) => {
+  try {
+    const totalBookings = await EventBooking.countDocuments();
+    res.status(200).json({ total: totalBookings }); // Return it as 'total' for consistency
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -232,4 +264,5 @@ module.exports = {
   updateBookingStatus,
   deleteBooking,
   getAllBookings,
+  getTotalBookings,
 };

@@ -189,20 +189,26 @@ const getPopularCuisines = async (req, res) => {
 };
 const getOrderStatusSummary = async (req, res) => {
   try {
-    const delivered = await Order.countDocuments({
-      status: { $regex: /^Completed$/i },
+    // Count documents for each status defined in your Order schema
+    const pendingCount = await Order.countDocuments({
+      status: { $regex: /^Pending$/i }, // Case-insensitive for 'Pending'
     });
-    const shipped = await Order.countDocuments({
-      status: { $regex: /^Shipped$/i },
+    const preparingCount = await Order.countDocuments({
+      status: { $regex: /^Preparing$/i }, // Case-insensitive for 'Preparing'
     });
-    const pending = await Order.countDocuments({
-      status: { $regex: /^Pending$/i },
+    const readyCount = await Order.countDocuments({
+      status: { $regex: /^Ready$/i }, // Case-insensitive for 'Ready'
+    });
+    const completedCount = await Order.countDocuments({
+      status: { $regex: /^Completed$/i }, // Case-insensitive for 'Completed'
     });
 
+    // Send back the counts with keys that match your frontend component's expectations
     res.status(200).json({
-      delivered,
-      shipped,
-      pending,
+      pending: pendingCount,
+      preparing: preparingCount,
+      ready: readyCount,
+      completed: completedCount,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -295,5 +301,5 @@ module.exports = {
   getOrderStatusSummary,
   getAllOrders,
   getOrderById,
-  deleteOrder,
+  deleteOrder
 };

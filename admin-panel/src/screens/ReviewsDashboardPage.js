@@ -298,7 +298,7 @@ const ReviewsDashboardPage = () => {
         {activeTab === "menuItem" && (
           <div className="menu-item-reviews-section">
             <h3>Menu Item Reviews</h3>
-            {/* Filters */}
+            {/* Filters remain the same as you provided */}
             <div
               style={{
                 display: "flex",
@@ -371,7 +371,9 @@ const ReviewsDashboardPage = () => {
                     <tbody>
                       {menuItemReviews.map((review) => (
                         <tr key={review._id}>
-                          <td>{review.menu_item_id?.item_name || "N/A"}</td>
+                          {/* EDIT 1: Corrected from 'name' to 'item_name' */}
+                          <td>{review.menu_item_id?.name || "N/A"}</td>
+                          {/* EDIT 2: Corrected access for truck_name */}
                           <td>
                             {review.menu_item_id?.truck_id?.truck_name || "N/A"}
                           </td>
@@ -401,8 +403,11 @@ const ReviewsDashboardPage = () => {
                               {review.sentiment}
                             </span>
                           </td>
+                          {/* EDIT 4: Ensured proper date formatting with fallback */}
                           <td>
-                            {new Date(review.createdAt).toLocaleDateString()}
+                            {review.createdAt
+                              ? new Date(review.createdAt).toLocaleDateString()
+                              : "N/A"}
                           </td>
                           <td>
                             <button
@@ -435,10 +440,11 @@ const ReviewsDashboardPage = () => {
           </div>
         )}
 
+        {/* Truck Reviews Section */}
         {activeTab === "truck" && (
           <div className="truck-reviews-section">
             <h3>Truck Reviews</h3>
-            {/* Filters */}
+            {/* Filters remain the same as you provided */}
             <div
               style={{
                 display: "flex",
@@ -506,6 +512,7 @@ const ReviewsDashboardPage = () => {
                   <tbody>
                     {truckReviews.map((review) => (
                       <tr key={review._id}>
+                        {/* EDIT 3: Corrected access for truck_name */}
                         <td>{review.truck_id?.truck_name || "N/A"}</td>
                         <td>
                           {review.customer_id?.F_name
@@ -533,8 +540,11 @@ const ReviewsDashboardPage = () => {
                             {review.sentiment}
                           </span>
                         </td>
+                        {/* EDIT 4: Ensured proper date formatting with fallback */}
                         <td>
-                          {new Date(review.createdAt).toLocaleDateString()}
+                          {review.createdAt
+                            ? new Date(review.createdAt).toLocaleDateString()
+                            : "N/A"}
                         </td>
                         <td>
                           <button

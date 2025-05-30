@@ -1,28 +1,19 @@
+
 const Truck = require("../models/truckModel");
-
 const fs = require("fs");
-
 const path = require("path");
-
 const truckService = require("../services/truckService");
 
 // 1. Create new truck
-
 const createTruck = async (req, res) => {
   try {
     const {
       truck_name,
-
       cuisine_type,
-
       description,
-
       logo_image_url,
-
       location,
-
       operating_hours,
-
       city, // ⬅️ Required now
     } = req.body;
 
@@ -32,24 +23,16 @@ const createTruck = async (req, res) => {
 
     const newTruck = new Truck({
       owner_id: req.user._id,
-
-      truck_name,
-
+      truck_name, 
       cuisine_type,
-
       description,
-
       logo_image_url,
-
       city,
-
       location,
-
       operating_hours,
     });
 
     const savedTruck = await newTruck.save();
-
     res.status(201).json(savedTruck);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -323,26 +306,15 @@ const getTotalTrucks = async (req, res) => {
 
 module.exports = {
   createTruck,
-
   getMyTrucks,
-
   getTruckById,
-
   updateTruck,
-
   deleteTruck,
-
   getAllPublicTrucks,
-
   addUnavailableDate,
-
   removeUnavailableDate,
-
   getAllTrucks,
-
   adminUpdateTruck,
-
   adminDeleteTruck,
-
-  getTotalTrucks,
+  getTotalTrucks
 };
