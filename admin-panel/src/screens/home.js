@@ -17,98 +17,133 @@ const Home = () => {
     totalTrucks: 0,
     totalUsers: 0,
     totalRevenue: 0,
+    totalBookings: 0, // Initialize totalBookings state
   });
   const [ordersByTruck, setOrdersByTruck] = useState([]);
   const [orderTypesData, setOrderTypesData] = useState([]);
   const [ordersByCityData, setOrdersByCityData] = useState([]);
   const [statusSummary, setStatusSummary] = useState({});
 
-  useEffect(() => {
-    const fetchTotalOrders = async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/api/orders/total", {
+  // ⭐⭐⭐ MOVE ALL FETCH FUNCTIONS HERE, OUTSIDE OF useEffect ⭐⭐⭐
+
+  const fetchTotalBookings = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/bookings/total-bookings", // Corrected URL
+        {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        });
+        }
+      );
+      setStats((prev) => ({
+        ...prev,
+        totalBookings: res.data.total,
+      }));
+    } catch (err) {
+      console.error("Failed to fetch total bookings:", err);
+      setStats((prev) => ({
+        ...prev,
+        totalBookings: "N/A",
+      }));
+    }
+  };
 
-        setStats((prev) => ({
-          ...prev,
-          totalOrders: res.data.totalOrders,
-        }));
-      } catch (err) {
-        console.error("Failed to fetch total orders:", err);
-      }
-    };
+  const fetchTotalOrders = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/orders/total", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setStats((prev) => ({
+        ...prev,
+        totalOrders: res.data.totalOrders,
+      }));
+    } catch (err) {
+      console.error("Failed to fetch total orders:", err);
+    }
+  };
 
-    const fetchTotalTrucks = async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/api/trucks/total", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+  const fetchTotalTrucks = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/trucks/total", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setStats((prev) => ({
+        ...prev,
+        totalTrucks: res.data.total,
+      }));
+    } catch (err) {
+      console.error("Failed to fetch total trucks:", err);
+    }
+  };
 
-        setStats((prev) => ({
-          ...prev,
-          totalTrucks: res.data.totalTrucks,
-        }));
-      } catch (err) {
-        console.error("Failed to fetch total trucks:", err);
-      }
-    };
+  const fetchTotalUsers = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/users/total", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setStats((prev) => ({
+        ...prev,
+        totalUsers: res.data.totalUsers,
+      }));
+    } catch (err) {
+      console.error("Failed to fetch total users:", err);
+    }
+  };
 
-    const fetchTotalUsers = async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/api/users/total", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+  const fetchOrdersByTruck = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/orders/by-truck", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setOrdersByTruck(res.data);
+    } catch (err) {
+      console.error("Failed to fetch orders by truck", err);
+    }
+  };
 
-        setStats((prev) => ({
-          ...prev,
-          totalUsers: res.data.totalUsers,
-        }));
-      } catch (err) {
-        console.error("Failed to fetch total users:", err);
-      }
-    };
-    const fetchOrdersByTruck = async () => {
-      try {
-        const res = await axios.get(
-          "http://localhost:5000/api/orders/by-truck",
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        setOrdersByTruck(res.data);
-      } catch (err) {
-        console.error("Failed to fetch orders by truck", err);
-      }
-    };
-    const fetchOrderTypes = async () => {
+  const fetchOrderTypes = async () => {
+    try {
       const res = await axios.get(
         "http://localhost:5000/api/orders/order-types",
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       );
       setOrderTypesData(res.data);
-    };
+    } catch (err) {
+      console.error("Failed to fetch order types:", err);
+    }
+  };
 
-    const fetchOrdersByCity = async () => {
+  const fetchOrdersByCity = async () => {
+    try {
       const res = await axios.get(
         "http://localhost:5000/api/orders/orders-by-city",
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       );
       setOrdersByCityData(res.data);
-    };
-    const fetchStatusSummary = async () => {
+    } catch (err) {
+      console.error("Failed to fetch orders by city:", err);
+    }
+  };
+
+  const fetchStatusSummary = async () => {
+    try {
       const res = await axios.get(
         "http://localhost:5000/api/orders/status-summary",
         {
@@ -118,16 +153,22 @@ const Home = () => {
         }
       );
       setStatusSummary(res.data);
-    };
-    fetchTotalOrders(); // ✅ already working — keep it
+    } catch (err) {
+      console.error("Failed to fetch status summary:", err);
+    }
+  };
+
+  // ⭐⭐⭐ Now, call the functions inside useEffect ⭐⭐⭐
+  useEffect(() => {
+    fetchTotalOrders();
     fetchTotalTrucks();
-    fetchTotalUsers(); // ✅ new addition
+    fetchTotalUsers();
     fetchOrderTypes();
     fetchStatusSummary();
-
     fetchOrdersByTruck();
     fetchOrdersByCity();
-  }, []);
+    fetchTotalBookings(); // Call the newly moved function
+  }, []); // Empty dependency array means this runs once on component mount
 
   return (
     <div className="dashboard-container">
@@ -152,17 +193,15 @@ const Home = () => {
                 value={stats.totalTrucks}
                 icon="🚚"
               />
-
               <StatCard
                 title="Total Users"
                 value={stats.totalUsers}
                 icon="👥"
               />
-
               <StatCard
-                title="Total Revenue"
-                value={`$${stats.totalRevenue}`}
-                icon="💰"
+                title="Total Bookings"
+                value={stats.totalBookings}
+                icon="📅"
               />
             </div>
           </section>
