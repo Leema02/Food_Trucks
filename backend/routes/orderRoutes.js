@@ -1,18 +1,18 @@
 const express = require("express");
 const {
-  placeOrder,
-  getMyOrders,
-  getTruckOrders,
-  updateOrderStatus,
-  getTotalOrders,
-  getOrdersByTruck,
-  getOrderTypesBreakdown, // ✅ You forgot to import this earlier
-  getOrdersByCity,
-  getPopularCuisines,
-  getOrderStatusSummary,
-  getAllOrders,
-  getOrderById,
-  deleteOrder,
+ placeOrder,
+ getMyOrders,
+ getTruckOrders,
+ updateOrderStatus,
+ getTotalOrders,
+ getOrdersByTruck,
+ getOrderTypesBreakdown, 
+ getOrdersByCity,
+ getPopularCuisines,
+ getOrderStatusSummary,
+ getAllOrders, 
+ getOrderById, 
+ deleteOrder, 
 } = require("../controllers/orderController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -37,6 +37,29 @@ router.get("/total", protect, authorizeRoles("admin"), getTotalOrders);
 
 // 🟣 Admin: Orders by truck
 router.get("/by-truck", protect, authorizeRoles("admin"), getOrdersByTruck);
+
+// 🟤 Admin: Pie chart for order types breakdown
+router.get(
+ "/order-types",
+  protect,
+  authorizeRoles("admin"),
+  getOrderTypesBreakdown
+);
+
+router.get(
+  "/orders-by-city",
+  protect,
+  authorizeRoles("admin"),
+  getOrdersByCity
+);
+
+// Note: Duplicate route entry for popular-cuisines, you can remove one if desired for cleanliness.
+router.get(
+  "/popular-cuisines",
+  protect,
+  authorizeRoles("admin"),
+  getPopularCuisines
+);
 router.get(
   "/popular-cuisines",
   protect,
@@ -44,32 +67,17 @@ router.get(
   getPopularCuisines
 );
 
-// 🟤 Admin: Pie chart for order types breakdown
-router.get(
-  "/order-types",
-  protect,
-  authorizeRoles("admin"),
-  getOrderTypesBreakdown
-);
-router.get(
-  "/orders-by-city",
-  protect,
-  authorizeRoles("admin"),
-  getOrdersByCity
-);
-router.get(
-  "/popular-cuisines",
-  protect,
-  authorizeRoles("admin"),
-  getPopularCuisines
-);
 router.get(
   "/status-summary",
   protect,
   authorizeRoles("admin"),
   getOrderStatusSummary
 );
-router.get("/", protect, authorizeRoles("admin"), getAllOrders);
-router.get("/:id", protect, authorizeRoles("admin"), getOrderById);
-router.delete("/:id", protect, authorizeRoles("admin"), deleteOrder);
+
+// --- ADMIN ROUTES  ---
+
+router.get("/", protect, authorizeRoles("admin"), getAllOrders); 
+router.get("/:id", protect, authorizeRoles("admin"), getOrderById); 
+router.delete("/:id", protect, authorizeRoles("admin"), deleteOrder); 
+
 module.exports = router;

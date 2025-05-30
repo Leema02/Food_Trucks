@@ -1,38 +1,39 @@
 const axios = require("axios");
-const MenuItemReview = require("../models/menuItemReviewModel"); // Assuming this model exists and is correct
+const MenuItemReview = require("../models/menuItemReviewModel");
+
 
 // Helper to analyze sentiment via Gemini
 const analyzeSentimentWithGemini = async (text) => {
   try {
     const response = await axios.post(
+
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         contents: [
           {
             parts: [
               {
-                text: `Only reply with one of these words: Positive, Neutral, or Negative.\n\nReview: "${text}"`,
-              },
-            ],
-          },
-        ],
+                text: `Only reply with one of these words: Positive, Neutral, or Negative.\n\nReview: "${text}"`
+              }
+            ]
+          }
+        ]
       }
     );
 
     const raw =
       response.data.candidates?.[0]?.content?.parts?.[0]?.text?.toLowerCase() ||
-      "neutral";
-    let sentiment = "neutral";
-    if (raw.includes("positive")) sentiment = "positive";
-    else if (raw.includes("negative")) sentiment = "negative";
+      'neutral';
+    let sentiment = 'neutral';
+    if (raw.includes('positive')) sentiment = 'positive';
+    else if (raw.includes('negative')) sentiment = 'negative';
 
     return { sentiment, sentiment_score: 1 }; // Optional: you can parse score if supported
   } catch (err) {
-    console.error("Sentiment analysis failed:", err.message);
-    return { sentiment: "neutral", sentiment_score: 0 };
+    console.error('Sentiment analysis failed:', err.message);
+    return { sentiment: 'neutral', sentiment_score: 0 };
   }
 };
-
 // POST /api/reviews/menu
 const addMenuItemReview = async (req, res) => {
   const { menu_item_id, order_id, rating, comment } = req.body;
@@ -51,7 +52,7 @@ const addMenuItemReview = async (req, res) => {
     }
 
     const { sentiment, sentiment_score } = await analyzeSentimentWithGemini(
-      comment || ""
+      comment || ''
     );
 
     const review = await MenuItemReview.create({
@@ -61,7 +62,7 @@ const addMenuItemReview = async (req, res) => {
       rating,
       comment,
       sentiment,
-      sentiment_score,
+      sentiment_score
     });
 
     res.status(201).json(review);
@@ -76,8 +77,9 @@ const getMenuItemReviews = async (req, res) => {
     const reviews = await MenuItemReview.find({
       menu_item_id: req.params.menuItemId,
     })
-      .populate("customer_id", "F_name L_name")
-      .populate("menu_item_id", "item_name"); // Populate menu item name
+      .populate('customer_id', 'F_name L_name')
+      .populate('menu_item_id', 'name'); 
+
     res.json(reviews);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -102,8 +104,6 @@ const checkMenuItemRated = async (req, res) => {
   }
 };
 
-// --- ADMIN SPECIFIC FUNCTIONS ---
-
 // Admin: Get all menu item reviews with pagination and filtering
 const getAllMenuItemReviewsAdmin = async (req, res) => {
   try {
@@ -123,15 +123,15 @@ const getAllMenuItemReviewsAdmin = async (req, res) => {
     const totalReviews = await MenuItemReview.countDocuments(filter);
     const reviews = await MenuItemReview.find(filter)
       .populate("customer_id", "F_name L_name email_address")
-      .populate("menu_item_id", "item_name truck_id") // Populate item name and truck_id
       .populate({
-        path: "menu_item_id", // Nested populate for truck name
+        path: "menu_item_id",
+        select: "name truck_id", 
         populate: {
           path: "truck_id",
           select: "truck_name",
         },
       })
-      .sort({ createdAt: -1 }) // Latest reviews first
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
@@ -143,11 +143,9 @@ const getAllMenuItemReviewsAdmin = async (req, res) => {
     });
   } catch (err) {
     console.error("Error in getAllMenuItemReviewsAdmin:", err);
-    res
-      .status(500)
-      .json({
-        message: "Server error while fetching menu item reviews for admin.",
-      });
+    res.status(500).json({
+      message: "Server error while fetching menu item reviews for admin.",
+    });
   }
 };
 
@@ -211,19 +209,18 @@ const getMenuItemReviewStatsAdmin = async (req, res) => {
     );
   } catch (err) {
     console.error("Error in getMenuItemReviewStatsAdmin:", err);
-    res
-      .status(500)
-      .json({
-        message: "Server error while fetching menu item review statistics.",
-      });
+    res.status(500).json({
+      message: "Server error while fetching menu item review statistics.",
+    });
   }
 };
+
 
 module.exports = {
   addMenuItemReview,
   getMenuItemReviews,
   checkMenuItemRated,
-  // Admin exports
+  
   getAllMenuItemReviewsAdmin,
   deleteMenuItemReviewAdmin,
   getMenuItemReviewStatsAdmin,

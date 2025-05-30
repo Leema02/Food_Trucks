@@ -7,6 +7,7 @@ import UsersPage from "./screens/UsersPage";
 import OrdersPage from "./screens/OrdersPage"; // Correctly imported
 import BookingsCalendarPage from "./components/BookingsCalendarPage";
 import ReviewsDashboardPage from "./screens/ReviewsDashboardPage";
+
 import TrucksPage from "./screens/TrucksPage";
 
 function App() {
