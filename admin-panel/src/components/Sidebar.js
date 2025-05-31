@@ -9,6 +9,7 @@ import {
   FaUtensils,
   FaMoneyBillWave,
   FaChartBar,
+  FaStar, // Import the FaStar icon for reviews
 } from "react-icons/fa";
 import logo from "../assets/appIcon.png";
 import "../styles/sidebar.css";
@@ -38,8 +39,10 @@ const Sidebar = () => {
         <li onClick={() => navigate("/admin/orders")}>
           <FaUtensils /> Orders
         </li>
-        <li onClick={() => navigate("/admin/payments")}>
-          <FaMoneyBillWave /> Payments
+
+        {/* Add the Reviews link here */}
+        <li onClick={() => navigate("/admin/reviews")}>
+          <FaStar /> Reviews {/* Using FaStar icon */}
         </li>
         <li onClick={() => navigate("/admin/reports")}>
           <FaChartBar /> Reports

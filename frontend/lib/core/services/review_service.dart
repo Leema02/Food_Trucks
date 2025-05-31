@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ReviewService {
   static const String baseUrl = 'http://10.0.2.2:5000/api/reviews';
@@ -52,7 +53,15 @@ class ReviewService {
 
   /// Get reviews for a truck
   static Future<List<dynamic>> fetchTruckReviews(String truckId) async {
-    final response = await http.get(Uri.parse('$baseUrl/truck/$truckId'));
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/truck/$truckId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -62,13 +71,21 @@ class ReviewService {
   }
 
   /// Get reviews for a menu item
-  static Future<List<dynamic>> fetchMenuItemReviews(String menuItemId) async {
-    final response = await http.get(Uri.parse('$baseUrl/menu/$menuItemId'));
+  static Future<List<dynamic>> fetchMenuItemReviews2(String menuItemId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/menu/$menuItemId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to load menu item reviews');
+      throw Exception('Failed to load your menu item reviews');
     }
   }
 
@@ -111,6 +128,25 @@ class ReviewService {
       return data['isRated'] ?? false;
     } else {
       throw Exception('Failed to check menu item rating status');
+    }
+  }
+
+  /// Get all menu item reviews submitted by the logged-in customer
+  static Future<List<dynamic>> fetchMyMenuItemReviews() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/menu/my'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load your menu item reviews');
     }
   }
 }

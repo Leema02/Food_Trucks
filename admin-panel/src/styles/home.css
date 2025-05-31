@@ -21,17 +21,15 @@
 .dashboard-container {
   display: flex;
   height: 100vh;
-  overflow: hidden; /* 🛑 prevent body scroll */
+  overflow: hidden;
 }
 
 .main-panel {
   flex: 1;
-  height: 100vh;
-  overflow-y: auto; /* ✅ this is where content scrolls */
+  overflow-y: auto;
   padding: 2rem;
   background-color: #f7f7f7;
 }
-
 .stats-grid {
   display: flex;
   gap: 1.5rem;
@@ -139,10 +137,11 @@
 html,
 body,
 #root {
-  height: 100%;
+  height: 100%; /* Important for full page height */
   margin: 0;
   padding: 0;
-  overflow: hidden; /* 🔥 prevents unwanted scroll */
+  width: 100%;
+  overflow: hidden; /* Prevents global page scrollbar */
 }
 
 .charts-row {
@@ -210,4 +209,61 @@ body,
   width: 35px;
   text-align: right;
   font-weight: 500;
+}
+.header {
+  display: flex; /* Make it a flex container */
+  justify-content: flex-end; /* Pushes content to the far right */
+  align-items: center; /* Vertically centers items */
+  padding: 15px 20px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%; /* Ensure it takes full width of its parent */
+  box-sizing: border-box; /* Include padding in width */
+  /* Other header styles you might have */
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Adds space between the logout button and user info */
+  /* If you had any 'margin-left: auto;' or 'justify-content' here, remove them */
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem; /* Adjust icon size as needed */
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px; /* Add some padding for better click area */
+  border-radius: 4px; /* Slightly rounded corners */
+}
+
+.icon-button:hover {
+  color: #007bff; /* Example hover color */
+  background-color: #f0f0f0; /* Light background on hover */
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between greeting text and avatar */
+  margin-left: 10px; /* Optional: add a little more space from the logout button */
+}
+
+.user-info .greeting {
+  font-size: 1rem;
+  color: #333;
+  white-space: nowrap; /* Prevent text from wrapping */
+}
+
+.user-info .avatar {
+  width: 40px; /* Adjust size as needed */
+  height: 40px; /* Adjust size as needed */
+  border-radius: 50%; /* Makes it round */
+  object-fit: cover; /* Ensures image covers the area without distortion */
+  border: 1px solid #eee; /* Optional: subtle border */
 }

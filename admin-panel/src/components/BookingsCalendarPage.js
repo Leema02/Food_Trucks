@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Calendar, dateFnsLocalizer, Views } from "react-big-calendar";
-import format from "date-fns/format";
-import parse from "date-fns/parse";
-import startOfWeek from "date-fns/startOfWeek";
-import getDay from "date-fns/getDay";
-import enUS from "date-fns/locale/en-US";
-import "react-big-calendar/lib/css/react-big-calendar.css";
+import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
+import { format, parse, startOfWeek, getDay } from 'date-fns';
+import enUS from 'date-fns/locale/en-US';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
-import "../styles/table.css";
+import "../styles/table.css"; 
 
 const locales = { "en-US": enUS };
 
@@ -23,94 +21,132 @@ const localizer = dateFnsLocalizer({
 const BookingsCalendarPage = () => {
   const [events, setEvents] = useState([]);
   const [view, setView] = useState(Views.WEEK);
-  const [date, setDate] = useState(new Date());
+  const [calendarDate, setCalendarDate] = useState(new Date()); 
+
+
+  const [searchDateInput, setSearchDateInput] = useState('');
+
+ 
+  const [appliedSearchDate, setAppliedSearchDate] = useState('');
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
+   
+    fetchBookings(appliedSearchDate);
 
+    
+    if (appliedSearchDate) {
+      setCalendarDate(new Date(appliedSearchDate));
+    } else {
+  
+      setCalendarDate(new Date());
+    }
+
+  }, [appliedSearchDate]); 
+
+
+  // Color map and index reset
   const COLORS = [
-    "#3e95cd",
-    "#8e5ea2",
-    "#3cba9f",
-    "#e8c3b9",
-    "#c45850",
-    "#f4a261",
-    "#2a9d8f",
-    "#e76f51",
-    "#264653",
-    "#6a0572",
+    "#3e95cd", "#8e5ea2", "#3cba9f", "#e8c3b9", "#c45850",
+    "#f4a261", "#2a9d8f", "#e76f51", "#264653", "#6a0572",
   ];
+ 
 
-  const colorMap = new Map();
-  let colorIndex = 0;
+  const fetchBookings = async (dateToFilter = "") => {
+    // Reset color map for each fetch
+    const tempColorMap = new Map();
+    let tempColorIndex = 0;
 
-  const fetchBookings = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/bookings/all", {
+      const url = dateToFilter
+        ? `http://localhost:5000/api/bookings/all?date=${dateToFilter}`
+        : "http://localhost:5000/api/bookings/all";
+
+      const res = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
       const expandedEvents = [];
-
       res.data.forEach((booking) => {
+       
+
+        if (!booking.truck_id) {
+            console.warn("Skipping booking due to missing truck_id:", booking);
+            return;
+        }
+
         const startDate = new Date(booking.event_start_date);
         const endDate = new Date(booking.event_end_date);
-
-        // Assign a unique color per truck
         const truckKey = booking.truck_id._id;
-        if (!colorMap.has(truckKey)) {
-          colorMap.set(truckKey, COLORS[colorIndex % COLORS.length]);
-          colorIndex++;
+
+        if (!tempColorMap.has(truckKey)) { // Use tempColorMap
+          tempColorMap.set(truckKey, COLORS[tempColorIndex % COLORS.length]); // Use tempColorIndex
+          tempColorIndex++; // Use tempColorIndex
         }
-        const eventColor = colorMap.get(truckKey);
+        const eventColor = tempColorMap.get(truckKey); // Use tempColorMap
 
         const current = new Date(startDate);
         while (current <= endDate) {
-          const eventStart = new Date(
-            `${current.toISOString().split("T")[0]}T${booking.start_time}`
-          );
-          const eventEnd = new Date(
-            `${current.toISOString().split("T")[0]}T${booking.end_time}`
-          );
+          const dateStr = current.toISOString().split("T")[0];
+          // Ensure times are correctly parsed for the calendar (local time)
+          const eventStart = new Date(`${dateStr}T${booking.start_time}`);
+          const eventEnd = new Date(`${dateStr}T${booking.end_time}`);
 
           expandedEvents.push({
-            id: `${booking._id}-${current.toDateString()}`,
+            id: `${booking._id}-${dateStr}`,
             title: `${booking.truck_id.truck_name} - ${booking.occasion_type}`,
             start: eventStart,
             end: eventEnd,
-            bgColor: eventColor, // ⬅️ Attach color
+            bgColor: eventColor,
           });
 
           current.setDate(current.getDate() + 1);
         }
       });
 
-      setEvents(expandedEvents);
+      console.log("Expanded events length:", expandedEvents.length);
+      setEvents(expandedEvents); 
     } catch (error) {
       console.error("Error fetching bookings:", error);
+     
     }
   };
 
-  // 🔘 Custom Nav Handlers
-  const goToToday = () => setDate(new Date());
+  const handleSearchDateInputChange = (e) => {
+    setSearchDateInput(e.target.value);
+  };
+
+  // NEW Handler for the "Apply Search" button
+  const handleApplySearch = () => {
+   
+    setAppliedSearchDate(searchDateInput);
+  };
+
+  
+  const handleClearSearch = () => {
+    setSearchDateInput(''); 
+    setAppliedSearchDate(''); 
+  };
+
+
+  // 🔘 Custom Nav Handlers (using calendarDate)
+  const goToToday = () => setCalendarDate(new Date());
 
   const goToBack = () => {
-    const newDate = new Date(date);
-    if (view === Views.MONTH) newDate.setMonth(date.getMonth() - 1);
-    if (view === Views.WEEK) newDate.setDate(date.getDate() - 7);
-    if (view === Views.DAY) newDate.setDate(date.getDate() - 1);
-    setDate(newDate);
+    const newDate = new Date(calendarDate); // Use calendarDate here
+    if (view === Views.MONTH) newDate.setMonth(calendarDate.getMonth() - 1);
+    if (view === Views.WEEK) newDate.setDate(calendarDate.getDate() - 7);
+    if (view === Views.DAY) newDate.setDate(calendarDate.getDate() - 1);
+    setCalendarDate(newDate); 
   };
 
   const goToNext = () => {
-    const newDate = new Date(date);
-    if (view === Views.MONTH) newDate.setMonth(date.getMonth() + 1);
-    if (view === Views.WEEK) newDate.setDate(date.getDate() + 7);
-    if (view === Views.DAY) newDate.setDate(date.getDate() + 1);
-    setDate(newDate);
+    const newDate = new Date(calendarDate); // Use calendarDate here
+    if (view === Views.MONTH) newDate.setMonth(calendarDate.getMonth() + 1);
+    if (view === Views.WEEK) newDate.setDate(calendarDate.getDate() + 7);
+    if (view === Views.DAY) newDate.setDate(calendarDate.getDate() + 1);
+    setCalendarDate(newDate); 
   };
 
   return (
@@ -119,15 +155,30 @@ const BookingsCalendarPage = () => {
       <div className="main-panel">
         <h2>📅 Bookings Calendar</h2>
 
+        {/* Applying recommended CSS class for search controls */}
+        <div className="search-controls">
+          <label htmlFor="bookingDateSearch">🔍 Search by Date:</label>
+          <input
+            type="date"
+            id="bookingDateSearch"
+            value={searchDateInput} 
+            onChange={handleSearchDateInputChange}
+          />
+          <button onClick={handleApplySearch}>Apply Search</button>
+          {appliedSearchDate && ( 
+            <button onClick={handleClearSearch}>Clear Search</button>
+          )}
+        </div>
+
         <Calendar
           localizer={localizer}
           events={events}
           startAccessor="start"
           endAccessor="end"
-          date={date}
+          date={calendarDate} 
           view={view}
           onView={setView}
-          onNavigate={setDate}
+          onNavigate={setCalendarDate} 
           style={{ height: "80vh" }}
           eventPropGetter={(event) => ({
             style: {

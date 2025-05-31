@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:async'; // For Timer (debouncing)
 import 'dart:convert'; // For jsonEncode/Decode
 import 'package:http/http.dart' as http; // For Gemini API call
+import 'package:myapp/screens/customer/home/widgets/recommended_dishes_slider.dart';
 
 // Make sure these paths are correct for your project structure
 import '../../../core/services/menu_service.dart';
@@ -323,92 +324,130 @@ class _HomeState extends State<Home> {
         centerTitle: true,
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          HeaderSection(
-            city: _selectedCity,
-            supportedCities: supportedCities,
-            onCityChange: (newCity) {
-              if (newCity != _selectedCity) {
-                setState(() => _selectedCity = newCity);
-                _searchController.clear(); // Clear search when city changes
-                _fetchTrucksAndMenus();
-              }
-            },
+      body: CustomScrollView(
+        slivers: [
+          // Header Section
+          SliverToBoxAdapter(
+            child: HeaderSection(
+              city: _selectedCity,
+              supportedCities: supportedCities,
+              onCityChange: (newCity) {
+                if (newCity != _selectedCity) {
+                  setState(() => _selectedCity = newCity);
+                  _searchController.clear();
+                  _fetchTrucksAndMenus();
+                }
+              },
+            ),
           ),
-          SearchFilterBar(
-            controller: _searchController,
-            onChanged: (query) {
-              // Debouncing is handled by the listener in initState
-              // This onChanged can be used for immediate UI updates if needed,
-              // but the main search logic is debounced.
-            },
+
+          // Search Bar
+          SliverToBoxAdapter(
+            child: SearchFilterBar(
+              controller: _searchController,
+              onChanged: (query) {},
+            ),
           ),
-          if (_isAISearching) // Show AI processing indicator
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
+
+          // Recommended Dishes Slider
+          SliverToBoxAdapter(
+            child: RecommendedDishesSlider(
+              selectedCity: _selectedCity,
+            ),
+          ),
+
+          // AI Processing Indicator
+          if (_isAISearching)
+            SliverToBoxAdapter(
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
                       width: 12,
                       height: 12,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.orange)),
-                  SizedBox(width: 8),
-                  Text("Thinking...", style: TextStyle(color: Colors.orange)),
-                ],
+                        strokeWidth: 2,
+                        color: Colors.orange,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Text("Thinking...", style: TextStyle(color: Colors.orange)),
+                  ],
+                ),
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 6,
-                      offset: Offset(0, 1)),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildToggleButton(
-                      'List View', false), // false represents list view
-                  SizedBox(
-                      height: 20,
-                      child: const VerticalDivider(
-                          width: 1, thickness: 1, color: Colors.black26)),
-                  _buildToggleButton(
-                      'Map View', true), // true represents map view
-                ],
+
+          // Toggle Buttons
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Center( // Wrap Container with Center
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min, // Keeps row to minimum width
+                    children: [
+                      _buildToggleButton('List View', false),
+                      SizedBox(
+                        height: 20,
+                        child: const VerticalDivider(
+                          width: 1,
+                          thickness: 1,
+                          color: Colors.black26,
+                        ),
+                      ),
+                      _buildToggleButton('Map View', true),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-          Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Colors.orange))
-                : _errorMessage.isNotEmpty
-                    ? Center(child: Text(_errorMessage))
-                    : _displayedTrucks.isEmpty
-                        ? Center(
-                            child: Text(_searchController.text.isEmpty
-                                ? "No food trucks found in $_selectedCity 😢"
-                                : "No matches for '${_searchController.text}'  શોધ😕"))
-                        : ListView.builder(
-                            itemCount: _displayedTrucks.length,
-                            itemBuilder: (context, index) {
-                              return TruckCard(
-                                truck: _displayedTrucks[index],
-                                activeSearchTerms: _currentSearchTerms,
-                              );
-                            },
-                          ),
-          ),
+          // Main Content Area
+          if (_isLoading)
+            SliverFillRemaining(
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.orange),
+              ),
+            )
+          else if (_errorMessage.isNotEmpty)
+            SliverFillRemaining(
+              child: Center(child: Text(_errorMessage)),
+            )
+          else if (_displayedTrucks.isEmpty)
+              SliverFillRemaining(
+                child: Center(
+                  child: Text(
+                    _searchController.text.isEmpty
+                        ? "No food trucks found in $_selectedCity 😢"
+                        : "No matches for '${_searchController.text}' 😕",
+                  ),
+                ),
+              )
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                    return TruckCard(
+                      truck: _displayedTrucks[index],
+                      activeSearchTerms: _currentSearchTerms,
+                    );
+                  },
+                  childCount: _displayedTrucks.length,
+                ),
+              ),
         ],
       ),
     );
