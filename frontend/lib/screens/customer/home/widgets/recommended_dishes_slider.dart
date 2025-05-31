@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../../../core/services/order_service.dart';
+import '../../../../core/services/review_service.dart';
 import '../../../../core/services/truckOwner_service.dart';
 import '../../../../core/services/menu_service.dart';
 import 'recommendation_card.dart';
@@ -43,6 +44,17 @@ class _RecommendedDishesSliderState extends State<RecommendedDishesSlider> {
     }
   }
 
+  Future<List<Map<String, dynamic>>> _fetchUserReviews() async {
+    try {
+      final List<dynamic> reviewsRaw = await ReviewService.fetchMyMenuItemReviews();
+      // Convert List<dynamic> to List<Map<String, dynamic>>
+      return reviewsRaw.map((review) => review as Map<String, dynamic>).toList();
+    } catch (e) {
+      print("[SLIDER_DEBUG] Error fetching user reviews: $e");
+      return []; // Return empty list on error
+    }
+  }
+
   Future<void> _fetchRecommendations() async {
     if (!mounted) return;
     setState(() {
@@ -70,6 +82,9 @@ class _RecommendedDishesSliderState extends State<RecommendedDishesSlider> {
         return (order['items'] as List<dynamic>? ?? []).map((item) => item['name'] as String);
       }).toSet().take(10).toList();
       print("[SLIDER_DEBUG] Past Order Names for AI: $pastOrderNames");
+
+      final List<Map<String, dynamic>> userReviews = await _fetchUserReviews();
+      print("[SLIDER_DEBUG] User Reviews Count: ${userReviews.length}");
 
       // 2. Fetch trucks
       final List<dynamic> trucksInCity = await TruckOwnerService.getPublicTrucks(city: widget.selectedCity);
@@ -110,7 +125,7 @@ class _RecommendedDishesSliderState extends State<RecommendedDishesSlider> {
       }
 
       // 4. Get AI recommendations
-      final String recommendationsJson = await _getAIRecommendations(pastOrderNames, _allAvailableMenusWithTruckInfo);
+      final String recommendationsJson = await _getAIRecommendations(pastOrderNames,userReviews, _allAvailableMenusWithTruckInfo);
       print("[SLIDER_DEBUG] AI Raw Recommendation JSON: $recommendationsJson");
       if (!mounted) return;
 
@@ -160,7 +175,7 @@ class _RecommendedDishesSliderState extends State<RecommendedDishesSlider> {
     }
   }
 
-  Future<String> _getAIRecommendations(List<String> pastOrderNames, List<Map<String, dynamic>> availableMenuItems) async {
+  Future<String> _getAIRecommendations(List<String> pastOrderNames,List<Map<String, dynamic>> userReviews, List<Map<String, dynamic>> availableMenuItems) async {
     print("[SLIDER_DEBUG] Getting AI recommendations. Past orders: ${pastOrderNames.length}, Available menus: ${availableMenuItems.length}");
     const apiKey = 'AIzaSyCsfzNXk_nP9V5my0gqNc5wV0-kPcPZ9YU'; // TODO: Replace
     final url = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=$apiKey');
@@ -171,16 +186,46 @@ class _RecommendedDishesSliderState extends State<RecommendedDishesSlider> {
       'truck_name': item['truck_name_for_recommendation'],
     }).toList();
 
-    final String prompt = """
-    User previously ordered: ${pastOrderNames.isEmpty ? "nothing specific" : pastOrderNames.join(", ")}.
-    Available menu items (format: [{'menu_id': id, 'name': name, 'truck_name': truckName}, ...]): 
-    ${jsonEncode(summarizedAvailableItems.take(50).toList())} 
-    // Limiting to 50 items in prompt for brevity & token limits, adjust as needed
+    // Summarize user reviews to include in the prompt
+    final summarizedUserReviews = userReviews.map((review) {
+      // Extract menu item name from nested structure
+      String menuItemName = 'Unknown Item';
+      if (review['menu_item_id'] is Map && review['menu_item_id']['name'] != null) {
+        menuItemName = review['menu_item_id']['name'];
+      }
+      return {
+        'item_name': menuItemName,
+        'rating': review['rating'],
+        'comment_summary': (review['comment'] as String?)?.substring(0, (review['comment'] as String?)!.length > 30 ? 30 : (review['comment']as String?)!.length) ?? '', // Short comment
+        'sentiment': review['sentiment'] ?? 'neutral',
+      };
+    }).take(10).toList(); // Limit number of reviews in prompt
 
-    Recommend 3 to 5 menu_ids from the available items based on past orders or general appeal.
-    Return ONLY a valid JSON array of strings, where each string is a 'menu_id'. Example: ["id1", "id2", "id3"]
-    If no good recommendations, return an empty JSON array: [].
-    """;
+    final String prompt = """
+You are a food recommendation assistant for the "Foodie Fleet" app.
+Your goal is to suggest 3 to 5 relevant menu items to the user.
+
+Consider the following user data:
+1. User's Past Ordered Item Names: ${pastOrderNames.isEmpty ? "None specified." : pastOrderNames.join(", ")}.
+2. User's Past Menu Item Reviews: 
+   ${jsonEncode(summarizedUserReviews.isEmpty ? "No past reviews." : summarizedUserReviews)}
+   (Pay attention to highly rated items, positive sentiment, and items the user commented on favorably. Avoid recommending items similar to ones they rated poorly or had negative sentiment for, unless the available options are very limited.)
+
+Here is a list of currently available menu items from various food trucks (format: [{'menu_id': id, 'name': name, 'truck_name': truckName, 'category': category, 'isVegan': bool, 'isSpicy': bool}, ...]): 
+${jsonEncode(summarizedAvailableItems.take(40).toList())} 
+// Limiting to 40 available items in prompt for token limits, adjust as needed.
+
+**Recommendation Task:**
+Based on the user's past orders AND their past reviews (especially ratings and sentiment), recommend 3 to 5 diverse and appealing 'menu_id's from the "Available menu items".
+*   Prioritize items similar to what they've liked (ordered or reviewed positively).
+*   Consider items that complement previous positive experiences.
+*   If past data is sparse, suggest popular or highly-rated general options from the available list.
+*   Try to offer some variety in terms of category or truck if possible.
+
+Return ONLY a valid JSON array of strings, where each string is the 'menu_id' of a recommended item.
+Example: ["menu_id_1", "menu_id_2", "menu_id_3"]
+If no good recommendations can be made, return an empty JSON array: [].
+""";
     try {
       final response = await http.post(url, headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'contents': [{'parts': [{'text': prompt}]}], "generationConfig": {"temperature": 0.6, "response_mime_type": "application/json" }}), // Request JSON output
@@ -222,11 +267,11 @@ class _RecommendedDishesSliderState extends State<RecommendedDishesSlider> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: ffSizeMdSlider, top: ffSizeMdSlider, bottom: ffSizeSmCard / 2),
+          padding: const EdgeInsets.only(left: ffSizeMdSlider, top: ffSizeMdSlider, bottom: 10.0),
           child: Text("Recommended For You", style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.black87)),
         ),
         SizedBox(
-          height: 335, // Height of the slider
+          height: 295 , // Height of the slider
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.only(left: ffSizeMdSlider, right: ffSizeMdSlider / 2, bottom: ffSizeSmCard / 2 + ffSizeMdSlider/2 ), // Added bottom padding for shadow

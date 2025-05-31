@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ReviewService {
   static const String baseUrl = 'http://10.0.2.2:5000/api/reviews';
@@ -72,6 +73,24 @@ class ReviewService {
     }
   }
 
+  static Future<List<dynamic>> fetchMenuItemReviews2(String menuItemId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/menu/$menuItemId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load your menu item reviews');
+    }
+  }
+
   /// Check if a truck was already rated for this order
   static Future<bool> checkIfTruckRated({
     required String token,
@@ -115,7 +134,10 @@ class ReviewService {
   }
 
   /// Get all menu item reviews submitted by the logged-in customer
-  static Future<List<dynamic>> fetchMyMenuItemReviews(String token) async {
+  static Future<List<dynamic>> fetchMyMenuItemReviews() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
     final response = await http.get(
       Uri.parse('$baseUrl/menu/my'),
       headers: {

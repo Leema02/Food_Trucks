@@ -1,29 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:myapp/screens/customer/cart/cart_controller.dart';
+import 'package:myapp/screens/customer/cart/cart_controller.dart'; // Adjust path
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 
-// --- Premium Styling for "Foodie Fleet" Card ---
-const Color ffPrimaryColor = Color(0xFFFF9F1C); // Vibrant orange
-const Color ffAccentColor = Color(0xFFFFD166); // Soft amber
-const Color ffSurfaceColor = Color(0xFFFDFDFD); // Off-white background
-const Color ffOnSurfaceColor = Color(0xFF2D2D2D); // Dark text
-const Color ffSecondaryTextColor = Color(0xFF7A7A7A); // Medium grey
-const Color ffSubtleTextColor = Color(0xFFB0B0B0); // Light grey
-const Color ffShadowColor = Color(0x1A000000); // Soft black shadow
+// Import ReviewService - ENSURE THIS PATH IS CORRECT
+import '../../../../core/services/review_service.dart'; // Adjust path to your ReviewService
 
-// Card dimensions
+// --- Styling Constants (from YOUR card code) ---
+const Color ffPrimaryColor = Color(0xFFFF9F1C);
+const Color ffAccentColor = Color(0xFFFFD166);
+const Color ffSurfaceColor = Color(0xFFFDFDFD);
+const Color ffOnSurfaceColor = Color(0xFF2D2D2D);
+const Color ffSecondaryTextColor = Color(0xFF7A7A7A);
+// const Color ffSubtleTextColor = Color(0xFFB0B0B0); // Not used in your rating display
+const Color ffShadowColor = Color(0x1A000000);
+
 const double ffCardBorderRadius = 24.0;
-const double ffImageHeight = 160.0;
-const double ffCardWidthFactor = 0.7;
+const double ffImageHeight = 120.0; // As per your code
+// const double ffCardWidthFactor = 0.7; // Your card uses fixed width 230.0
 
-// Spacing
 const double ffPaddingXs = 4.0;
 const double ffPaddingSm = 8.0;
 const double ffPaddingMd = 16.0;
-const double ffPaddingLg = 20.0;
+// const double ffPaddingLg = 20.0;
 
-class RecommendationCard extends StatelessWidget {
+// CHANGED RecommendationCard to StatefulWidget
+class RecommendationCard extends StatefulWidget {
   final Map<String, dynamic> menuItem;
   final String truckName;
 
@@ -34,28 +36,97 @@ class RecommendationCard extends StatelessWidget {
   });
 
   @override
+  State<RecommendationCard> createState() => _RecommendationCardState();
+}
+
+class _RecommendationCardState extends State<RecommendationCard> {
+  double _averageRating = 0.0;
+  int _reviewCount = 0;
+  bool _isLoadingReviews = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchThisItemReviews();
+  }
+
+  Future<void> _fetchThisItemReviews() async {
+    if (!mounted) return;
+    // No need to set _isLoadingReviews to true here again, already true by default or set by parent
+
+    final String? menuItemId = widget.menuItem['_id'] as String?;
+    if (menuItemId == null) {
+      print("RecommendationCard: MenuItem ID is null for ${widget.menuItem['name']}, cannot fetch reviews.");
+      if (mounted) {
+        setState(() => _isLoadingReviews = false);
+      }
+      return;
+    }
+
+    print("[CARD_REVIEW_DEBUG] Fetching reviews for item: ${widget.menuItem['name']} (ID: $menuItemId)");
+
+    try {
+      // Ensure ReviewService.fetchMenuItemReviews is a static method
+      final reviews = await ReviewService.fetchMenuItemReviews2(menuItemId);
+      if (!mounted) return;
+
+      if (reviews.isNotEmpty) {
+        double totalRating = 0;
+        for (var review in reviews) {
+          if (review is Map<String, dynamic> && review['rating'] is num) {
+            totalRating += (review['rating'] as num).toDouble();
+          }
+        }
+        setState(() {
+          _reviewCount = reviews.length;
+          _averageRating = totalRating / _reviewCount; // Avoid division by zero if count somehow becomes 0 after check
+          _isLoadingReviews = false;
+        });
+        print("[CARD_REVIEW_DEBUG] Reviews for ${widget.menuItem['name']}: Avg $_averageRating, Count $_reviewCount");
+      } else {
+        setState(() { // No reviews found
+          _reviewCount = 0;
+          _averageRating = 0.0;
+          _isLoadingReviews = false;
+        });
+        print("[CARD_REVIEW_DEBUG] No reviews found for ${widget.menuItem['name']}");
+      }
+    } catch (e) {
+      print("[CARD_REVIEW_DEBUG] Error fetching reviews in card for item $menuItemId: $e");
+      if (mounted) {
+        setState(() {
+          _isLoadingReviews = false;
+          _reviewCount = 0; // Reset on error
+          _averageRating = 0.0;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final String? imageUrl = menuItem['image_url'] as String?;
+    // Accessing widget.menuItem and widget.truckName
+    final String? imageUrl = widget.menuItem['image_url'] as String?;
     final String placeholderImage = 'https://via.placeholder.com/400x250.png?text=Food+Image';
 
     final Map<String, dynamic> itemDetailsForCart = {
-      'menu_id': menuItem['_id'],
-      'name': menuItem['name'],
-      'price': menuItem['price'],
-      'image_url': menuItem['image_url'],
-      'truck_id': menuItem['truck_id_for_recommendation'],
-      'truck_city': menuItem['truck_city_for_recommendation'],
-      'isVegan': menuItem['isVegan'] ?? false,
-      'isSpicy': menuItem['isSpicy'] ?? false,
-      'calories': menuItem['calories'],
+      'menu_id': widget.menuItem['_id'],
+      'name': widget.menuItem['name'],
+      'price': widget.menuItem['price'],
+      'image_url': widget.menuItem['image_url'],
+      'truck_id': widget.menuItem['truck_id_for_recommendation'],
+      'truck_city': widget.menuItem['truck_city_for_recommendation'],
+      'isVegan': widget.menuItem['isVegan'] ?? false,
+      'isSpicy': widget.menuItem['isSpicy'] ?? false,
+      'calories': widget.menuItem['calories'],
     };
 
-    final bool isVegan = menuItem['isVegan'] as bool? ?? false;
-    final bool isSpicy = menuItem['isSpicy'] as bool? ?? false;
+    final bool isVegan = widget.menuItem['isVegan'] as bool? ?? false;
+    final bool isSpicy = widget.menuItem['isSpicy'] as bool? ?? false;
 
     return Container(
-      width: MediaQuery.of(context).size.width * ffCardWidthFactor,
-      margin: const EdgeInsets.only(right: ffPaddingMd, bottom: ffPaddingMd),
+      width: 230.0, // Your specified width
+      margin: const EdgeInsets.only(right: ffPaddingMd, bottom: 25.0), // Your specified margin
       decoration: BoxDecoration(
         color: ffSurfaceColor,
         borderRadius: BorderRadius.circular(ffCardBorderRadius),
@@ -74,11 +145,11 @@ class RecommendationCard extends StatelessWidget {
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              // mainAxisSize: MainAxisSize.min, // Keep this if it helps your layout
               children: [
-                // --- Premium Image Section ---
+                // --- Premium Image Section --- (YOUR EXISTING IMAGE STACK)
                 Stack(
                   children: [
-                    // Image with shimmer effect
                     SizedBox(
                       height: ffImageHeight,
                       width: double.infinity,
@@ -89,12 +160,10 @@ class RecommendationCard extends StatelessWidget {
                             ? 'http://10.0.2.2:5000$imageUrl'
                             : placeholderImage),
                         fit: BoxFit.cover,
-                        placeholder: (context, url) => ShimmerPlaceholder(),
-                        errorWidget: (context, url, error) => ImageErrorPlaceholder(),
+                        placeholder: (context, url) => ShimmerPlaceholder(height: ffImageHeight), // Pass height
+                        errorWidget: (context, url, error) => ImageErrorPlaceholder(height: ffImageHeight), // Pass height
                       ),
                     ),
-
-                    // Gradient overlay
                     Container(
                       height: ffImageHeight,
                       decoration: BoxDecoration(
@@ -108,8 +177,6 @@ class RecommendationCard extends StatelessWidget {
                         ),
                       ),
                     ),
-
-                    // Vegan/Spicy tags
                     if (isVegan || isSpicy)
                       Positioned(
                         top: ffPaddingMd,
@@ -122,13 +189,11 @@ class RecommendationCard extends StatelessWidget {
                           ],
                         ),
                       ),
-
-                    // Truck name at bottom of image
                     Positioned(
                       left: ffPaddingMd,
                       bottom: ffPaddingMd,
                       child: Text(
-                        truckName,
+                        widget.truckName, // Use widget.truckName
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
@@ -140,15 +205,15 @@ class RecommendationCard extends StatelessWidget {
                   ],
                 ),
 
-                // --- Details Section ---
+                // --- Details Section --- (YOUR EXISTING DETAILS PADDING AND COLUMN)
                 Padding(
                   padding: const EdgeInsets.all(ffPaddingMd),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min, // Add this to help content fit if not already there
                     children: [
-                      // Dish name with custom font
                       Text(
-                        menuItem['name'] as String? ?? 'Premium Dish',
+                        widget.menuItem['name'] as String? ?? 'Premium Dish',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: ffOnSurfaceColor,
@@ -158,61 +223,72 @@ class RecommendationCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-
                       const SizedBox(height: ffPaddingSm),
-
-                      // Calories and rating row
                       Row(
                         children: [
                           Icon(Icons.fastfood_outlined, size: 16, color: ffSecondaryTextColor),
                           const SizedBox(width: ffPaddingXs),
                           Text(
-                            '${menuItem['calories']?.toString() ?? 'N/A'} Cal',
-                            style: TextStyle(
+                            '${widget.menuItem['calories']?.toString() ?? 'N/A'} Cal',
+                            style: const TextStyle( // Used const for your original style
                               color: ffSecondaryTextColor,
                               fontSize: 12,
                             ),
                           ),
-
                           const SizedBox(width: ffPaddingMd),
 
-                          Icon(Iconsax.star, size: 16, color: ffAccentColor),
-                          const SizedBox(width: ffPaddingXs),
-                          Text(
-                            '4.8 (25)',
-                            style: TextStyle(
-                              color: ffSecondaryTextColor,
-                              fontSize: 12,
+                          // =========== MODIFIED RATING DISPLAY START ===========
+                          if (_isLoadingReviews)
+                            const SizedBox(
+                              width: 16, height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 1.5, color: ffAccentColor),
+                            )
+                          else if (_reviewCount > 0) ...[
+                            const Icon(Icons.star, size: 16, color: ffAccentColor), // Filled star
+                            const SizedBox(width: ffPaddingXs),
+                            Text(
+                              '${_averageRating.toStringAsFixed(1)} ($_reviewCount)',
+                              style: const TextStyle( // Used const for your original style
+                                color: ffSecondaryTextColor,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
+                          ] else ...[
+                            // If no reviews, display as per your original placeholder but with an empty star
+                            Icon(Iconsax.star, size: 16, color: ffSecondaryTextColor.withOpacity(0.6)), // Empty/Outline star
+                            const SizedBox(width: ffPaddingXs),
+                            const Text(
+                              'New', // Or 'No Reviews' or '0 (0)'
+                              style: TextStyle(
+                                color: ffSecondaryTextColor,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                          // =========== MODIFIED RATING DISPLAY END ===========
                         ],
                       ),
-
-                      const SizedBox(height: ffPaddingMd),
-
-                      // Price and Add button
+                      const SizedBox(height: 10.0), // Your original spacing
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center, // Added for vertical alignment
                         children: [
                           Text(
-                            '\$${(menuItem['price'] as num?)?.toStringAsFixed(2) ?? 'N/A'}',
+                            '\$${(widget.menuItem['price'] as num?)?.toStringAsFixed(2) ?? 'N/A'}',
                             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                               color: ffPrimaryColor,
                               fontWeight: FontWeight.w800,
                               fontSize: 20,
                             ),
                           ),
-
-                          // Floating action button
                           FloatingActionButton.small(
                             onPressed: () => _addToCart(context, itemDetailsForCart),
                             backgroundColor: ffPrimaryColor,
                             foregroundColor: Colors.white,
                             elevation: 2,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(Iconsax.add),
+                                borderRadius: BorderRadius.circular(12)),
+                            child: const Icon(Icons.add_shopping_cart_outlined, size:20), // Your original icon
                           ),
                         ],
                       ),
@@ -221,9 +297,7 @@ class RecommendationCard extends StatelessWidget {
                 ),
               ],
             ),
-
-            // Premium corner decoration
-            Positioned(
+            Positioned( // YOUR EXISTING PREMIUM CORNER DECORATION
               top: -30,
               right: -30,
               child: Container(
@@ -241,6 +315,7 @@ class RecommendationCard extends StatelessWidget {
     );
   }
 
+  // YOUR EXISTING HELPER METHODS
   Widget _buildPremiumTag(String text, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: ffPaddingSm, vertical: 5),
@@ -255,21 +330,15 @@ class RecommendationCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: Colors.white),
-          const SizedBox(width: ffPaddingXs),
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, size: 14, color: Colors.white),
+        const SizedBox(width: ffPaddingXs),
+        Text(
+          text,
+          style: const TextStyle(
+              color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+        ),
+      ]),
     );
   }
 
@@ -290,11 +359,15 @@ class RecommendationCard extends StatelessWidget {
   }
 }
 
-// Custom shimmer placeholder widget
+// YOUR EXISTING PLACEHOLDER WIDGETS
 class ShimmerPlaceholder extends StatelessWidget {
+  final double height; // Added required height
+  const ShimmerPlaceholder({super.key, required this.height});
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: height, // Use passed height
+      width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -307,25 +380,26 @@ class ShimmerPlaceholder extends StatelessWidget {
           stops: const [0.1, 0.5, 0.9],
         ),
       ),
-      child: const Center(
-        child: Icon(Iconsax.gallery, size: 40, color: Colors.grey),
-      ),
+      // child: const Center(child: Icon(Iconsax.gallery, size: 40, color: Colors.grey)),
     );
   }
 }
 
-// Custom error placeholder widget
 class ImageErrorPlaceholder extends StatelessWidget {
+  final double height;
+  const ImageErrorPlaceholder({super.key, required this.height}); // Added required height
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: height, // Use passed height
+      width: double.infinity,
       color: Colors.grey.shade100,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Iconsax.gallery_slash, size: 40, color: Colors.grey.shade400),
           const SizedBox(height: ffPaddingSm),
-          Text("Image not available",
+          Text("Image N/A",
               style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
         ],
       ),
