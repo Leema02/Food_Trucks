@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:myapp/screens/customer/cart/cart_controller.dart'; // Adjust path
-import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 // Import ReviewService - ENSURE THIS PATH IS CORRECT
 import '../../../../core/services/review_service.dart'; // Adjust path to your ReviewService
@@ -56,14 +55,16 @@ class _RecommendationCardState extends State<RecommendationCard> {
 
     final String? menuItemId = widget.menuItem['_id'] as String?;
     if (menuItemId == null) {
-      print("RecommendationCard: MenuItem ID is null for ${widget.menuItem['name']}, cannot fetch reviews.");
+      print(
+          "RecommendationCard: MenuItem ID is null for ${widget.menuItem['name']}, cannot fetch reviews.");
       if (mounted) {
         setState(() => _isLoadingReviews = false);
       }
       return;
     }
 
-    print("[CARD_REVIEW_DEBUG] Fetching reviews for item: ${widget.menuItem['name']} (ID: $menuItemId)");
+    print(
+        "[CARD_REVIEW_DEBUG] Fetching reviews for item: ${widget.menuItem['name']} (ID: $menuItemId)");
 
     try {
       // Ensure ReviewService.fetchMenuItemReviews is a static method
@@ -79,20 +80,25 @@ class _RecommendationCardState extends State<RecommendationCard> {
         }
         setState(() {
           _reviewCount = reviews.length;
-          _averageRating = totalRating / _reviewCount; // Avoid division by zero if count somehow becomes 0 after check
+          _averageRating = totalRating /
+              _reviewCount; // Avoid division by zero if count somehow becomes 0 after check
           _isLoadingReviews = false;
         });
-        print("[CARD_REVIEW_DEBUG] Reviews for ${widget.menuItem['name']}: Avg $_averageRating, Count $_reviewCount");
+        print(
+            "[CARD_REVIEW_DEBUG] Reviews for ${widget.menuItem['name']}: Avg $_averageRating, Count $_reviewCount");
       } else {
-        setState(() { // No reviews found
+        setState(() {
+          // No reviews found
           _reviewCount = 0;
           _averageRating = 0.0;
           _isLoadingReviews = false;
         });
-        print("[CARD_REVIEW_DEBUG] No reviews found for ${widget.menuItem['name']}");
+        print(
+            "[CARD_REVIEW_DEBUG] No reviews found for ${widget.menuItem['name']}");
       }
     } catch (e) {
-      print("[CARD_REVIEW_DEBUG] Error fetching reviews in card for item $menuItemId: $e");
+      print(
+          "[CARD_REVIEW_DEBUG] Error fetching reviews in card for item $menuItemId: $e");
       if (mounted) {
         setState(() {
           _isLoadingReviews = false;
@@ -107,7 +113,8 @@ class _RecommendationCardState extends State<RecommendationCard> {
   Widget build(BuildContext context) {
     // Accessing widget.menuItem and widget.truckName
     final String? imageUrl = widget.menuItem['image_url'] as String?;
-    final String placeholderImage = 'https://via.placeholder.com/400x250.png?text=Food+Image';
+    final String placeholderImage =
+        'https://via.placeholder.com/400x250.png?text=Food+Image';
 
     final Map<String, dynamic> itemDetailsForCart = {
       'menu_id': widget.menuItem['_id'],
@@ -126,7 +133,8 @@ class _RecommendationCardState extends State<RecommendationCard> {
 
     return Container(
       width: 230.0, // Your specified width
-      margin: const EdgeInsets.only(right: ffPaddingMd, bottom: 25.0), // Your specified margin
+      margin: const EdgeInsets.only(
+          right: ffPaddingMd, bottom: 25.0), // Your specified margin
       decoration: BoxDecoration(
         color: ffSurfaceColor,
         borderRadius: BorderRadius.circular(ffCardBorderRadius),
@@ -154,14 +162,18 @@ class _RecommendationCardState extends State<RecommendationCard> {
                       height: ffImageHeight,
                       width: double.infinity,
                       child: CachedNetworkImage(
-                        imageUrl: (imageUrl != null && imageUrl.startsWith('http'))
-                            ? imageUrl
-                            : (imageUrl != null
-                            ? 'http://10.0.2.2:5000$imageUrl'
-                            : placeholderImage),
+                        imageUrl:
+                            (imageUrl != null && imageUrl.startsWith('http'))
+                                ? imageUrl
+                                : (imageUrl != null
+                                    ? 'http://10.0.2.2:5000$imageUrl'
+                                    : placeholderImage),
                         fit: BoxFit.cover,
-                        placeholder: (context, url) => ShimmerPlaceholder(height: ffImageHeight), // Pass height
-                        errorWidget: (context, url, error) => ImageErrorPlaceholder(height: ffImageHeight), // Pass height
+                        placeholder: (context, url) => ShimmerPlaceholder(
+                            height: ffImageHeight), // Pass height
+                        errorWidget: (context, url, error) =>
+                            ImageErrorPlaceholder(
+                                height: ffImageHeight), // Pass height
                       ),
                     ),
                     Container(
@@ -184,8 +196,12 @@ class _RecommendationCardState extends State<RecommendationCard> {
                         child: Wrap(
                           spacing: ffPaddingXs,
                           children: [
-                            if (isVegan) _buildPremiumTag("Vegan", Icons.eco, Colors.green),
-                            if (isSpicy) _buildPremiumTag("Spicy", Icons.local_fire_department, Colors.red),
+                            if (isVegan)
+                              _buildPremiumTag(
+                                  "Vegan", Icons.eco, Colors.green),
+                            if (isSpicy)
+                              _buildPremiumTag("Spicy",
+                                  Icons.local_fire_department, Colors.red),
                           ],
                         ),
                       ),
@@ -195,11 +211,11 @@ class _RecommendationCardState extends State<RecommendationCard> {
                       child: Text(
                         widget.truckName, // Use widget.truckName
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          letterSpacing: 0.2,
-                        ),
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              letterSpacing: 0.2,
+                            ),
                       ),
                     ),
                   ],
@@ -210,27 +226,30 @@ class _RecommendationCardState extends State<RecommendationCard> {
                   padding: const EdgeInsets.all(ffPaddingMd),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min, // Add this to help content fit if not already there
+                    mainAxisSize: MainAxisSize
+                        .min, // Add this to help content fit if not already there
                     children: [
                       Text(
                         widget.menuItem['name'] as String? ?? 'Premium Dish',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: ffOnSurfaceColor,
-                          fontSize: 18,
-                          height: 1.3,
-                        ),
+                              fontWeight: FontWeight.w800,
+                              color: ffOnSurfaceColor,
+                              fontSize: 18,
+                              height: 1.3,
+                            ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: ffPaddingSm),
                       Row(
                         children: [
-                          Icon(Icons.fastfood_outlined, size: 16, color: ffSecondaryTextColor),
+                          Icon(Icons.fastfood_outlined,
+                              size: 16, color: ffSecondaryTextColor),
                           const SizedBox(width: ffPaddingXs),
                           Text(
                             '${widget.menuItem['calories']?.toString() ?? 'N/A'} Cal',
-                            style: const TextStyle( // Used const for your original style
+                            style: const TextStyle(
+                              // Used const for your original style
                               color: ffSecondaryTextColor,
                               fontSize: 12,
                             ),
@@ -240,22 +259,29 @@ class _RecommendationCardState extends State<RecommendationCard> {
                           // =========== MODIFIED RATING DISPLAY START ===========
                           if (_isLoadingReviews)
                             const SizedBox(
-                              width: 16, height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 1.5, color: ffAccentColor),
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 1.5, color: ffAccentColor),
                             )
                           else if (_reviewCount > 0) ...[
-                            const Icon(Icons.star, size: 16, color: ffAccentColor), // Filled star
+                            const Icon(Icons.star,
+                                size: 16, color: ffAccentColor), // Filled star
                             const SizedBox(width: ffPaddingXs),
                             Text(
                               '${_averageRating.toStringAsFixed(1)} ($_reviewCount)',
-                              style: const TextStyle( // Used const for your original style
+                              style: const TextStyle(
+                                // Used const for your original style
                                 color: ffSecondaryTextColor,
                                 fontSize: 12,
                               ),
                             ),
                           ] else ...[
                             // If no reviews, display as per your original placeholder but with an empty star
-                            Icon(Iconsax.star, size: 16, color: ffSecondaryTextColor.withOpacity(0.6)), // Empty/Outline star
+                            Icon(Icons.star,
+                                size: 16,
+                                color: ffSecondaryTextColor
+                                    .withOpacity(0.6)), // Empty/Outline star
                             const SizedBox(width: ffPaddingXs),
                             const Text(
                               'New', // Or 'No Reviews' or '0 (0)'
@@ -271,24 +297,30 @@ class _RecommendationCardState extends State<RecommendationCard> {
                       const SizedBox(height: 10.0), // Your original spacing
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center, // Added for vertical alignment
+                        crossAxisAlignment: CrossAxisAlignment
+                            .center, // Added for vertical alignment
                         children: [
                           Text(
                             '\$${(widget.menuItem['price'] as num?)?.toStringAsFixed(2) ?? 'N/A'}',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              color: ffPrimaryColor,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 20,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall
+                                ?.copyWith(
+                                  color: ffPrimaryColor,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 20,
+                                ),
                           ),
                           FloatingActionButton.small(
-                            onPressed: () => _addToCart(context, itemDetailsForCart),
+                            onPressed: () =>
+                                _addToCart(context, itemDetailsForCart),
                             backgroundColor: ffPrimaryColor,
                             foregroundColor: Colors.white,
                             elevation: 2,
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
-                            child: const Icon(Icons.add_shopping_cart_outlined, size:20), // Your original icon
+                            child: const Icon(Icons.add_shopping_cart_outlined,
+                                size: 20), // Your original icon
                           ),
                         ],
                       ),
@@ -297,7 +329,8 @@ class _RecommendationCardState extends State<RecommendationCard> {
                 ),
               ],
             ),
-            Positioned( // YOUR EXISTING PREMIUM CORNER DECORATION
+            Positioned(
+              // YOUR EXISTING PREMIUM CORNER DECORATION
               top: -30,
               right: -30,
               child: Container(
@@ -387,7 +420,8 @@ class ShimmerPlaceholder extends StatelessWidget {
 
 class ImageErrorPlaceholder extends StatelessWidget {
   final double height;
-  const ImageErrorPlaceholder({super.key, required this.height}); // Added required height
+  const ImageErrorPlaceholder(
+      {super.key, required this.height}); // Added required height
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -397,7 +431,7 @@ class ImageErrorPlaceholder extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Iconsax.gallery_slash, size: 40, color: Colors.grey.shade400),
+          Icon(Icons.abc, size: 40, color: Colors.grey.shade400),
           const SizedBox(height: ffPaddingSm),
           Text("Image N/A",
               style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
