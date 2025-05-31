@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:async'; // For Timer (debouncing)
 import 'dart:convert'; // For jsonEncode/Decode
 import 'package:http/http.dart' as http; // For Gemini API call
+import 'package:myapp/screens/customer/home/widgets/recommended_dishes_slider.dart';
 
 // Make sure these paths are correct for your project structure
 import '../../../core/services/menu_service.dart';
@@ -344,6 +345,9 @@ class _HomeState extends State<Home> {
               // but the main search logic is debounced.
             },
           ),
+          // RecommendedDishesSlider(
+          //   selectedCity: _selectedCity,
+          // ),
           if (_isAISearching) // Show AI processing indicator
             const Padding(
               padding: EdgeInsets.all(8.0),
