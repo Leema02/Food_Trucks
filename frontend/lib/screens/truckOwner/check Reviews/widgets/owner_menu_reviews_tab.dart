@@ -78,7 +78,7 @@ class _OwnerMenuReviewsTabState extends State<OwnerMenuReviewsTab> {
         final name = item['name'];
         namesMap[id] = name;
 
-        final reviews = await ReviewService.fetchMenuItemReviews(id);
+        final reviews = await ReviewService.fetchMenuItemReviews2(id);
         allFetched.addAll(reviews);
       }
 

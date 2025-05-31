@@ -53,7 +53,15 @@ class ReviewService {
 
   /// Get reviews for a truck
   static Future<List<dynamic>> fetchTruckReviews(String truckId) async {
-    final response = await http.get(Uri.parse('$baseUrl/truck/$truckId'));
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/truck/$truckId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -63,16 +71,6 @@ class ReviewService {
   }
 
   /// Get reviews for a menu item
-  static Future<List<dynamic>> fetchMenuItemReviews(String menuItemId) async {
-    final response = await http.get(Uri.parse('$baseUrl/menu/$menuItemId'));
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to load menu item reviews');
-    }
-  }
-
   static Future<List<dynamic>> fetchMenuItemReviews2(String menuItemId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
