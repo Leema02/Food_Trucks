@@ -1,4 +1,8 @@
 require("dotenv").config(); // Load .env file
+const { Server }             = require("socket.io");
+const { addUserSocket, getUserSocket, removeUserSocket }
+                             = require("./services/CustomSocketService");
+                             const http                   = require("http");
 const express = require("express");
 const connectDB = require("./config/db");
 const bodyParser = require("body-parser");
@@ -7,6 +11,22 @@ const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const server =http.createServer(app);
+const io = new Server(server);
+io.on('connection', (socket) => {
+  
+  console.log('A user connected');
+  socket.on("setId",(data)=>{
+    addUserSocket(data,socket)  
+  });
+  
+  
+  
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+    removeUserSocket(socket);
+});}
+)
 
 // Connect to MongoDB
 connectDB();
@@ -40,6 +60,6 @@ app.use('/api/reviews', reviewRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
 
 // Start the server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port http://localhost:${PORT}`);
 });

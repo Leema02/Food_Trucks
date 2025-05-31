@@ -1,6 +1,8 @@
 const EventBooking = require("../models/eventBookingModel");
 const Truck = require("../models/truckModel");
-
+const Notification=require("../models/NotificationModel");
+const User=require("../models/userModel");
+const { sendToClient } = require("../services/CustomSocketService");
 // 🟢 Create a new booking (multi-day)
 const createBooking = async (req, res) => {
   try {
@@ -78,7 +80,12 @@ const createBooking = async (req, res) => {
       (dateStr) => new Date(dateStr)
     );
     await truck.save();
-
+    const not =await Notification.create({
+      userId:truck.owner_id,
+      title:"New Booking Received",
+      message:` New booking from ${req.user.F_name+" "+req.user.L_name} `
+    });
+    sendToClient(truck.owner_id.toString(),"Notification",not);
     res.status(201).json(saved);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -158,7 +165,14 @@ const updateBookingStatus = async (req, res) => {
     // ✅ Always update status here (even for rejected)
     booking.status = status;
     await booking.save();
-
+    if(booking.status=="confirmed"){
+      const not =await Notification.create({
+        userId:booking.user_id,
+        title:"Booking Accepted",
+        message:`Your booking has been confirmed by Truck! `
+      });
+      sendToClient(booking.user_id.toString(),"Notification",not);
+    }
     res.json({ message: `Booking ${status} successfully`, booking });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -206,7 +220,22 @@ const deleteBooking = async (req, res) => {
 
     await truck.save();
     await booking.deleteOne();
-
+    if(isCustomer){
+      const not =await Notification.create({
+        userId:truck.owner_id,
+        title:"Booking Cancelled",
+        message:`Booking from  ${req.user.F_name+" "+req.user.L_name} was cancelled." `
+      });
+      sendToClient(truck.owner_id.toString(),"Notification",not);
+    }
+    else{
+      const not =await Notification.create({
+        userId:booking.user_id,
+        title:"Booking Rejected",
+        message:`The truck owner rejects the event `
+      });
+      sendToClient(booking.user_id.toString(),"Notification",not);
+    }
     res.json({ message: "✅ Booking deleted and dates unblocked." });
   } catch (err) {
     res.status(500).json({ message: err.message });

@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:myapp/screens/customer/customer_main_container.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:myapp/screens/truckOwner/ownerDashbored.dart';
@@ -12,6 +14,8 @@ import 'package:myapp/screens/auth/widgets/sign_up_bar.dart';
 import 'package:myapp/screens/auth/widgets/responsive.dart';
 import 'package:myapp/core/services/auth_service.dart';
 import 'package:easy_localization/easy_localization.dart';
+
+import '../../../core/services/SocketService.dart';
 
 class LoginPage extends StatefulWidget {
   final Locale? locale;
@@ -76,6 +80,12 @@ class _LoginPageState extends State<LoginPage> {
       final responseData = jsonDecode(httpResponse.body);
 
       if (httpResponse.statusCode == 200) {
+        // const platform = MethodChannel('com.example.myapp/service');
+        SocketService.socketService.currentUserId =
+            responseData['user']['_id'] as String;
+        log(responseData.toString());
+        // platform.invokeMethod('startService');
+        SocketService.socketService.connectToServer();
         _showMessage("✅ Login successful");
 
         final prefs = await SharedPreferences.getInstance();

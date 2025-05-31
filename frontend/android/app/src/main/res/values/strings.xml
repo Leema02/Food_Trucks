@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">myapp</string>
+
+  <string name="stripe_publishable_key">
+    pk_test_51RRdZMIee5pLQ5EwAOSGDbauHv7IMZqJvSg1hQwWc9BbfoPHUXFqN7wDME95xPBat7lBW2vY9yYhYnN9pu6DmU7n00gbcWkxbm
+  </string>
+</resources>
