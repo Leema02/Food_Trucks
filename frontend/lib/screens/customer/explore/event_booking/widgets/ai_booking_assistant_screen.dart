@@ -40,7 +40,7 @@ class _AIBookingAssistantScreenState extends State<AIBookingAssistantScreen> {
   List<Map<String, dynamic>> _relevantMenusWithTruckInfo = []; // To store menus of fetched trucks
   Map<String, dynamic> _extractedBookingParams = {};
 
-  static const String _geminiApiKey = 'YOUR_GEMINI_API_KEY_HERE'; // <<<--- REPLACE THIS
+  static const String _geminiApiKey = 'AIzaSyCsfzNXk_nP9V5my0gqNc5wV0-kPcPZ9YU'; 
   static final Uri _geminiUrl = Uri.parse(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=$_geminiApiKey');
 
