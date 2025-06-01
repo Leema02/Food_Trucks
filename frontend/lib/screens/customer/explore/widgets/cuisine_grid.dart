@@ -16,12 +16,24 @@ class _CuisineGridSectionState extends State<CuisineGridSection> {
   bool isLoading = true;
 
   final Map<String, String> cuisineImages = {
-    "Multi-Cuisine": "assets/multi.jpg",
-    "American": "assets/american.jpg",
-    "Asian": "assets/asian.jpg",
-    "BBQ": "assets/bbq.jpg",
-    "Brazilian": "assets/brazilian.jpg",
-    "Breakfast": "assets/breakfast.jpg",
+    'Palestinian': 'assets/image/explore/cuisines/pal.jpg',
+    'Middle Eastern': 'assets/image/explore/cuisines/middleE.jpg',
+    'BBQ': 'assets/image/explore/cuisines/bbq.jpg',
+    'Burgers': 'assets/image/explore/cuisines/burger.jpg',
+    'Pizza': 'assets/image/explore/cuisines/pizza.jpg',
+    'Mexican': 'assets/image/explore/cuisines/mexican.jpg',
+    'Asian': 'assets/image/explore/cuisines/asian.jpg',
+    'Sushi': 'assets/image/explore/cuisines/sushi.jpg',
+    'Italian': 'assets/image/explore/cuisines/italian.jpg',
+    'Fried Chicken': 'assets/image/explore/cuisines/chicken.jpg',
+    'Sandwiches': 'assets/image/explore/cuisines/sand.jpg',
+    'Seafood': 'assets/image/explore/cuisines/seafood.jpg',
+    'Desserts': 'assets/image/explore/cuisines/dessert.jpg',
+    'Ice Cream': 'assets/image/explore/cuisines/icecream.jpg',
+    'Coffee': 'assets/image/explore/cuisines/coffee.jpg',
+    'Shawarma': 'assets/image/explore/cuisines/shawerma.jpg',
+    'Falafel': 'assets/image/explore/cuisines/falafel.jpg',
+    'Vegan': 'assets/image/explore/cuisines/vegan.jpg',
   };
 
   @override
@@ -53,7 +65,7 @@ class _CuisineGridSectionState extends State<CuisineGridSection> {
       children: [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text("Cuisine",
+          child: Text("Cuisine Type",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         ),
         const SizedBox(height: 12),

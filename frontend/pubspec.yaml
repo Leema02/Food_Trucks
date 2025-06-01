@@ -88,6 +88,8 @@ flutter:
     - assets/image/plate-002.png
     - assets/image/plate-007.png
     - assets/langs/
+    - assets/image/explore/
+    - assets/image/explore/cuisines/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

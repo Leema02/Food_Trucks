@@ -20,6 +20,11 @@ class TruckCard extends StatelessWidget {
             : 'http://10.0.2.2:5000$imagePath')
         : null;
 
+    final double? averageRating = truck['average_rating'] != null
+        ? double.tryParse(truck['average_rating'].toString())
+        : null;
+    final int reviewCount = truck['review_count'] ?? 0;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
@@ -78,24 +83,41 @@ class TruckCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
 
-                // ⭐ Average Rating (if available)
-                if (truck.containsKey('average_rating') &&
-                    truck['average_rating'] != null)
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        double.tryParse(truck['average_rating'].toString())
-                                ?.toStringAsFixed(1) ??
-                            '0.0',
-                        style: const TextStyle(
+                // ⭐ Rating or "New"
+                Row(
+                  children: [
+                    const Icon(Icons.star, color: Colors.amber, size: 20),
+                    const SizedBox(width: 4),
+                    if (averageRating != null)
+                      Row(
+                        children: [
+                          Text(
+                            averageRating.toStringAsFixed(1),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '($reviewCount)',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      const Text(
+                        'New',
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: Colors.orange,
                         ),
                       ),
-                    ],
-                  ),
+                  ],
+                ),
 
                 const SizedBox(height: 6),
                 Text(

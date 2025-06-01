@@ -91,13 +91,35 @@ async function seed() {
   });
 
   console.log('🚚 Seeding fake trucks...');
+
+function getRandomOperatingHours() {
+  const hours = [
+    { open: '08:00 AM', close: '04:00 PM' },
+    { open: '10:00 AM', close: '10:00 PM' },
+    { open: '12:00 PM', close: '12:00 AM' },
+    { open: '06:00 PM', close: '02:00 AM' },
+    { open: '09:00 AM', close: '05:00 PM' },
+  ];
+  return faker.helpers.arrayElement(hours);
+}
+
+function getRandomSentiment() {
+  return faker.helpers.arrayElement(['positive', 'neutral', 'negative']);
+}
+
+function getRandomSentimentScore() {
+  return parseFloat((Math.random() * 2 - 1).toFixed(2)); // range -1 to 1
+}
+
+
   const cuisineOptions = [
     'Palestinian', 'Middle Eastern', 'BBQ', 'Burgers', 'Pizza', 'Mexican',
     'Asian', 'Sushi', 'Italian', 'Fried Chicken', 'Sandwiches', 'Seafood',
     'Desserts', 'Ice Cream', 'Coffee', 'Shawarma', 'Falafel', 'Vegan'
   ];
+  
   const trucks = [];
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 50; i++) {
     const city = faker.helpers.arrayElement(supportedCities);
     const coords = getRandomLocation(city);
 
@@ -142,10 +164,7 @@ async function seed() {
         longitude: coords.longitude,
         address_string: coords.address_string
       },
-      operating_hours: {
-        open: '10:00 AM',
-        close: '10:00 PM'
-      },
+operating_hours: getRandomOperatingHours(),
       logo_image_url: faker.image.urlLoremFlickr({ category: 'food' }),
       unavailable_dates
     });
@@ -153,7 +172,7 @@ async function seed() {
     trucks.push(truck);
   }
 console.log('🍔 Seeding fake menu items...');
-for (let i = 0; i < 30; i++) {
+for (let i = 0; i < 70; i++) {
   const truck = faker.helpers.arrayElement(trucks);
 
   await MenuItem.create({
@@ -236,7 +255,7 @@ for (const truck of trucks) {
 
 console.log('🧾 Seeding fake orders + reviews...');
 
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < 50; i++) {
   const truck = faker.helpers.arrayElement(trucks);
   const items = await MenuItem.find({ truck_id: truck._id }).limit(3);
   if (!items.length) continue;
@@ -258,23 +277,31 @@ const order = await Order.create({
 });
 
   // Truck Review
-  await TruckReview.create({
-    customer_id: customer._id,
-    truck_id: truck._id,
-    rating: faker.number.int({ min: 3, max: 5 }),
-    comment: faker.helpers.arrayElement(['Great truck!', 'Loved it!', 'Would order again.'])
-  });
+await TruckReview.create({
+  customer_id: customer._id,
+  truck_id: truck._id,
+  order_id: order._id,
+  rating: faker.number.int({ min: 3, max: 5 }),
+  comment: faker.helpers.arrayElement(['Great truck!', 'Loved it!', 'Would order again.']),
+  sentiment: getRandomSentiment(),
+  sentiment_score: getRandomSentimentScore()
+});
+
+
 
   // Menu Item Reviews
 for (const ordered of orderedItems) {
   await MenuItemReview.create({
     customer_id: customer._id,
-    menu_item_id: ordered.menu_id, 
+    menu_item_id: ordered.menu_id,
     order_id: order._id,
     rating: faker.number.int({ min: 3, max: 5 }),
-    comment: faker.helpers.arrayElement(['Tasty!', 'Too spicy.', 'Perfectly cooked.'])
+    comment: faker.helpers.arrayElement(['Tasty!', 'Too spicy.', 'Perfectly cooked.']),
+    sentiment: getRandomSentiment(),
+    sentiment_score: getRandomSentimentScore()
   });
 }
+
 
 }
 
