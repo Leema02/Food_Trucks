@@ -383,7 +383,8 @@ class _HomeState extends State<Home> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Center( // Wrap Container with Center
+              child: Center(
+                // Wrap Container with Center
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -397,7 +398,8 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min, // Keeps row to minimum width
+                    mainAxisSize:
+                        MainAxisSize.min, // Keeps row to minimum width
                     children: [
                       _buildToggleButton('List View', false),
                       SizedBox(
@@ -427,27 +429,27 @@ class _HomeState extends State<Home> {
               child: Center(child: Text(_errorMessage)),
             )
           else if (_displayedTrucks.isEmpty)
-              SliverFillRemaining(
-                child: Center(
-                  child: Text(
-                    _searchController.text.isEmpty
-                        ? "No food trucks found in $_selectedCity 😢"
-                        : "No matches for '${_searchController.text}' 😕",
-                  ),
-                ),
-              )
-            else
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                    return TruckCard(
-                      truck: _displayedTrucks[index],
-                      activeSearchTerms: _currentSearchTerms,
-                    );
-                  },
-                  childCount: _displayedTrucks.length,
+            SliverFillRemaining(
+              child: Center(
+                child: Text(
+                  _searchController.text.isEmpty
+                      ? "No food trucks found in $_selectedCity 😢"
+                      : "No matches for '${_searchController.text}' 😕",
                 ),
               ),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  return TruckCard(
+                    truck: _displayedTrucks[index],
+                    activeSearchTerms: _currentSearchTerms,
+                  );
+                },
+                childCount: _displayedTrucks.length,
+              ),
+            ),
         ],
       ),
     );
