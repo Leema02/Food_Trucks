@@ -185,46 +185,95 @@ const removeUnavailableDate = async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 };
-
 const getAllTrucks = async (req, res) => {
   try {
-    // Use pagination if you want for large datasets
-
     const page = parseInt(req.query.page) || 1;
-
     const limit = parseInt(req.query.limit) || 10;
-
     const skip = (page - 1) * limit;
 
-    const totalTrucks = await Truck.countDocuments();
+    const matchFilter = {};
 
-    const trucks = await Truck.find()
+    if (req.query.cuisine) {
+      matchFilter.cuisine_type = req.query.cuisine;
+    }
 
-      .populate("owner_id", "F_name L_name email_address")
+    // 🔶 Get current time in HH:mm format
+    const now = new Date();
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-      .skip(skip)
+    // 🔷 Base aggregation pipeline
+    const pipeline = [
+      { $match: matchFilter },
 
-      .limit(limit);
+      // ✅ If openNow=true, add time-based filtering
+      ...(req.query.openNow === 'true'
+        ? [{
+            $match: {
+              $expr: {
+                $or: [
+                  {
+                    $and: [
+                      { $lte: [{ $toString: "$operating_hours.open" }, currentTime] },
+                      { $gte: [{ $toString: "$operating_hours.close" }, currentTime] },
+                    ]
+                  },
+                  {
+                    $and: [
+                      { $gt: [{ $toString: "$operating_hours.open" }, { $toString: "$operating_hours.close" }] },
+                      {
+                        $or: [
+                          { $lte: [{ $toString: "$operating_hours.open" }, currentTime] },
+                          { $gte: [{ $toString: "$operating_hours.close" }, currentTime] },
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }]
+        : []),
+
+      // ✅ Join truck reviews and calculate rating
+      {
+        $lookup: {
+          from: 'truckreviews',
+          localField: '_id',
+          foreignField: 'truck_id',
+          as: 'reviews'
+        }
+      },
+      {
+        $addFields: {
+          average_rating: { $avg: '$reviews.rating' },
+          review_count: { $size: '$reviews' }
+        }
+      },
+
+      // ✅ Sort if sort=rating
+      ...(req.query.sort === 'rating'
+        ? [{ $sort: { average_rating: -1 } }]
+        : []),
+
+      { $skip: skip },
+      { $limit: limit }
+    ];
+
+    const trucks = await Truck.aggregate(pipeline);
 
     res.json({
       trucks,
-
       currentPage: page,
-
-      totalPages: Math.ceil(totalTrucks / limit),
-
-      totalItems: totalTrucks,
+      totalPages: 1, // Optionally estimate if you want pagination
+      totalItems: trucks.length
     });
+
   } catch (err) {
-    console.error("Error in getAllTrucks (Admin):", err);
-
-    res
-
-      .status(500)
-
-      .json({ message: "Server error while fetching all trucks." });
+    console.error("❌ Error in getAllTrucks:", err);
+    res.status(500).json({ message: "Server error while fetching trucks." });
   }
 };
+
 
 // Admin: Update any truck
 
@@ -304,6 +353,17 @@ const getTotalTrucks = async (req, res) => {
   }
 };
 
+// 🚚 Get all unique cuisine types
+const getAllCuisines = async (req, res) => {
+  try {
+    const cuisines = await Truck.distinct('cuisine_type');
+    res.status(200).json(cuisines);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
 module.exports = {
   createTruck,
   getMyTrucks,
@@ -316,5 +376,7 @@ module.exports = {
   getAllTrucks,
   adminUpdateTruck,
   adminDeleteTruck,
-  getTotalTrucks
+  getTotalTrucks,
+  getAllCuisines
+
 };
