@@ -4,14 +4,32 @@ import 'package:intl/intl.dart';
 import 'package:myapp/core/services/event_booking_service.dart';
 import 'package:myapp/core/services/menu_service.dart';
 
+// new
+const Color ffFormPrimaryColor = Colors.orange;
+const Color ffFormSurfaceColor = Colors.white;
+const Color ffFormBackgroundColor = Color(0xFFF4F4F4);
+
 class FinalBookingForm extends StatefulWidget {
   final Map<String, dynamic> truck;
   final DateTimeRange selectedDateRange;
+
+  // new
+  final TimeOfDay? initialStartTime;
+  final TimeOfDay? initialEndTime;
+  final int? initialGuestCount;
+  final String? initialLocation; // Could be city or more specific
+  final String? initialSpecialRequests;
 
   const FinalBookingForm({
     super.key,
     required this.truck,
     required this.selectedDateRange,
+    // new
+    this.initialStartTime,
+    this.initialEndTime,
+    this.initialGuestCount,
+    this.initialLocation,
+    this.initialSpecialRequests,
   });
 
   @override
@@ -20,18 +38,48 @@ class FinalBookingForm extends StatefulWidget {
 
 class _FinalBookingFormState extends State<FinalBookingForm> {
   final _formKey = GlobalKey<FormState>();
-  final locationController = TextEditingController();
-  final guestsController = TextEditingController();
-  final requestsController = TextEditingController();
+  //new
+  late TextEditingController locationController;
+  late TextEditingController guestsController;
+  late TextEditingController requestsController;
+  // final locationController = TextEditingController();
+  // final guestsController = TextEditingController();
+  // final requestsController = TextEditingController();
 
   TimeOfDay? startTime;
   TimeOfDay? endTime;
   double? estimatedTotal;
 
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   guestsController.addListener(_onGuestCountChanged);
+  // }
+
+  //new
   @override
   void initState() {
     super.initState();
+    // Pre-fill controllers and time from widget parameters
+    startTime = widget.initialStartTime;
+    endTime = widget.initialEndTime;
+    locationController = TextEditingController(text: widget.initialLocation ?? widget.truck['city'] ?? ''); // Fallback to truck city
+    guestsController = TextEditingController(text: widget.initialGuestCount?.toString() ?? '');
+    requestsController = TextEditingController(text: widget.initialSpecialRequests ?? '');
+
     guestsController.addListener(_onGuestCountChanged);
+    if (widget.initialGuestCount != null && widget.initialGuestCount! > 0) {
+      calculateEstimatedTotal(widget.initialGuestCount!);
+    }
+  }
+
+  //new
+  @override
+  void dispose() {
+    locationController.dispose();
+    guestsController.dispose();
+    requestsController.dispose();
+    super.dispose();
   }
 
   void _onGuestCountChanged() {
@@ -132,6 +180,8 @@ class _FinalBookingFormState extends State<FinalBookingForm> {
       appBar: AppBar(
         title: const Text("Complete Booking"),
         backgroundColor: Colors.orange,
+        // new
+        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

@@ -9,6 +9,7 @@ import 'package:myapp/screens/customer/home/widgets/recommended_dishes_slider.da
 import '../../../core/services/menu_service.dart';
 import '../../../core/services/truckOwner_service.dart';
 import '../../../core/constants/supported_cities.dart';
+import '../explore/event_booking/widgets/ai_booking_assistant_screen.dart';
 import 'widgets/header_section.dart';
 import 'widgets/search_filter_bar.dart'; // Updated path
 import 'widgets/truck_card.dart';
