@@ -1,5 +1,7 @@
 
 const Truck = require("../models/truckModel");
+const TruckReview = require("../models/truckReviewModel"); 
+
 const fs = require("fs");
 const path = require("path");
 const truckService = require("../services/truckService");
@@ -142,14 +144,45 @@ const getAllPublicTrucks = async (req, res) => {
   try {
     const { city } = req.query;
 
-    const filter = city
+    const matchFilter = city
       ? { city: { $regex: new RegExp(`^${city}$`, "i") } }
       : {};
 
-    const trucks = await Truck.find(filter, "-__v -updatedAt -createdAt");
+    const trucks = await Truck.aggregate([
+      { $match: matchFilter },
+
+      // Join reviews
+      {
+        $lookup: {
+          from: "truckreviews", // ✅ collection name (lowercase, plural usually)
+          localField: "_id",
+          foreignField: "truck_id",
+          as: "reviews",
+        },
+      },
+
+      // Calculate avg and count
+      {
+        $addFields: {
+          average_rating: { $avg: "$reviews.rating" },
+          review_count: { $size: "$reviews" },
+        },
+      },
+
+      // Optional: hide unwanted fields
+      {
+        $project: {
+          __v: 0,
+          updatedAt: 0,
+          createdAt: 0,
+          reviews: 0, // to avoid sending the full review array
+        },
+      },
+    ]);
 
     res.json(trucks);
   } catch (err) {
+    console.error("❌ getAllPublicTrucks error:", err);
     res.status(500).json({ message: err.message });
   }
 };
