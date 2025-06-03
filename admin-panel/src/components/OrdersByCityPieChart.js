@@ -27,10 +27,33 @@ const OrdersByCityPieChart = ({ data }) => {
         text: "Orders by City",
         font: { size: 18 },
       },
+      legend: {
+        position: "bottom",
+      },
     },
   };
 
-  return <Pie data={chartData} options={options} />;
+  return (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",   // horizontally center
+      alignItems: "center",       // vertically center
+      height: "100%",             // take full height of card
+      minHeight: "400px",         // ensure visual space
+    }}
+  >
+    <div
+      style={{
+        width: "320px",           // ⬅️ Increase chart size
+        height: "320px",
+        position: "relative",
+      }}
+    >
+      <Pie data={chartData} options={options} />
+    </div>
+  </div>
+);
 };
 
 export default OrdersByCityPieChart;

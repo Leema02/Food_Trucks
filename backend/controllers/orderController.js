@@ -222,41 +222,128 @@ const getAllOrders = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const query = {};
+
+    // New: Add name-based search
+    const customerName = req.query.customer_name;
+    const truckName = req.query.truck_name;
+
+    // Build base query
     if (req.query.status) {
-      query.status = new RegExp(req.query.status, "i"); // Case-insensitive status filter
-    }
-    if (req.query.customer_id) {
-      query.customer_id = req.query.customer_id;
-    }
-    if (req.query.truck_id) {
-      query.truck_id = req.query.truck_id;
+      query.status = new RegExp(req.query.status, "i");
     }
     if (req.query.order_type) {
       query.order_type = new RegExp(req.query.order_type, "i");
     }
 
-    const sort = {};
-    if (req.query.sortBy && req.query.orderBy) {
-      sort[req.query.sortBy] = req.query.orderBy === "desc" ? -1 : 1;
-    } else {
-      sort.createdAt = -1; // Default sort by newest first
+    let customerMatch = {};
+    if (customerName) {
+      customerMatch = {
+        $or: [
+          { "customer_id.F_name": new RegExp(customerName, "i") },
+          { "customer_id.L_name": new RegExp(customerName, "i") },
+        ],
+      };
+    }
+
+    let truckMatch = {};
+    if (truckName) {
+      truckMatch = {
+        "truck_id.truck_name": new RegExp(truckName, "i"),
+      };
     }
 
     const orders = await Order.find(query)
-      .populate("customer_id", "F_name L_name email") // Populate customer info
-      .populate("truck_id", "truck_name") // Populate truck info
-      .sort(sort)
+      .populate("customer_id", "F_name L_name email")
+      .populate("truck_id", "truck_name")
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    const totalOrders = await Order.countDocuments(query);
+    // Post-filtering on populated fields
+    const filteredOrders = orders.filter((order) => {
+      const matchCustomer =
+        !customerName ||
+        customerMatch.$or.some((cond) =>
+          new RegExp(Object.values(cond)[0], "i").test(
+            order.customer_id?.[Object.keys(cond)[0].split(".")[1]] || ""
+          )
+        );
+      const matchTruck =
+        !truckName ||
+        new RegExp(truckMatch["truck_id.truck_name"], "i").test(
+          order.truck_id?.truck_name || ""
+        );
+      return matchCustomer && matchTruck;
+    });
 
     res.status(200).json({
-      orders,
-      totalPages: Math.ceil(totalOrders / limit),
-      currentPage: page,
-      totalOrders,
+      orders: filteredOrders,
+      totalPages: 1, // Because we filtered in memory
+      currentPage: 1,
+      totalOrders: filteredOrders.length,
     });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getOrdersCountByTruck = async (req, res) => {
+  try {
+    const data = await Order.aggregate([
+      {
+        $group: {
+          _id: "$truck_id", 
+          orderCount: { $sum: 1 },
+        },
+      },
+      {
+        $lookup: {
+          from: "trucks",
+          localField: "_id",
+          foreignField: "_id",
+          as: "truckInfo",
+        },
+      },
+      {
+        $unwind: "$truckInfo",
+      },
+      {
+        $group: {
+          _id: "$truckInfo.truck_name", 
+          orderCount: { $sum: "$orderCount" }, 
+        },
+      },
+    
+      {
+        $project: {
+          _id: 0, 
+          truckName: "$_id", 
+          orderCount: "$orderCount",
+        },
+      },
+     
+      {
+        $sort: { orderCount: -1 },
+      },
+      {
+        $limit: 5,
+      },
+    ]);
+
+    res.status(200).json(data);
+  } catch (err) {
+    console.error("Error getting orders count by truck:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+const deleteOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    await order.deleteOne();
+    res.status(200).json({ message: "Order deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -270,23 +357,13 @@ const getOrderById = async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
+
     res.status(200).json(order);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-const deleteOrder = async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id);
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-    await order.deleteOne(); // Use deleteOne() or deleteMany() depending on Mongoose version
-    res.status(200).json({ message: "Order deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
+
 
 module.exports = {
   placeOrder,
@@ -301,5 +378,6 @@ module.exports = {
   getOrderStatusSummary,
   getAllOrders,
   getOrderById,
-  deleteOrder
+  deleteOrder,
+  getOrdersCountByTruck
 };

@@ -188,41 +188,40 @@ const removeUnavailableDate = async (req, res) => {
 
 const getAllTrucks = async (req, res) => {
   try {
-    // Use pagination if you want for large datasets
-
     const page = parseInt(req.query.page) || 1;
-
     const limit = parseInt(req.query.limit) || 10;
-
     const skip = (page - 1) * limit;
 
-    const totalTrucks = await Truck.countDocuments();
+    // 👇 Add search filters
+    const { truck_name, city, cuisine_type } = req.query;
+    const filter = {};
+    if (truck_name) {
+      filter.truck_name = { $regex: truck_name, $options: "i" };
+    }
+    if (city) {
+      filter.city = { $regex: city, $options: "i" };
+    }
+    if (cuisine_type) {
+      filter.cuisine_type = { $regex: cuisine_type, $options: "i" };
+    }
 
-    const trucks = await Truck.find()
+    // 👇 Use the filter here (was missing in your version)
+    const totalTrucks = await Truck.countDocuments(filter);
 
+    const trucks = await Truck.find(filter)
       .populate("owner_id", "F_name L_name email_address")
-
       .skip(skip)
-
       .limit(limit);
 
     res.json({
       trucks,
-
       currentPage: page,
-
       totalPages: Math.ceil(totalTrucks / limit),
-
       totalItems: totalTrucks,
     });
   } catch (err) {
     console.error("Error in getAllTrucks (Admin):", err);
-
-    res
-
-      .status(500)
-
-      .json({ message: "Server error while fetching all trucks." });
+    res.status(500).json({ message: "Server error while fetching all trucks." });
   }
 };
 

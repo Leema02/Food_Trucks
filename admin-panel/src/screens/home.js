@@ -7,6 +7,7 @@ import OrderTypesPieChart from "../components/OrderTypesPieChart";
 import Header from "../components/Header";
 import OrderStatusProgress from "../components/OrderStatusProgress";
 import OrdersByCityPieChart from "../components/OrdersByCityPieChart";
+import UserSignupLineChart from "../components/UserSignupLineChart";
 import "../styles/OrderStatusProgress.css";
 
 import "../styles/home.css";
@@ -19,10 +20,11 @@ const Home = () => {
     totalRevenue: 0,
     totalBookings: 0, // Initialize totalBookings state
   });
-  const [ordersByTruck, setOrdersByTruck] = useState([]);
+const [topOrdersByTruck, setTopOrdersByTruck] = useState([]);
   const [orderTypesData, setOrderTypesData] = useState([]);
   const [ordersByCityData, setOrdersByCityData] = useState([]);
   const [statusSummary, setStatusSummary] = useState({});
+  const [signupStats, setSignupStats] = useState([]);
 
   // ⭐⭐⭐ MOVE ALL FETCH FUNCTIONS HERE, OUTSIDE OF useEffect ⭐⭐⭐
 
@@ -48,7 +50,18 @@ const Home = () => {
       }));
     }
   };
-
+const fetchSignupStats = async () => {
+  try {
+    const res = await axios.get("http://localhost:5000/api/users/signup-stats", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    setSignupStats(res.data);
+  } catch (error) {
+    console.error("Error fetching signup stats:", error);
+  }
+};
   const fetchTotalOrders = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/orders/total", {
@@ -99,14 +112,14 @@ const Home = () => {
 
   const fetchOrdersByTruck = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/orders/by-truck", {
+      const res = await axios.get("http://localhost:5000/api/orders/count-by-truck", { // <--- CHANGED ENDPOINT HERE
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      setOrdersByTruck(res.data);
+      setTopOrdersByTruck(res.data); // <--- Set to the new state variable
     } catch (err) {
-      console.error("Failed to fetch orders by truck", err);
+      console.error("Failed to fetch top orders by truck", err); // Changed error message
     }
   };
 
@@ -168,6 +181,7 @@ const Home = () => {
     fetchOrdersByTruck();
     fetchOrdersByCity();
     fetchTotalBookings(); // Call the newly moved function
+    fetchSignupStats();
   }, []); // Empty dependency array means this runs once on component mount
 
   return (
@@ -208,18 +222,22 @@ const Home = () => {
 
           {/* Charts Section */}
           <div className="charts-row">
-            <div className="chart-card">
-              <OrdersByTruckChart data={ordersByTruck} />
-            </div>
-            <div className="chart-card">
-              <OrderTypesPieChart data={orderTypesData} />
-            </div>
-            <div className="chart-card">
-              <OrdersByCityPieChart data={ordersByCityData} />
-            </div>
+  <div className="chart-card">
+    <OrdersByTruckChart data={topOrdersByTruck} />
+  </div>
+  <div className="chart-card">
+    <OrderTypesPieChart data={orderTypesData} />
+  </div>
+  <div className="chart-card">
+    <OrdersByCityPieChart data={ordersByCityData} />
+  </div>
+  <div className="chart-card">
+    <UserSignupLineChart data={signupStats} />
+  </div>
 
-            <OrderStatusProgress data={statusSummary} />
-          </div>
+  <OrderStatusProgress data={statusSummary} />
+</div>
+
         </div>
       </main>
     </div>

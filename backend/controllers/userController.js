@@ -61,7 +61,20 @@ const signupUser = async (req, res) => {
 
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password -__v");
+    const { search } = req.query;
+
+    const query = {};
+
+    if (search) {
+      query.$or = [
+        { F_name: { $regex: search, $options: "i" } },
+        { L_name: { $regex: search, $options: "i" } },
+        { email_address: { $regex: search, $options: "i" } },
+        { city: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const users = await User.find(query).select("-password -__v");
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -278,6 +291,25 @@ const getTotalUsers = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+// 📈 New Users Over Time
+const getUserSignupStats = async (req, res) => {
+  try {
+    const data = await User.aggregate([
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 
 module.exports = {
   signupUser,
@@ -290,4 +322,5 @@ module.exports = {
   updateUser,
   deleteUser,
   getTotalUsers,
+  getUserSignupStats,
 };

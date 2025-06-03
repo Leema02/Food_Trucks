@@ -15,63 +15,65 @@ const TrucksPage = () => {
   const [limit, setLimit] = useState(10); // Items per page
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [searchName, setSearchName] = useState("");
+const [searchCity, setSearchCity] = useState("");
+const [searchCuisine, setSearchCuisine] = useState("");
+
 
   // useCallback for fetchTrucks to optimize performance
-  const fetchTrucks = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setError("Authentication token not found. Please log in.");
-        setLoading(false);
-        return;
-      }
-
-      // Parameters for pagination
-      const params = { page, limit };
-
-      const res = await axios.get("http://localhost:5000/api/trucks/admin", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params: params, // Pass pagination parameters
-      });
-      setTrucks(res.data.trucks);
-      setTotalPages(res.data.totalPages);
-      setTotalItems(res.data.totalItems);
-    } catch (err) {
-      console.error("Error fetching trucks:", err);
-      if (err.response) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          setError(
-            "You are not authorized to view trucks. Please check your permissions."
-          );
-        } else if (err.response.status === 404) {
-          setError(
-            "The trucks endpoint was not found. Please check the backend URL."
-          );
-        } else {
-          setError(
-            `Failed to fetch trucks: ${
-              err.response.data.message || err.response.statusText
-            }`
-          );
-        }
-      } else if (err.request) {
-        setError("No response from server. Check if the backend is running.");
-      } else {
-        setError("An unexpected error occurred while setting up the request.");
-      }
-    } finally {
+ const fetchTrucks = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Authentication token not found. Please log in.");
       setLoading(false);
+      return;
     }
-  }, [page, limit]); // Dependencies for useCallback
+
+    const params = {
+      page,
+      limit,
+      truck_name: searchName || undefined,
+      city: searchCity || undefined,
+      cuisine_type: searchCuisine || undefined,
+    };
+
+    const res = await axios.get("http://localhost:5000/api/trucks/admin", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      params, // ✅ send all filters + pagination
+    });
+
+    setTrucks(res.data.trucks);
+    setTotalPages(res.data.totalPages);
+    setTotalItems(res.data.totalItems);
+  } catch (err) {
+    console.error("Error fetching trucks:", err);
+    if (err.response) {
+      if (err.response.status === 401 || err.response.status === 403) {
+        setError("You are not authorized to view trucks. Please check your permissions.");
+      } else if (err.response.status === 404) {
+        setError("The trucks endpoint was not found. Please check the backend URL.");
+      } else {
+        setError(`Failed to fetch trucks: ${err.response.data.message || err.response.statusText}`);
+      }
+    } else if (err.request) {
+      setError("No response from server. Check if the backend is running.");
+    } else {
+      setError("An unexpected error occurred while setting up the request.");
+    }
+  } finally {
+    setLoading(false);
+  }
+}, [page, limit, searchName, searchCity, searchCuisine]); // ✅ Add these dependencies
 
   // useEffect to call fetchTrucks when component mounts or page/limit changes
-  useEffect(() => {
-    fetchTrucks();
-  }, [fetchTrucks]);
+useEffect(() => {
+  fetchTrucks();
+}, [page, searchName, searchCity, searchCuisine]); // Add the 3 search states here
 
   // Handle click on Edit button
   const handleEditClick = (truck) => {
@@ -269,6 +271,83 @@ const TrucksPage = () => {
     <div className="dashboard-container">
       <Sidebar />
       <div className="main-panel">
+  
+  {/* 🔍 INSERT FILTERS HERE */}
+  <div
+    style={{
+      display: "flex",
+      gap: "15px",
+      flexWrap: "wrap",
+      marginBottom: "20px",
+    }}
+  >
+    <input
+      placeholder="Search by Name"
+      value={searchName}
+      onChange={(e) => setSearchName(e.target.value)}
+      style={{
+        padding: "8px",
+        borderRadius: "4px",
+        border: "1px solid #ccc",
+        width: "200px",
+      }}
+    />
+    <input
+      placeholder="Search by City"
+      value={searchCity}
+      onChange={(e) => setSearchCity(e.target.value)}
+      style={{
+        padding: "8px",
+        borderRadius: "4px",
+        border: "1px solid #ccc",
+        width: "200px",
+      }}
+    />
+    <input
+      placeholder="Search by Cuisine"
+      value={searchCuisine}
+      onChange={(e) => setSearchCuisine(e.target.value)}
+      style={{
+        padding: "8px",
+        borderRadius: "4px",
+        border: "1px solid #ccc",
+        width: "200px",
+      }}
+    />
+    <button
+      onClick={() => setPage(1)}
+      style={{
+        padding: "8px 16px",
+        backgroundColor: "#007bff",
+        color: "white",
+        border: "none",
+        borderRadius: "4px",
+        cursor: "pointer",
+        fontWeight: "bold",
+      }}
+    >
+      🔍 Search
+    </button>
+    <button
+      onClick={() => {
+        setSearchName("");
+        setSearchCity("");
+        setSearchCuisine("");
+        setPage(1);
+      }}
+      style={{
+        padding: "8px 16px",
+        backgroundColor: "#6c757d",
+        color: "white",
+        border: "none",
+        borderRadius: "4px",
+        cursor: "pointer",
+      }}
+    >
+      ❌ Clear
+    </button>
+  </div>
+
         {/* TOP CONTROLS: TRUCK TITLE ON LEFT, BUTTONS & PAGINATION ON RIGHT */}
         <div
           style={{
@@ -279,6 +358,7 @@ const TrucksPage = () => {
             flexWrap: "wrap", // Allow items to wrap on smaller screens
             gap: "15px", // Space between items when wrapped
           }}
+          
         >
           {/* Page Title - Now on the left */}
           <h2>🚚 Manage Trucks (Admin)</h2>

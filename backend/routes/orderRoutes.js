@@ -13,6 +13,7 @@ const {
  getAllOrders, 
  getOrderById, 
  deleteOrder, 
+ getOrdersCountByTruck,
 } = require("../controllers/orderController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -37,6 +38,10 @@ router.get("/total", protect, authorizeRoles("admin"), getTotalOrders);
 
 // 🟣 Admin: Orders by truck
 router.get("/by-truck", protect, authorizeRoles("admin"), getOrdersByTruck);
+
+// Admin: Get orders count by truck for chart
+router.get("/count-by-truck", protect, authorizeRoles("admin"), getOrdersCountByTruck);
+
 
 // 🟤 Admin: Pie chart for order types breakdown
 router.get(

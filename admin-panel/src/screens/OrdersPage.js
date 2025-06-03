@@ -16,16 +16,20 @@ const OrdersPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterOrderType, setFilterOrderType] = useState("");
-  const [filterCustomerId, setFilterCustomerId] = useState("");
-  const [filterTruckId, setFilterTruckId] = useState(""); // Correctly declared
+  const [filterCustomerName, setFilterCustomerName] = useState("");
+  const [filterTruckName, setFilterTruckName] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
   const [orderBy, setOrderBy] = useState("desc"); // 'asc' or 'desc'
 
   const statusOptions = ["Pending", "Preparing", "Ready", "Completed"];
   const orderTypeOptions = ["pickup", "delivery"];
 
-  // fetchOrders is wrapped in useCallback to prevent unnecessary re-creations.
-  // It depends on all state variables that influence the API request parameters.
+  // Helper function to validate if a string looks like a MongoDB ObjectId
+  const isValidObjectId = (id) => {
+    // A simple regex for a 24-character hexadecimal string
+    return /^[0-9a-fA-F]{24}$/.test(id);
+  };
+
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     setError(null); // Clear previous errors
@@ -37,19 +41,27 @@ const OrdersPage = () => {
         return;
       }
 
-      const params = {
-        page,
-        limit,
-        status: filterStatus,
-        order_type: filterOrderType,
-        customer_id: filterCustomerId,
-        truck_id: filterTruckId,
-        sortBy,
-        orderBy,
-      };
+  const params = {
+  page,
+  limit,
+  status: filterStatus,
+  order_type: filterOrderType,
+  sortBy,
+  orderBy,
+  customer_name: filterCustomerName,
+  truck_name: filterTruckName,
+};
+
+
+if (filterCustomerName) {
+  params.customer_name = filterCustomerName;
+}
+if (filterTruckName) {
+  params.truck_name = filterTruckName;
+}
+
 
       // Remove empty parameters to avoid sending unnecessary query strings
-      // This helps in cleaner backend logic and potentially cached responses
       Object.keys(params).forEach(
         (key) => params[key] === "" && delete params[key]
       );
@@ -65,7 +77,6 @@ const OrdersPage = () => {
       setTotalPages(res.data.totalPages);
     } catch (err) {
       console.error("Error fetching orders:", err);
-      // More user-friendly error messages based on common HTTP statuses
       if (err.response) {
         if (err.response.status === 401 || err.response.status === 403) {
           setError(
@@ -75,11 +86,13 @@ const OrdersPage = () => {
           setError(
             "The orders endpoint was not found. Please check the backend URL."
           );
-        } else {
+        } else if (err.response.data && err.response.data.message) {
+            // Display backend-provided error message
+            setError(`Failed to fetch orders: ${err.response.data.message}`);
+        }
+        else {
           setError(
-            `Failed to fetch orders: ${
-              err.response.data.message || err.response.statusText
-            }`
+            `Failed to fetch orders: ${err.response.statusText || "Unknown error"}`
           );
         }
       } else if (err.request) {
@@ -95,22 +108,18 @@ const OrdersPage = () => {
     limit,
     filterStatus,
     filterOrderType,
-    filterCustomerId,
-    filterTruckId, // Dependency for useCallback
+    filterCustomerName, 
+    filterTruckName,
     sortBy,
     orderBy,
   ]);
 
-  // useEffect now only depends on fetchOrders.
-  // fetchOrders itself changes only when its dependencies change,
-  // preventing unnecessary re-runs of the effect.
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
   const handleEditClick = (order) => {
     setEditingOrder(order._id);
-    // Initialize form data with the current order's status
     setFormData({ status: order.status });
   };
 
@@ -124,7 +133,6 @@ const OrdersPage = () => {
   };
 
   const handleSaveEdit = async () => {
-    // Basic validation
     if (!formData.status) {
       alert("Please select a status.");
       return;
@@ -133,13 +141,12 @@ const OrdersPage = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        // Added check for token existence
         alert("Authentication token not found. Please log in.");
         return;
       }
       await axios.put(
         `http://localhost:5000/api/orders/${editingOrder}`,
-        { status: formData.status }, // This is the data you're sending
+        { status: formData.status },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -149,10 +156,9 @@ const OrdersPage = () => {
       alert("✅ Order updated successfully!");
       setEditingOrder(null);
       setFormData({});
-      fetchOrders(); // Re-fetch to show the updated status
+      fetchOrders();
     } catch (err) {
       console.error("Order update failed:", err);
-      // Added more detailed logging for debugging
       console.log("Error response:", err.response);
       console.log("Error request:", err.request);
       console.log("Error message:", err.message);
@@ -180,7 +186,6 @@ const OrdersPage = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        // Added check for token existence
         alert("Authentication token not found. Please log in.");
         return;
       }
@@ -190,11 +195,9 @@ const OrdersPage = () => {
         },
       });
       alert("🗑️ Order deleted successfully!");
-      // Re-fetch orders to remove the deleted item from the list
       fetchOrders();
     } catch (err) {
       console.error("Order deletion failed:", err);
-      // Added more detailed logging for debugging
       console.log("Error response:", err.response);
       console.log("Error request:", err.request);
       console.log("Error message:", err.message);
@@ -213,7 +216,6 @@ const OrdersPage = () => {
     }
   };
 
-  // Pagination Handlers
   const handleNextPage = () => {
     if (page < totalPages) {
       setPage(page + 1);
@@ -231,7 +233,6 @@ const OrdersPage = () => {
       <Sidebar />
       <div className="main-panel">
         <h2>Orders</h2>
-        {/* Filters and Sorting Section */}
         <div
           className="filters-container"
           style={{
@@ -242,12 +243,12 @@ const OrdersPage = () => {
             alignItems: "center",
           }}
         >
-          {/* Status Filter */}
+          
           <select
             value={filterStatus}
             onChange={(e) => {
               setFilterStatus(e.target.value);
-              setPage(1); // Reset to first page on filter change
+              setPage(1);
             }}
             style={{
               padding: "8px",
@@ -263,12 +264,11 @@ const OrdersPage = () => {
             ))}
           </select>
 
-          {/* Order Type Filter */}
           <select
             value={filterOrderType}
             onChange={(e) => {
               setFilterOrderType(e.target.value);
-              setPage(1); // Reset to first page on filter change
+              setPage(1);
             }}
             style={{
               padding: "8px",
@@ -280,37 +280,41 @@ const OrdersPage = () => {
             {orderTypeOptions.map((type) => (
               <option key={type} value={type}>
                 {type.charAt(0).toUpperCase() + type.slice(1)}{" "}
-                {/* Capitalize first letter */}
               </option>
             ))}
           </select>
 
-          {/* Customer ID Filter Input */}
-          <input
-            type="text"
-            placeholder="Customer ID"
-            value={filterCustomerId}
-            onChange={(e) => setFilterCustomerId(e.target.value)}
-            style={{
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-            }}
-          />
-          {/* Truck ID Filter Input */}
-          <input
-            type="text"
-            placeholder="Truck ID"
-            value={filterTruckId}
-            onChange={(e) => setFilterTruckId(e.target.value)} // Corrected: This now uses setFilterTruckId
-            style={{
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-            }}
-          />
+         <input
+  type="text"
+  placeholder="Customer Name"
+  value={filterCustomerName}
+  onChange={(e) => {
+    setFilterCustomerName(e.target.value);
+    setPage(1);
+  }}
+  style={{
+    padding: "8px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+  }}
+/>
 
-          {/* Sort By Selector */}
+<input
+  type="text"
+  placeholder="Truck Name"
+  value={filterTruckName}
+  onChange={(e) => {
+    setFilterTruckName(e.target.value);
+    setPage(1);
+  }}
+  style={{
+    padding: "8px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+  }}
+/>
+
+
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -324,7 +328,6 @@ const OrdersPage = () => {
             <option value="total_price">Sort By Price</option>
             <option value="status">Sort By Status</option>
           </select>
-          {/* Order By (Asc/Desc) Selector */}
           <select
             value={orderBy}
             onChange={(e) => setOrderBy(e.target.value)}
@@ -338,34 +341,31 @@ const OrdersPage = () => {
             <option value="asc">Ascending</option>
           </select>
 
-          {/* Clear Filters Button */}
-          <button
-            onClick={() => {
-              setFilterStatus("");
-              setFilterOrderType("");
-              setFilterCustomerId("");
-              setFilterTruckId("");
-              setSortBy("createdAt"); // Reset to default sort
-              setOrderBy("desc"); // Reset to default order
-              setPage(1); // Always reset to page 1 when clearing filters
-            }}
-            style={{
-              padding: "8px 15px",
-              backgroundColor: "#f44336",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-            }}
-          >
-            Clear Filters
-          </button>
+       <button
+  onClick={() => {
+    setFilterStatus("");
+    setFilterOrderType("");
+    setFilterCustomerName(""); // ✅ new
+    setFilterTruckName("");    // ✅ new
+    setSortBy("createdAt");
+    setOrderBy("desc");
+    setPage(1);
+  }}
+  style={{
+    padding: "8px 15px",
+    backgroundColor: "#f44336",
+    color: "white",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+  }}
+>
+  Clear Filters
+</button>
+
         </div>
-        {/* Loading and Error Messages */}
         {loading && <p>Loading orders...</p>}
-        {error && <p className="error-message">{error}</p>}{" "}
-        {/* Error message display */}
-        {/* Display Table or "No orders found" */}
+        {error && <p className="error-message">{error}</p>}
         {!loading && !error && orders.length === 0 && (
           <p>No orders found matching your criteria.</p>
         )}
@@ -389,14 +389,12 @@ const OrdersPage = () => {
                 {orders.map((order) => (
                   <tr key={order._id}>
                     <td>{order._id}</td>
-                    {/* Optional chaining (?) is crucial here in case populate fails or data is missing */}
                     <td>
                       {order.customer_id?.F_name} {order.customer_id?.L_name}
                     </td>
                     <td>{order.truck_id?.truck_name}</td>
                     <td>
                       <ul>
-                        {/* Ensure 'items' array exists before mapping */}
                         {order.items &&
                           order.items.map((item, index) => (
                             <li key={index}>
@@ -406,12 +404,10 @@ const OrdersPage = () => {
                           ))}
                       </ul>
                     </td>
-                    <td>${order.total_price?.toFixed(2)}</td>{" "}
-                    {/* Use optional chaining and toFixed for price */}
+                    <td>${order.total_price?.toFixed(2)}</td>
                     <td>{order.order_type}</td>
                     <td>{order.status}</td>
-                    <td>{new Date(order.createdAt).toLocaleString()}</td>{" "}
-                    {/* Format date for readability */}
+                    <td>{new Date(order.createdAt).toLocaleString()}</td>
                     <td>
                       <button
                         className="edit-btn"
@@ -431,7 +427,6 @@ const OrdersPage = () => {
               </tbody>
             </table>
 
-            {/* Pagination Controls */}
             <div
               className="pagination-controls"
               style={{
@@ -491,7 +486,6 @@ const OrdersPage = () => {
             </div>
           </>
         )}
-        {/* Edit Order Status Form (Modal-like overlay) */}
         {editingOrder && (
           <div
             className="edit-order-form-overlay"
@@ -501,7 +495,7 @@ const OrdersPage = () => {
               left: 0,
               width: "100%",
               height: "100%",
-              backgroundColor: "rgba(0, 0, 0, 0.5)", // Dark overlay
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
