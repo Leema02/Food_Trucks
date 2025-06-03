@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/screens/account/report_problem_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AccountPage extends StatefulWidget {
@@ -81,9 +82,13 @@ class _AccountPageState extends State<AccountPage> {
             ),
             _buildAccountButton(
               icon: Icons.support_agent,
-              label: "Contact Support",
+              label: "Report a Problem",
               onTap: () {
-                // Future support screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const ReportProblemPage()),
+                );
               },
             ),
             _buildAccountButton(

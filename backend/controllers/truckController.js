@@ -1,5 +1,7 @@
 
 const Truck = require("../models/truckModel");
+const TruckReview = require("../models/truckReviewModel"); 
+
 const fs = require("fs");
 const path = require("path");
 const truckService = require("../services/truckService");
@@ -142,14 +144,45 @@ const getAllPublicTrucks = async (req, res) => {
   try {
     const { city } = req.query;
 
-    const filter = city
+    const matchFilter = city
       ? { city: { $regex: new RegExp(`^${city}$`, "i") } }
       : {};
 
-    const trucks = await Truck.find(filter, "-__v -updatedAt -createdAt");
+    const trucks = await Truck.aggregate([
+      { $match: matchFilter },
+
+      // Join reviews
+      {
+        $lookup: {
+          from: "truckreviews", // ✅ collection name (lowercase, plural usually)
+          localField: "_id",
+          foreignField: "truck_id",
+          as: "reviews",
+        },
+      },
+
+      // Calculate avg and count
+      {
+        $addFields: {
+          average_rating: { $avg: "$reviews.rating" },
+          review_count: { $size: "$reviews" },
+        },
+      },
+
+      // Optional: hide unwanted fields
+      {
+        $project: {
+          __v: 0,
+          updatedAt: 0,
+          createdAt: 0,
+          reviews: 0, // to avoid sending the full review array
+        },
+      },
+    ]);
 
     res.json(trucks);
   } catch (err) {
+    console.error("❌ getAllPublicTrucks error:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -185,7 +218,6 @@ const removeUnavailableDate = async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 };
-
 const getAllTrucks = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -219,11 +251,13 @@ const getAllTrucks = async (req, res) => {
       totalPages: Math.ceil(totalTrucks / limit),
       totalItems: totalTrucks,
     });
+
   } catch (err) {
     console.error("Error in getAllTrucks (Admin):", err);
     res.status(500).json({ message: "Server error while fetching all trucks." });
   }
 };
+
 
 // Admin: Update any truck
 
@@ -303,6 +337,17 @@ const getTotalTrucks = async (req, res) => {
   }
 };
 
+// 🚚 Get all unique cuisine types
+const getAllCuisines = async (req, res) => {
+  try {
+    const cuisines = await Truck.distinct('cuisine_type');
+    res.status(200).json(cuisines);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
 module.exports = {
   createTruck,
   getMyTrucks,
@@ -315,5 +360,7 @@ module.exports = {
   getAllTrucks,
   adminUpdateTruck,
   adminDeleteTruck,
-  getTotalTrucks
+  getTotalTrucks,
+  getAllCuisines
+
 };
