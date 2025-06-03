@@ -10,13 +10,24 @@ exports.createReport = async (req, res) => {
       role: role_id,
       category,
       subject,
-      description
+      description,
     });
+ const io = req.app.get("io"); 
+    io.emit("new_report", {
+      _id: report._id,
+      category,
+      subject,
+      description,
+      role: role_id,
+      submittedAt: report.createdAt,
+    });
+
     res.status(201).json(report);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 exports.getAllReports = async (req, res) => {
   try {

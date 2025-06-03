@@ -1,8 +1,9 @@
 import React from "react";
 import "../styles/home.css";
-import { FaSignOutAlt } from "react-icons/fa"; // FaFilter import removed
+import { FaSignOutAlt } from "react-icons/fa";
 import userAvatar from "../assets/avatar.png";
 import { useNavigate } from "react-router-dom";
+import NotificationBell from "./NotificationBell";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -13,14 +14,14 @@ const Header = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminUser"); // clear stored user
+    localStorage.removeItem("adminUser");
     navigate("/login");
   };
 
   return (
     <div className="header">
       <div className="header-actions">
-        {/* Filter button removed */}
+        <NotificationBell />
 
         <button className="icon-button" onClick={handleLogout}>
           <FaSignOutAlt />
