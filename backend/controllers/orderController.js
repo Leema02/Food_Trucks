@@ -1,7 +1,8 @@
 const Order = require("../models/orderModel");
 const User = require("../models/userModel");
 const Truck = require("../models/truckModel");
-
+const Notification=require("../models/NotificationModel");
+const { sendToClient } = require("../services/CustomSocketService");
 // 🟢 Place a new order
 const placeOrder = async (req, res) => {
   try {
@@ -31,6 +32,12 @@ const placeOrder = async (req, res) => {
     });
 
     const savedOrder = await newOrder.save();
+    const not =await Notification.create({
+      userId:truck.owner_id.toString(),
+      title:"New Order",
+      message:`${customer.F_name} ${customer.L_name} placed a new order`
+    });
+    sendToClient(truck.owner_id.toString(),"Notification",not);
     res.status(201).json(savedOrder);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -71,7 +78,24 @@ const updateOrderStatus = async (req, res) => {
 
     order.status = req.body.status;
     await order.save();
-
+    console.log(order.status);
+    console.log(order.customer_id.toString())
+    if(order.status=="Preparing"){
+      const not =await Notification.create({
+        userId:order.customer_id.toString(),
+        title:"Order Update",
+        message:`your order is being prepared`
+      });
+      sendToClient(order.customer_id.toString(),"Notification",not);
+    }
+    if(order.status=="Ready"){
+      const not =await Notification.create({
+        userId:order.customer_id.toString(),
+        title:"Order Update",
+        message:`your order is ready`
+      });
+      sendToClient(order.customer_id.toString(),"Notification",not);
+    }
     res.json(order);
   } catch (err) {
     res.status(500).json({ message: err.message });
