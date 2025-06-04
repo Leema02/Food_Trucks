@@ -1,33 +1,26 @@
 import React from "react";
 import "../styles/home.css";
-import { FaSignOutAlt, FaFilter, FaSearch } from "react-icons/fa";
+import { FaSignOutAlt } from "react-icons/fa"; // FaFilter import removed
 import userAvatar from "../assets/avatar.png";
 import { useNavigate } from "react-router-dom";
 
 const Header = () => {
   const navigate = useNavigate();
 
-  // ✅ Get user from localStorage
+  // Get user from localStorage
   const storedUser = JSON.parse(localStorage.getItem("adminUser"));
   const userName = storedUser ? `${storedUser.F_name}` : "Admin";
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminUser"); // ✅ clear stored user
+    localStorage.removeItem("adminUser"); // clear stored user
     navigate("/login");
   };
 
   return (
     <div className="header">
-      <div className="search-bar">
-        <FaSearch className="icon" />
-        <input type="text" placeholder="Search here" />
-      </div>
-
       <div className="header-actions">
-        <button className="icon-button">
-          <FaFilter />
-        </button>
+        {/* Filter button removed */}
 
         <button className="icon-button" onClick={handleLogout}>
           <FaSignOutAlt />

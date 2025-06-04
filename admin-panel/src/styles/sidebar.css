@@ -61,6 +61,8 @@
 html,
 body,
 .dashboard-container {
-  height: 100%;
-  margin: 0;
+  display: flex;
+  height: 100vh; /* Sets the total height of your dashboard */
+  width: 100vw;
+  overflow: hidden; /* Ensures dashboard container itself doesn't cause main page scroll */
 }
