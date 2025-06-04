@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
-
 
 class NotificationService {
   static Future<void> initializeNotification() async {
@@ -69,9 +67,7 @@ class NotificationService {
     debugPrint('onActionReceivedMethod');
     final payload = receivedAction.payload ?? {};
     log("payload: $payload");
-    if (payload["navigate"] == "true") {
-      
-    }
+    if (payload["navigate"] == "true") {}
   }
 
   static Future<void> showNotification({
@@ -106,7 +102,7 @@ class NotificationService {
       actionButtons: actionButtons,
       schedule: scheduled
           ? NotificationInterval(
-              interval: Duration(seconds: interval??2),
+              interval: Duration(seconds: interval ?? 2),
               timeZone:
                   await AwesomeNotifications().getLocalTimeZoneIdentifier(),
               preciseAlarm: true,

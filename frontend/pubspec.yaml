@@ -54,9 +54,10 @@ dependencies:
   flutter_chat_ui: ^1.6.7
   flutter_chat_types: ^3.6.2
   uuid: ^4.1.0
-  intl: ^0.19.0
-  awesome_notifications: ^0.10.0
+  intl: ^0.20.2
   socket_io_client: ^3.1.2
+  awesome_notifications: ^0.10.0
+  
 
 dev_dependencies:
 

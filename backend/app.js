@@ -1,6 +1,7 @@
 require("dotenv").config(); // Load .env file
 const { Server }             = require("socket.io");
-const { addUserSocket, getUserSocket, removeUserSocket }
+const { addUserSocket,  removeUserSocket ,sendToClient,
+  getEventsStartingIn24Hours}
                              = require("./services/CustomSocketService");
                              const http                   = require("http");
 const express = require("express");
@@ -8,9 +9,10 @@ const connectDB = require("./config/db");
 const bodyParser = require("body-parser");
 const path = require("path");
 const cors = require("cors");
-
+const cron = require('node-cron');
 const app = express();
 const PORT = process.env.PORT || 5000;
+
 const server =http.createServer(app);
 const io = new Server(server);
 io.on('connection', (socket) => {
@@ -34,7 +36,16 @@ connectDB();
 // Middleware setup
 app.use(bodyParser.json()); // Parse JSON request bodies
 app.use(cors());
-
+cron.schedule('48 * * * *', async () => {
+  const events= await getEventsStartingIn24Hours();
+  console.log("========================")
+  console.log(events.length);
+  console.log("========================")
+  for(let i of events){
+    sendToClient(i.user_id.toString(),"Notification",{title:"Event reminder",message:"Your event starts in 24 hours"});
+    sendToClient(i.truck_id.owner_id.toString(),"Notification",{title:"Event reminder",message:"Your event starts in 24 hours"});
+  }
+});
 const userRoutes = require("./routes/userRoutes");
 const truckRoutes = require("./routes/truckRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");

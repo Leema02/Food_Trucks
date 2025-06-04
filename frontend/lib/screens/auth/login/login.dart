@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:myapp/screens/customer/customer_main_container.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:myapp/screens/truckOwner/ownerDashbored.dart';
