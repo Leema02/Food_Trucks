@@ -13,7 +13,10 @@ const {
  getAllOrders, 
  getOrderById, 
  deleteOrder, 
- getOrdersCountByTruck,
+ getAllCustomersOrders,   
+ getAllTrucksOrders,     
+ updateAnyOrderStatus ,
+ adminSearchOrders,   
 } = require("../controllers/orderController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -39,10 +42,6 @@ router.get("/total", protect, authorizeRoles("admin"), getTotalOrders);
 // 🟣 Admin: Orders by truck
 router.get("/by-truck", protect, authorizeRoles("admin"), getOrdersByTruck);
 
-// Admin: Get orders count by truck for chart
-router.get("/count-by-truck", protect, authorizeRoles("admin"), getOrdersCountByTruck);
-
-
 // 🟤 Admin: Pie chart for order types breakdown
 router.get(
  "/order-types",
@@ -65,12 +64,7 @@ router.get(
   authorizeRoles("admin"),
   getPopularCuisines
 );
-router.get(
-  "/popular-cuisines",
-  protect,
-  authorizeRoles("admin"),
-  getPopularCuisines
-);
+
 
 router.get(
   "/status-summary",
@@ -81,8 +75,15 @@ router.get(
 
 // --- ADMIN ROUTES  ---
 
+router.get("/admin-search", protect, authorizeRoles("admin"), adminSearchOrders);
+
 router.get("/", protect, authorizeRoles("admin"), getAllOrders); 
 router.get("/:id", protect, authorizeRoles("admin"), getOrderById); 
 router.delete("/:id", protect, authorizeRoles("admin"), deleteOrder); 
+
+
+router.get("/admin/customer/:customerId", protect, authorizeRoles("admin"), getAllCustomersOrders);
+router.get("/admin/truck/:truckId", protect, authorizeRoles("admin"), getAllTrucksOrders);
+router.put("/admin/status/:id", protect, authorizeRoles("admin"), updateAnyOrderStatus);
 
 module.exports = router;

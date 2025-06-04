@@ -66,12 +66,11 @@ if (filterTruckName) {
         (key) => params[key] === "" && delete params[key]
       );
 
-      const res = await axios.get("http://localhost:5000/api/orders", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params: params,
-      });
+const res = await axios.get("http://localhost:5000/api/orders/admin-search", {
+  headers: { Authorization: `Bearer ${token}` },
+  params,
+});
+
 
       setOrders(res.data.orders);
       setTotalPages(res.data.totalPages);
@@ -144,15 +143,10 @@ if (filterTruckName) {
         alert("Authentication token not found. Please log in.");
         return;
       }
-      await axios.put(
-        `http://localhost:5000/api/orders/${editingOrder}`,
-        { status: formData.status },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+ await axios.put(`http://localhost:5000/api/orders/admin/status/${editingOrder}`, { status: formData.status }, {
+  headers: { Authorization: `Bearer ${token}` },
+});
+
       alert("✅ Order updated successfully!");
       setEditingOrder(null);
       setFormData({});

@@ -61,20 +61,7 @@ const signupUser = async (req, res) => {
 
 const getAllUsers = async (req, res) => {
   try {
-    const { search } = req.query;
-
-    const query = {};
-
-    if (search) {
-      query.$or = [
-        { F_name: { $regex: search, $options: "i" } },
-        { L_name: { $regex: search, $options: "i" } },
-        { email_address: { $regex: search, $options: "i" } },
-        { city: { $regex: search, $options: "i" } },
-      ];
-    }
-
-    const users = await User.find(query).select("-password -__v");
+    const users = await User.find().select("-password -__v");
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -310,6 +297,28 @@ const getUserSignupStats = async (req, res) => {
   }
 };
 
+const getAllUsersWithSearch = async (req, res) => {
+  try {
+    const { search } = req.query;
+
+    const query = {};
+
+    if (search) {
+      query.$or = [
+        { F_name: { $regex: search, $options: "i" } },
+        { L_name: { $regex: search, $options: "i" } },
+        { email_address: { $regex: search, $options: "i" } },
+        { city: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const users = await User.find(query).select("-password -__v");
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 
 module.exports = {
   signupUser,
@@ -323,4 +332,5 @@ module.exports = {
   deleteUser,
   getTotalUsers,
   getUserSignupStats,
+  getAllUsersWithSearch
 };

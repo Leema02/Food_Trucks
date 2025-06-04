@@ -14,15 +14,19 @@ useEffect(() => {
 }, [searchTerm]);
 
   const fetchUsers = () => {
-  axios
-    .get("http://localhost:5000/api/users", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      params: {
-        search: searchTerm || undefined,
-      },
-    })
+ const endpoint = searchTerm
+  ? "http://localhost:5000/api/users/admin-search"
+  : "http://localhost:5000/api/users";
+
+axios
+  .get(endpoint, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+    params: {
+      search: searchTerm || undefined,
+    },
+  })
     .then((res) => setUsers(res.data))
     .catch((err) => console.error("Error fetching users:", err));
 };
@@ -160,20 +164,25 @@ useEffect(() => {
           <h2>Users</h2>
           <button
             className="edit-btn"
-            onClick={() => {
-              setEditingUser("new");
-              setFormData({
-                F_name: "",
-                L_name: "",
-                email_address: "",
-                phone_num: "",
-                username: "",
-                password: "",
-                address: "",
-                role_id: "",
-                city: "",
-              });
-            }}
+       onClick={() => {
+  // Always clear form data first
+  setFormData({
+    F_name: "",
+    L_name: "",
+    email_address: "",
+    phone_num: "",
+    username: "",
+    password: "",
+    address: "",
+    role_id: "",
+    city: "",
+  });
+
+  // Then trigger the form to open
+  setEditingUser("new");
+}}
+
+
           >
             + New
           </button>
@@ -227,9 +236,10 @@ useEffect(() => {
           </tbody>
         </table>
 
-        {editingUser && (
-          <div className="edit-user-form">
-            <h3>{editingUser === "new" ? "New User" : "Edit User"}</h3>
+       {(editingUser === "new" || typeof editingUser === "string") && (
+  <div className="edit-user-form">
+    <h3>{editingUser === "new" ? "New User" : "Edit User"}</h3>
+
 
             <form onSubmit={(e) => e.preventDefault()}>
               <input
@@ -244,12 +254,13 @@ useEffect(() => {
                 placeholder="Last Name"
                 onChange={handleInputChange}
               />
-              <input
-                name="email_address"
-                value={formData.email_address || ""}
-                placeholder="Email"
-                onChange={handleInputChange}
-              />
+             <input
+  name="email_address"
+  value={formData.email_address || ""}
+  onChange={handleInputChange}
+  placeholder="Email"
+/>
+
               <input
                 name="phone_num"
                 value={formData.phone_num || ""}

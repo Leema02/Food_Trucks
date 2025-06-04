@@ -224,37 +224,86 @@ const getAllTrucks = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // 👇 Add search filters
-    const { truck_name, city, cuisine_type } = req.query;
-    const filter = {};
-    if (truck_name) {
-      filter.truck_name = { $regex: truck_name, $options: "i" };
-    }
-    if (city) {
-      filter.city = { $regex: city, $options: "i" };
-    }
-    if (cuisine_type) {
-      filter.cuisine_type = { $regex: cuisine_type, $options: "i" };
+    const matchFilter = {};
+
+    if (req.query.cuisine) {
+      matchFilter.cuisine_type = req.query.cuisine;
     }
 
-    // 👇 Use the filter here (was missing in your version)
-    const totalTrucks = await Truck.countDocuments(filter);
+    // 🔶 Get current time in HH:mm format
+    const now = new Date();
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-    const trucks = await Truck.find(filter)
-      .populate("owner_id", "F_name L_name email_address")
-      .skip(skip)
-      .limit(limit);
+    // 🔷 Base aggregation pipeline
+    const pipeline = [
+      { $match: matchFilter },
+
+      // ✅ If openNow=true, add time-based filtering
+      ...(req.query.openNow === 'true'
+        ? [{
+            $match: {
+              $expr: {
+                $or: [
+                  {
+                    $and: [
+                      { $lte: [{ $toString: "$operating_hours.open" }, currentTime] },
+                      { $gte: [{ $toString: "$operating_hours.close" }, currentTime] },
+                    ]
+                  },
+                  {
+                    $and: [
+                      { $gt: [{ $toString: "$operating_hours.open" }, { $toString: "$operating_hours.close" }] },
+                      {
+                        $or: [
+                          { $lte: [{ $toString: "$operating_hours.open" }, currentTime] },
+                          { $gte: [{ $toString: "$operating_hours.close" }, currentTime] },
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }]
+        : []),
+
+      // ✅ Join truck reviews and calculate rating
+      {
+        $lookup: {
+          from: 'truckreviews',
+          localField: '_id',
+          foreignField: 'truck_id',
+          as: 'reviews'
+        }
+      },
+      {
+        $addFields: {
+          average_rating: { $avg: '$reviews.rating' },
+          review_count: { $size: '$reviews' }
+        }
+      },
+
+      // ✅ Sort if sort=rating
+      ...(req.query.sort === 'rating'
+        ? [{ $sort: { average_rating: -1 } }]
+        : []),
+
+      { $skip: skip },
+      { $limit: limit }
+    ];
+
+    const trucks = await Truck.aggregate(pipeline);
 
     res.json({
       trucks,
       currentPage: page,
-      totalPages: Math.ceil(totalTrucks / limit),
-      totalItems: totalTrucks,
+      totalPages: 1, // Optionally estimate if you want pagination
+      totalItems: trucks.length
     });
 
   } catch (err) {
-    console.error("Error in getAllTrucks (Admin):", err);
-    res.status(500).json({ message: "Server error while fetching all trucks." });
+    console.error("❌ Error in getAllTrucks:", err);
+    res.status(500).json({ message: "Server error while fetching trucks." });
   }
 };
 
@@ -347,6 +396,59 @@ const getAllCuisines = async (req, res) => {
   }
 };
 
+const getTrucksForAdmin = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const { truck_name, city, cuisine_type } = req.query;
+        const filter = {};
+
+        if (truck_name) {
+            filter.truck_name = { $regex: truck_name, $options: "i" }; // Case-insensitive search
+        }
+        if (city) {
+            filter.city = { $regex: city, $options: "i" }; // Case-insensitive search
+        }
+        if (cuisine_type) {
+            filter.cuisine_type = { $regex: cuisine_type, $options: "i" }; // Case-insensitive search
+        }
+
+        const totalTrucks = await Truck.countDocuments(filter); // Count total documents matching the filter
+        const trucks = await Truck.find(filter)
+            .populate("owner_id", "F_name L_name email_address") // Populate owner details
+            .skip(skip)
+            .limit(limit);
+
+        res.json({
+            trucks,
+            currentPage: page,
+            totalPages: Math.ceil(totalTrucks / limit),
+            totalItems: totalTrucks,
+        });
+
+    } catch (err) {
+        console.error("Error in getTrucksForAdmin:", err);
+        res.status(500).json({ message: "Server error while fetching trucks for admin." });
+    }
+};
+
+// New method for Admin to get a single truck by ID
+const getAdminTruckById = async (req, res) => {
+    try {
+        const truck = await Truck.findById(req.params.id); // Find truck by ID
+        if (!truck) {
+            return res.status(404).json({ message: "Truck not found" });
+        }
+        res.status(200).json(truck);
+    } catch (err) {
+        console.error("Error in getAdminTruckById:", err);
+        res.status(500).json({ message: "Server error while fetching truck by ID for admin." });
+    }
+};
+
+
 
 module.exports = {
   createTruck,
@@ -361,6 +463,8 @@ module.exports = {
   adminUpdateTruck,
   adminDeleteTruck,
   getTotalTrucks,
-  getAllCuisines
+  getAllCuisines,
+  getTrucksForAdmin,
+  getAdminTruckById
 
 };

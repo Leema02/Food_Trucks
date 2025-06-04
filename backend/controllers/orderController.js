@@ -222,128 +222,41 @@ const getAllOrders = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const query = {};
-
-    // New: Add name-based search
-    const customerName = req.query.customer_name;
-    const truckName = req.query.truck_name;
-
-    // Build base query
     if (req.query.status) {
-      query.status = new RegExp(req.query.status, "i");
+      query.status = new RegExp(req.query.status, "i"); // Case-insensitive status filter
+    }
+    if (req.query.customer_id) {
+      query.customer_id = req.query.customer_id;
+    }
+    if (req.query.truck_id) {
+      query.truck_id = req.query.truck_id;
     }
     if (req.query.order_type) {
       query.order_type = new RegExp(req.query.order_type, "i");
     }
 
-    let customerMatch = {};
-    if (customerName) {
-      customerMatch = {
-        $or: [
-          { "customer_id.F_name": new RegExp(customerName, "i") },
-          { "customer_id.L_name": new RegExp(customerName, "i") },
-        ],
-      };
-    }
-
-    let truckMatch = {};
-    if (truckName) {
-      truckMatch = {
-        "truck_id.truck_name": new RegExp(truckName, "i"),
-      };
+    const sort = {};
+    if (req.query.sortBy && req.query.orderBy) {
+      sort[req.query.sortBy] = req.query.orderBy === "desc" ? -1 : 1;
+    } else {
+      sort.createdAt = -1; // Default sort by newest first
     }
 
     const orders = await Order.find(query)
-      .populate("customer_id", "F_name L_name email")
-      .populate("truck_id", "truck_name")
-      .sort({ createdAt: -1 })
+      .populate("customer_id", "F_name L_name email") // Populate customer info
+      .populate("truck_id", "truck_name") // Populate truck info
+      .sort(sort)
       .skip(skip)
       .limit(limit);
 
-    // Post-filtering on populated fields
-    const filteredOrders = orders.filter((order) => {
-      const matchCustomer =
-        !customerName ||
-        customerMatch.$or.some((cond) =>
-          new RegExp(Object.values(cond)[0], "i").test(
-            order.customer_id?.[Object.keys(cond)[0].split(".")[1]] || ""
-          )
-        );
-      const matchTruck =
-        !truckName ||
-        new RegExp(truckMatch["truck_id.truck_name"], "i").test(
-          order.truck_id?.truck_name || ""
-        );
-      return matchCustomer && matchTruck;
-    });
+    const totalOrders = await Order.countDocuments(query);
 
     res.status(200).json({
-      orders: filteredOrders,
-      totalPages: 1, // Because we filtered in memory
-      currentPage: 1,
-      totalOrders: filteredOrders.length,
+      orders,
+      totalPages: Math.ceil(totalOrders / limit),
+      currentPage: page,
+      totalOrders,
     });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-const getOrdersCountByTruck = async (req, res) => {
-  try {
-    const data = await Order.aggregate([
-      {
-        $group: {
-          _id: "$truck_id", 
-          orderCount: { $sum: 1 },
-        },
-      },
-      {
-        $lookup: {
-          from: "trucks",
-          localField: "_id",
-          foreignField: "_id",
-          as: "truckInfo",
-        },
-      },
-      {
-        $unwind: "$truckInfo",
-      },
-      {
-        $group: {
-          _id: "$truckInfo.truck_name", 
-          orderCount: { $sum: "$orderCount" }, 
-        },
-      },
-    
-      {
-        $project: {
-          _id: 0, 
-          truckName: "$_id", 
-          orderCount: "$orderCount",
-        },
-      },
-     
-      {
-        $sort: { orderCount: -1 },
-      },
-      {
-        $limit: 5,
-      },
-    ]);
-
-    res.status(200).json(data);
-  } catch (err) {
-    console.error("Error getting orders count by truck:", err);
-    res.status(500).json({ message: err.message });
-  }
-};
-const deleteOrder = async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id);
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-    await order.deleteOne();
-    res.status(200).json({ message: "Order deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -357,8 +270,139 @@ const getOrderById = async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-
     res.status(200).json(order);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const deleteOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    await order.deleteOne(); // Use deleteOne() or deleteMany() depending on Mongoose version
+    res.status(200).json({ message: "Order deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getAllCustomersOrders = async (req, res) => {
+  try {
+    const customerId = req.params.customerId;
+    const orders = await Order.find({ customer_id: customerId })
+      .populate("truck_id", "truck_name")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(orders);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const getAllTrucksOrders = async (req, res) => {
+  try {
+    const truckId = req.params.truckId;
+    const orders = await Order.find({ truck_id: truckId })
+      .populate("customer_id", "F_name L_name email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(orders);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const updateAnyOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    order.status = status;
+    await order.save();
+
+    res.status(200).json({ message: "Order status updated by admin", order });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const adminSearchOrders = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      order_type,
+      customer_name,
+      truck_name,
+      sortBy = "createdAt",
+      orderBy = "desc",
+    } = req.query;
+
+    const skip = (page - 1) * parseInt(limit);
+    const sortDirection = orderBy === "desc" ? -1 : 1;
+
+    const matchStage = {};
+
+    if (status) matchStage.status = { $regex: new RegExp(status, "i") };
+    if (order_type) matchStage.order_type = { $regex: new RegExp(order_type, "i") };
+
+    const pipeline = [
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: "users",
+          localField: "customer_id",
+          foreignField: "_id",
+          as: "customer_id",
+        },
+      },
+      { $unwind: "$customer_id" },
+      {
+        $lookup: {
+          from: "trucks",
+          localField: "truck_id",
+          foreignField: "_id",
+          as: "truck_id",
+        },
+      },
+      { $unwind: "$truck_id" },
+    ];
+
+    if (customer_name) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { "customer_id.F_name": { $regex: new RegExp(customer_name, "i") } },
+            { "customer_id.L_name": { $regex: new RegExp(customer_name, "i") } },
+          ],
+        },
+      });
+    }
+
+    if (truck_name) {
+      pipeline.push({
+        $match: {
+          "truck_id.truck_name": { $regex: new RegExp(truck_name, "i") },
+        },
+      });
+    }
+
+    const totalPipeline = [...pipeline, { $count: "total" }];
+    const totalCount = await Order.aggregate(totalPipeline);
+    const totalOrders = totalCount[0]?.total || 0;
+    const totalPages = Math.ceil(totalOrders / parseInt(limit));
+
+    pipeline.push({ $sort: { [sortBy]: sortDirection } });
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: parseInt(limit) });
+
+    const orders = await Order.aggregate(pipeline);
+
+    res.json({ orders, totalOrders, totalPages, currentPage: parseInt(page) });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -379,5 +423,9 @@ module.exports = {
   getAllOrders,
   getOrderById,
   deleteOrder,
-  getOrdersCountByTruck
+  getAllCustomersOrders,
+getAllTrucksOrders,
+updateAnyOrderStatus,
+  adminSearchOrders,
+
 };
