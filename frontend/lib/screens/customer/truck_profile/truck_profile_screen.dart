@@ -2,25 +2,23 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:myapp/screens/customer/truck_profile/map_route_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-// These imports depend on your project structure.
-// If they cause errors, comment them out and the corresponding code (MenuCard, TruckBookingScreen)
-// The UI layout will still work.
+import 'package:intl/intl.dart';
 import 'package:myapp/core/services/menu_service.dart';
 import 'package:myapp/screens/customer/menu/menu_card.dart';
 import '../explore/event_booking/truck_booking_screen.dart';
 
 
-// --- Enhanced Styles for Truck Profile (Foodie Fleet Theme) ---
-const Color ffPrimaryColor = Color(0xFFFF6B35); // Vibrant orange
+const Color ffPrimaryColor = Color(0xFFFF6B35);
 const Color ffPrimaryDark = Color(0xFFE55A2A);
 const Color ffSurfaceColor = Color(0xFFFFFFFF);
 const Color ffBackgroundColor = Color(0xFFFFFFFF);
 const Color ffOnPrimaryColor = Color(0xFFFFFFFF);
 const Color ffOnSurfaceColor = Color(0xFF2D2D2D);
 const Color ffSecondaryTextColor = Color(0xFF6C757D);
-const Color ffAccentColor = Color(0xFFFFD166); // Golden yellow
+const Color ffAccentColor = Color(0xFFFFD166);
 const Color ffSuccessColor = Color(0xFF4CAF50);
 
 const double ffPaddingMd = 20.0;
@@ -31,7 +29,6 @@ const double ffBorderRadius = 24.0;
 const double ffProfileImageHeight = 280.0;
 const double ffIconSize = 24.0;
 
-// Custom text styles
 TextStyle ffTitleStyle = const TextStyle(
   fontSize: 28.0,
   fontWeight: FontWeight.w800,
@@ -57,7 +54,6 @@ TextStyle ffInfoStyle = const TextStyle(
   fontWeight: FontWeight.w600,
   color: ffOnSurfaceColor,
 );
-// --- End Styles ---
 
 class TruckProfileScreen extends StatefulWidget {
   final String truckId;
@@ -84,6 +80,40 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
   double? _displayAverageRating;
   int _displayReviewCount = 0;
 
+  Future<void> _openRouteInMap() async {
+    if (_truckData == null) return;
+
+    final location = _truckData!['location'];
+    if (location == null ||
+        location['latitude'] == null ||
+        location['longitude'] == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Truck location is not available.')),
+        );
+      }
+      return;
+    }
+
+    final double latitude = location['latitude'];
+    final double longitude = location['longitude'];
+    final String truckName = _truckData!['truck_name'] ?? 'The Truck';
+
+    final truckPosition = LatLng(latitude, longitude);
+
+    // Navigate to the new map screen
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              MapRouteScreen(truckPosition: truckPosition, truckName: truckName),
+
+        ),
+      );
+    }
+  }
+
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -99,6 +129,48 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Widget _buildStatusPill({required bool isOpen}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: isOpen ? ffSuccessColor.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isOpen ? ffSuccessColor : Colors.red.shade400,
+          width: 1.5,
+        ),
+      ),
+      child: Text(
+        isOpen ? "Open" : "Closed",
+        style: TextStyle(
+          color: isOpen ? ffSuccessColor : Colors.red.shade700,
+          fontWeight: FontWeight.w800,
+          fontSize: 14,
+        ),
+      ),
+    );
+  }
+
+  Widget _getTruckStatus(String? openTimeStr, String? closeTimeStr) {
+    if (openTimeStr == null || closeTimeStr == null) {
+      return const SizedBox.shrink();
+    }
+    try {
+      final now = DateTime.now();
+      final openTime = DateFormat("hh:mm a").parse(openTimeStr);
+      final closeTime = DateFormat("hh:mm a").parse(closeTimeStr);
+
+      final todayOpen = DateTime(now.year, now.month, now.day, openTime.hour, openTime.minute);
+      final todayClose = DateTime(now.year, now.month, now.day, closeTime.hour, closeTime.minute);
+
+      final bool isOpen = now.isAfter(todayOpen) && now.isBefore(todayClose);
+
+      return _buildStatusPill(isOpen: isOpen);
+    } catch (e) {
+      return const SizedBox.shrink();
+    }
   }
 
   Future<void> _loadFavoriteStatus() async {
@@ -300,8 +372,21 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(truck['truck_name'] ?? 'Truck Name', style: ffTitleStyle),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: Text(truck['truck_name'] ?? 'Truck Name', style: ffTitleStyle),),
+              const SizedBox(height: ffPaddingXs / 2),
+              _getTruckStatus(
+                truck['operating_hours']?['open'],
+                truck['operating_hours']?['close'],
+              ),
+            ],
+          ),
           const SizedBox(height: ffPaddingXs / 2),
+
+
           Row(
             children: [
               Icon(Icons.location_city_rounded, color: ffSecondaryTextColor, size: 18),
@@ -345,7 +430,7 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
               ),
               Row(
                 children: [
-                  _buildActionButton(Icons.directions_car_filled_rounded, "Route", () {}),
+                  _buildActionButton(Icons.directions_car_filled_rounded, "Route", _openRouteInMap),
                   const SizedBox(width: ffPaddingXs),
                   _buildActionButton(Icons.share_location_rounded, "Share", () {}),
                 ],
@@ -370,7 +455,7 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
             slivers: [
               SliverAppBar(
                 expandedHeight: ffProfileImageHeight,
-                pinned: true,
+                pinned: false,
                 backgroundColor: ffSurfaceColor,
                 elevation: scrollOffset > (cardTopPosition - kToolbarHeight) ? 2.0 : 0.0,
                 leading: Padding(

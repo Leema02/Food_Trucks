@@ -233,6 +233,7 @@ const getAllTrucks = async (req, res) => {
     // 🔶 Get current time in HH:mm format
     const now = new Date();
     const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    console.log(now, "Current time:", currentTime); // Debugging line to check current time 
 
     // 🔷 Base aggregation pipeline
     const pipeline = [
