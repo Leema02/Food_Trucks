@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:myapp/screens/customer/truck_profile/map_route_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // These imports depend on your project structure.
@@ -83,6 +85,41 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
   bool _isFavorite = false;
   double? _displayAverageRating;
   int _displayReviewCount = 0;
+
+  Future<void> _openRouteInMap() async {
+    if (_truckData == null) return;
+
+    // Safely access the location data
+    final location = _truckData!['location'];
+    if (location == null ||
+        location['latitude'] == null ||
+        location['longitude'] == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Truck location is not available.')),
+        );
+      }
+      return;
+    }
+
+    final double latitude = location['latitude'];
+    final double longitude = location['longitude'];
+    final String truckName = _truckData!['truck_name'] ?? 'The Truck';
+
+    final truckPosition = LatLng(latitude, longitude);
+
+    // Navigate to the new map screen
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              MapRouteScreen(truckPosition: truckPosition, truckName: truckName),
+
+        ),
+      );
+    }
+  }
 
   final ScrollController _scrollController = ScrollController();
 
@@ -345,7 +382,7 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
               ),
               Row(
                 children: [
-                  _buildActionButton(Icons.directions_car_filled_rounded, "Route", () {}),
+                  _buildActionButton(Icons.directions_car_filled_rounded, "Route", _openRouteInMap),
                   const SizedBox(width: ffPaddingXs),
                   _buildActionButton(Icons.share_location_rounded, "Share", () {}),
                 ],
@@ -370,7 +407,7 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
             slivers: [
               SliverAppBar(
                 expandedHeight: ffProfileImageHeight,
-                pinned: true,
+                pinned: false,
                 backgroundColor: ffSurfaceColor,
                 elevation: scrollOffset > (cardTopPosition - kToolbarHeight) ? 2.0 : 0.0,
                 leading: Padding(
