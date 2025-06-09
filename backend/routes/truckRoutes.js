@@ -22,7 +22,7 @@ router.post( "/", authorizeRoles("truck owner", "admin"),TruckController.createT
 
 router.get("/my-trucks",authorizeRoles("truck owner", "admin"), TruckController.getMyTrucks);
 
-router.get("/:id",authorizeRoles("truck owner", "admin"),TruckController.getTruckById);
+router.get("/:id",TruckController.getTruckById);
 
 router.put("/:id",authorizeRoles("truck owner", "admin"),TruckController.updateTruck);
 
