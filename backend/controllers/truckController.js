@@ -218,6 +218,7 @@ const removeUnavailableDate = async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 };
+
 const getAllTrucks = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -306,6 +307,7 @@ const getAllTrucks = async (req, res) => {
     console.error("❌ Error in getAllTrucks:", err);
     res.status(500).json({ message: "Server error while fetching trucks." });
   }
+  
 };
 
 
