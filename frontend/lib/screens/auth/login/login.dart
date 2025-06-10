@@ -74,7 +74,6 @@ class _LoginPageState extends State<LoginPage> {
         "email_address": _emailController.text.trim(),
         "password": _passwordController.text.trim(),
       };
-
       final httpResponse = await AuthService.login(credentials);
       final responseData = jsonDecode(httpResponse.body);
 

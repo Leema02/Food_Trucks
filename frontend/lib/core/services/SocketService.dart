@@ -15,15 +15,17 @@ class SocketService {
   }
 
   connectToServer() {
-    log("message");
-
+    log("======================================================================================");
+    log("Connect to serverrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
+    log("======================================================================================");
+    socket?.disconnect();
     socket = IO.io(server, <String, dynamic>{
       'transports': ['websocket'],
       'path': '/socket.io/socket',
     });
     socket!.on('connect', (_) {
       log("message");
-      socket!.emit('setId', currentUserId);
+      socket!.emit('setId', {"id": currentUserId, "role": "user"});
     });
     socket!.on("Notification", (data) async {
       log("data");

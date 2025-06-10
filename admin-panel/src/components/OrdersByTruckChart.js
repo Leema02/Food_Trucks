@@ -17,19 +17,20 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
 const OrdersByTruckChart = ({ data }) => {
-  const chartData = {
-    labels: data.map((d) => d.truckName),
-    datasets: [
-      {
-        label: "Orders",
-        data: data.map((d) => d.orderCount),
-        backgroundColor: "rgba(54, 162, 235, 0.6)",
-        borderRadius: 5,
-      },
-    ],
-  };
+    console.log("OrdersByTruckChart: Data received:", data); // ⭐ ADD THIS
+
+    const chartData = {
+        labels: data.map((d) => d.truckName),
+        datasets: [
+            {
+                label: "Orders",
+                data: data.map((d) => d.orderCount),
+                backgroundColor: "rgba(54, 162, 235, 0.6)",
+                borderRadius: 5,
+            },
+        ],
+    };
 
   const options = {
     responsive: true,

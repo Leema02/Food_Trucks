@@ -1,4 +1,5 @@
 const ProblemReport = require('../models/problemReportModel');
+const { notifyAdmins, sendToClient } = require("../services/CustomSocketService");
 
 exports.createReport = async (req, res) => {
   const { category, subject, description } = req.body;
@@ -10,13 +11,25 @@ exports.createReport = async (req, res) => {
       role: role_id,
       category,
       subject,
-      description
+      description,
     });
+ const io = req.app.get("io"); 
+    // io.emit("new_report", {
+    //   _id: report._id,
+    //   category,
+    //   subject,
+    //   description,
+    //   role: role_id,
+    //   submittedAt: report.createdAt,
+    // });
+    notifyAdmins(report);
+
     res.status(201).json(report);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 exports.getAllReports = async (req, res) => {
   try {
@@ -38,6 +51,7 @@ exports.updateReport = async (req, res) => {
       { status, admin_response },
       { new: true }
     );
+    sendToClient(updated.user_id.toString(),"Notification",{title :`Report update`,message:`${status}`});
     res.json(updated);
   } catch (err) {
     res.status(500).json({ message: err.message });

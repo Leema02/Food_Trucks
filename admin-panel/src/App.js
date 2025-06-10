@@ -7,6 +7,8 @@ import UsersPage from "./screens/UsersPage";
 import OrdersPage from "./screens/OrdersPage"; // Correctly imported
 import BookingsCalendarPage from "./components/BookingsCalendarPage";
 import ReviewsDashboardPage from "./screens/ReviewsDashboardPage";
+import ReportsPage from "./screens/ReportsPage";
+
 
 import TrucksPage from "./screens/TrucksPage";
 
@@ -22,6 +24,8 @@ function App() {
         <Route path="/admin/trucks" element={<TrucksPage />} />
         <Route path="/admin/orders" element={<OrdersPage />} />
         <Route path="/admin/reviews" element={<ReviewsDashboardPage />} />
+        <Route path="/admin/reports" element={<ReportsPage />} />
+
 
         {/* Correctly routed */}
       </Routes>

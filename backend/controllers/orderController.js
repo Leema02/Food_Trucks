@@ -312,6 +312,162 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+const getAllCustomersOrders = async (req, res) => {
+  try {
+    const customerId = req.params.customerId;
+    const orders = await Order.find({ customer_id: customerId })
+      .populate("truck_id", "truck_name")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(orders);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const getAllTrucksOrders = async (req, res) => {
+  try {
+    const truckId = req.params.truckId;
+    const orders = await Order.find({ truck_id: truckId })
+      .populate("customer_id", "F_name L_name email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(orders);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const updateAnyOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    order.status = status;
+    await order.save();
+
+    res.status(200).json({ message: "Order status updated by admin", order });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const adminSearchOrders = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      order_type,
+      customer_name,
+      truck_name,
+      sortBy = "createdAt",
+      orderBy = "desc",
+    } = req.query;
+
+    const skip = (page - 1) * parseInt(limit);
+    const sortDirection = orderBy === "desc" ? -1 : 1;
+
+    const matchStage = {};
+
+    if (status) matchStage.status = { $regex: new RegExp(status, "i") };
+    if (order_type) matchStage.order_type = { $regex: new RegExp(order_type, "i") };
+
+    const pipeline = [
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: "users",
+          localField: "customer_id",
+          foreignField: "_id",
+          as: "customer_id",
+        },
+      },
+      { $unwind: "$customer_id" },
+      {
+        $lookup: {
+          from: "trucks",
+          localField: "truck_id",
+          foreignField: "_id",
+          as: "truck_id",
+        },
+      },
+      { $unwind: "$truck_id" },
+    ];
+
+    if (customer_name) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { "customer_id.F_name": { $regex: new RegExp(customer_name, "i") } },
+            { "customer_id.L_name": { $regex: new RegExp(customer_name, "i") } },
+          ],
+        },
+      });
+    }
+
+    if (truck_name) {
+      pipeline.push({
+        $match: {
+          "truck_id.truck_name": { $regex: new RegExp(truck_name, "i") },
+        },
+      });
+    }
+
+    const totalPipeline = [...pipeline, { $count: "total" }];
+    const totalCount = await Order.aggregate(totalPipeline);
+    const totalOrders = totalCount[0]?.total || 0;
+    const totalPages = Math.ceil(totalOrders / parseInt(limit));
+
+    pipeline.push({ $sort: { [sortBy]: sortDirection } });
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: parseInt(limit) });
+
+    const orders = await Order.aggregate(pipeline);
+
+    res.json({ orders, totalOrders, totalPages, currentPage: parseInt(page) });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getTop5OrdersByTruck = async (req, res) => {
+    try {
+        const data = await Order.aggregate([
+            {
+                $group: {
+                    _id: "$truck_id",
+                    orderCount: { $sum: 1 },
+                },
+            },
+            {
+                $lookup: {
+                    from: "trucks", // Collection name in MongoDB
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "truckInfo",
+                },
+            },
+            {
+                $unwind: "$truckInfo", // Deconstructs the truckInfo array
+            },
+            {
+                $project: {
+                    truckName: "$truckInfo.truck_name",
+                    orderCount: 1,
+                },
+            },
+            { $sort: { orderCount: -1 } }, // Sort by orderCount in descending order
+            { $limit: 5 } // Limit to the top 5 results
+        ]);
+
+        res.status(200).json(data);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 module.exports = {
   placeOrder,
   getMyOrders,
@@ -325,5 +481,10 @@ module.exports = {
   getOrderStatusSummary,
   getAllOrders,
   getOrderById,
-  deleteOrder
+  deleteOrder,
+getAllCustomersOrders,
+getAllTrucksOrders,
+updateAnyOrderStatus,
+adminSearchOrders, 
+getTop5OrdersByTruck,
 };

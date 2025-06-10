@@ -1,10 +1,18 @@
 const EventBooking = require("../models/eventBookingModel");
 
 const userSocketMap = {};
+const adminSocketMap = {};
 
 const addUserSocket = (userId, socket) => {
   console.log(userId)
-  userSocketMap[userId] = socket;
+  if(userId.role=='admin')
+  {
+    adminSocketMap[userId.id] = socket;
+  }
+  else{
+  userSocketMap[userId.id] = socket;
+
+  }
   
 };
 
@@ -12,18 +20,34 @@ const removeUserSocket = (socket) => {
   const userId = Object.keys(userSocketMap).find((key) => userSocketMap[key] === socket);
   if (userId) {
     delete userSocketMap[userId];
+    return;
   }
+    const adminId = Object.keys(adminSocketMap).find((key) => adminSocketMap[key] === socket);
+    delete adminSocketMap[adminId];
+
 };
 const doesUserExist = (userId) => {
   return userSocketMap.hasOwnProperty(userId);
 };
+const doesAdminExist = (userId) => {
+  return adminSocketMap.hasOwnProperty(userId);
+};
 const getUserSocket = (userId) => userSocketMap[userId];
 const sendToClient=(userId,event, data)=>{
   console.log(userId);
+  console.log(doesUserExist(userId));
     if(doesUserExist(userId)){
       console.log(userId);
         getUserSocket(userId).emit(event,data)
     }
+    else if(doesAdminExist(userId)){
+      adminSocketMap[userId].emit(event,data);
+    }
+}
+function notifyAdmins(report){
+  for(let i in adminSocketMap){
+    sendToClient(i,"Notification",report);
+  }
 }
 function translateTime(hour24) {
   if (hour24 === 0) {
@@ -65,5 +89,6 @@ module.exports = {
     getUserSocket,
     doesUserExist,
     sendToClient,
-    getEventsStartingIn24Hours
+    getEventsStartingIn24Hours,
+    notifyAdmins
   };
