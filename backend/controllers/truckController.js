@@ -218,6 +218,7 @@ const removeUnavailableDate = async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 };
+
 const getAllTrucks = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
