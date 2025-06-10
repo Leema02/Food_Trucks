@@ -157,17 +157,61 @@ const BookingsCalendarPage = () => {
 
         {/* Applying recommended CSS class for search controls */}
         <div className="search-controls">
-          <label htmlFor="bookingDateSearch">🔍 Search by Date:</label>
-          <input
-            type="date"
-            id="bookingDateSearch"
-            value={searchDateInput} 
-            onChange={handleSearchDateInputChange}
-          />
-          <button onClick={handleApplySearch}>Apply Search</button>
-          {appliedSearchDate && ( 
-            <button onClick={handleClearSearch}>Clear Search</button>
-          )}
+          <div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: "12px",
+    margin: "20px 0",
+    flexWrap: "wrap",
+  }}
+>
+  <label htmlFor="bookingDateSearch" style={{ fontWeight: "bold" }}>
+    🔍 Search by Date:
+  </label>
+  <input
+    type="date"
+    id="bookingDateSearch"
+    value={searchDateInput}
+    onChange={handleSearchDateInputChange}
+    style={{
+      padding: "8px",
+      borderRadius: "4px",
+      border: "1px solid #ccc",
+      minWidth: "180px",
+    }}
+  />
+  <button
+    onClick={handleApplySearch}
+    style={{
+      padding: "8px 16px",
+      backgroundColor: "#007bff",
+      color: "white",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+      fontWeight: "bold",
+    }}
+  >
+    Apply Search
+  </button>
+  {appliedSearchDate && (
+    <button
+      onClick={handleClearSearch}
+      style={{
+        padding: "8px 16px",
+        backgroundColor: "#6c757d",
+        color: "white",
+        border: "none",
+        borderRadius: "4px",
+        cursor: "pointer",
+      }}
+    >
+      Clear Search
+    </button>
+  )}
+</div>
         </div>
 
         <Calendar

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Sidebar from "../components/Sidebar";
 import StatCard from "../components/StatCard";
@@ -7,8 +7,8 @@ import OrderTypesPieChart from "../components/OrderTypesPieChart";
 import Header from "../components/Header";
 import OrderStatusProgress from "../components/OrderStatusProgress";
 import OrdersByCityPieChart from "../components/OrdersByCityPieChart";
+import UserSignupLineChart from "../components/UserSignupLineChart";
 import "../styles/OrderStatusProgress.css";
-
 import "../styles/home.css";
 
 const Home = () => {
@@ -17,19 +17,19 @@ const Home = () => {
     totalTrucks: 0,
     totalUsers: 0,
     totalRevenue: 0,
-    totalBookings: 0, // Initialize totalBookings state
+    totalBookings: 0,
   });
-  const [ordersByTruck, setOrdersByTruck] = useState([]);
+  const [topOrdersByTruck, setTopOrdersByTruck] = useState([]);
   const [orderTypesData, setOrderTypesData] = useState([]);
   const [ordersByCityData, setOrdersByCityData] = useState([]);
   const [statusSummary, setStatusSummary] = useState({});
+  const [signupStats, setSignupStats] = useState([]);
 
-  // ⭐⭐⭐ MOVE ALL FETCH FUNCTIONS HERE, OUTSIDE OF useEffect ⭐⭐⭐
-
-  const fetchTotalBookings = async () => {
+  // Fetch functions using useCallback for memoization
+  const fetchTotalBookings = useCallback(async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/bookings/total-bookings", // Corrected URL
+        "http://localhost:5000/api/bookings/total-bookings",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -47,9 +47,22 @@ const Home = () => {
         totalBookings: "N/A",
       }));
     }
-  };
+  }, []);
 
-  const fetchTotalOrders = async () => {
+  const fetchSignupStats = useCallback(async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/users/signup-stats", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setSignupStats(res.data);
+    } catch (error) {
+      console.error("Error fetching signup stats:", error);
+    }
+  }, []);
+
+  const fetchTotalOrders = useCallback(async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/orders/total", {
         headers: {
@@ -63,9 +76,9 @@ const Home = () => {
     } catch (err) {
       console.error("Failed to fetch total orders:", err);
     }
-  };
+  }, []);
 
-  const fetchTotalTrucks = async () => {
+  const fetchTotalTrucks = useCallback(async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/trucks/total", {
         headers: {
@@ -79,9 +92,9 @@ const Home = () => {
     } catch (err) {
       console.error("Failed to fetch total trucks:", err);
     }
-  };
+  }, []);
 
-  const fetchTotalUsers = async () => {
+  const fetchTotalUsers = useCallback(async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/users/total", {
         headers: {
@@ -95,22 +108,41 @@ const Home = () => {
     } catch (err) {
       console.error("Failed to fetch total users:", err);
     }
-  };
+  }, []);
 
-  const fetchOrdersByTruck = async () => {
+const fetchOrdersByTruck = useCallback(async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/orders/by-truck", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      setOrdersByTruck(res.data);
-    } catch (err) {
-      console.error("Failed to fetch orders by truck", err);
-    }
-  };
+        // Change the URL to your new top 5 endpoint
+        const res = await axios.get("http://localhost:5000/api/orders/stats/top5-by-truck", {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+        });
 
-  const fetchOrderTypes = async () => {
+        const rawData = res.data; // This will now contain only the top 5 from the backend
+
+        // *** You still need the frontend aggregation ***
+        // Because the backend groups by _id, if two _ids have the same truckName,
+        // they will still appear as separate entries in the rawData from the backend.
+        // The frontend aggregation sums these up for a single bar per unique truckName.
+   const aggregatedData = rawData.reduce((acc, current) => {
+    const existingTruck = acc.find(item => item.truckName === current.truckName);
+    if (existingTruck) {
+        existingTruck.orderCount += current.orderCount;
+    } else {
+        acc.push({ truckName: current.truckName || 'Unknown Truck', orderCount: current.orderCount });
+    }
+    return acc;
+}, []);
+
+setTopOrdersByTruck(aggregatedData); // Set the aggregated data to state
+    } catch (err) {
+        console.error("Failed to fetch top 5 orders by truck data:", err);
+    }
+}, []);
+
+
+  const fetchOrderTypes = useCallback(async () => {
     try {
       const res = await axios.get(
         "http://localhost:5000/api/orders/order-types",
@@ -124,9 +156,9 @@ const Home = () => {
     } catch (err) {
       console.error("Failed to fetch order types:", err);
     }
-  };
+  }, []);
 
-  const fetchOrdersByCity = async () => {
+  const fetchOrdersByCity = useCallback(async () => {
     try {
       const res = await axios.get(
         "http://localhost:5000/api/orders/orders-by-city",
@@ -140,9 +172,9 @@ const Home = () => {
     } catch (err) {
       console.error("Failed to fetch orders by city:", err);
     }
-  };
+  }, []);
 
-  const fetchStatusSummary = async () => {
+  const fetchStatusSummary = useCallback(async () => {
     try {
       const res = await axios.get(
         "http://localhost:5000/api/orders/status-summary",
@@ -156,19 +188,21 @@ const Home = () => {
     } catch (err) {
       console.error("Failed to fetch status summary:", err);
     }
-  };
+  }, []);
 
-  // ⭐⭐⭐ Now, call the functions inside useEffect ⭐⭐⭐
   useEffect(() => {
     fetchTotalOrders();
     fetchTotalTrucks();
     fetchTotalUsers();
     fetchOrderTypes();
     fetchStatusSummary();
-    fetchOrdersByTruck();
+    fetchOrdersByTruck(); // This will now fetch and aggregate
     fetchOrdersByCity();
-    fetchTotalBookings(); // Call the newly moved function
-  }, []); // Empty dependency array means this runs once on component mount
+    fetchTotalBookings();
+    fetchSignupStats();
+  }, [fetchTotalOrders, fetchTotalTrucks, fetchTotalUsers, fetchOrderTypes,
+      fetchStatusSummary, fetchOrdersByTruck, fetchOrdersByCity,
+      fetchTotalBookings, fetchSignupStats]); // Added all dependencies for useCallback functions
 
   return (
     <div className="dashboard-container">
@@ -209,7 +243,7 @@ const Home = () => {
           {/* Charts Section */}
           <div className="charts-row">
             <div className="chart-card">
-              <OrdersByTruckChart data={ordersByTruck} />
+              <OrdersByTruckChart data={topOrdersByTruck} />
             </div>
             <div className="chart-card">
               <OrderTypesPieChart data={orderTypesData} />
@@ -217,8 +251,10 @@ const Home = () => {
             <div className="chart-card">
               <OrdersByCityPieChart data={ordersByCityData} />
             </div>
+            <div className="chart-card">
+              <UserSignupLineChart data={signupStats} />
+            </div>
 
-            <OrderStatusProgress data={statusSummary} />
           </div>
         </div>
       </main>

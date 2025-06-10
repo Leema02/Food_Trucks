@@ -1,4 +1,5 @@
 import axios from "axios";
+import socketService from "./SocketService";
 
 const API_BASE_URL = "http://localhost:5000/api/admin";
 
@@ -9,7 +10,9 @@ export const authService = {
         email,
         password: Password,
       });
-
+      console.log(response.data.admin.id)
+      socketService.setId(response.data.admin.id);
+      socketService.connectToServer();
       return {
         success: true,
         data: response.data,

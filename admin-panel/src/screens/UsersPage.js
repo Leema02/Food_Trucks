@@ -7,21 +7,30 @@ const UsersPage = () => {
   const [users, setUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+useEffect(() => {
+  fetchUsers();
+}, [searchTerm]);
 
   const fetchUsers = () => {
-    axios
-      .get("http://localhost:5000/api/users", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      })
-      .then((res) => setUsers(res.data))
-      .catch((err) => console.error("Error fetching users:", err));
-  };
+ const endpoint = searchTerm
+  ? "http://localhost:5000/api/users/admin-search"
+  : "http://localhost:5000/api/users";
+
+axios
+  .get(endpoint, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+    params: {
+      search: searchTerm || undefined,
+    },
+  })
+    .then((res) => setUsers(res.data))
+    .catch((err) => console.error("Error fetching users:", err));
+};
+
 
   const handleEditClick = (user) => {
     setEditingUser(user._id);
@@ -98,8 +107,53 @@ const UsersPage = () => {
 
   return (
     <div className="dashboard-container">
+      
       <Sidebar />
       <div className="main-panel">
+        <div style={{ margin: "20px 0", display: "flex", gap: "10px" }}>
+  <input
+    type="text"
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    placeholder="🔍 Search by name, email, or username"
+    style={{
+      padding: "8px",
+      borderRadius: "4px",
+      border: "1px solid #ccc",
+      width: "250px",
+    }}
+  />
+  <button
+    onClick={() => fetchUsers()}
+    style={{
+      padding: "8px 16px",
+      borderRadius: "4px",
+      border: "none",
+      backgroundColor: "#007bff",
+      color: "white",
+      cursor: "pointer",
+    }}
+  >
+    Search
+  </button>
+  <button
+    onClick={() => {
+      setSearchTerm("");
+      fetchUsers();
+    }}
+    style={{
+      padding: "8px 16px",
+      borderRadius: "4px",
+      border: "none",
+      backgroundColor: "#6c757d",
+      color: "white",
+      cursor: "pointer",
+    }}
+  >
+    Clear
+  </button>
+</div>
+
         <div
           style={{
             display: "flex",
@@ -110,20 +164,25 @@ const UsersPage = () => {
           <h2>Users</h2>
           <button
             className="edit-btn"
-            onClick={() => {
-              setEditingUser("new");
-              setFormData({
-                F_name: "",
-                L_name: "",
-                email_address: "",
-                phone_num: "",
-                username: "",
-                password: "",
-                address: "",
-                role_id: "",
-                city: "",
-              });
-            }}
+       onClick={() => {
+  // Always clear form data first
+  setFormData({
+    F_name: "",
+    L_name: "",
+    email_address: "",
+    phone_num: "",
+    username: "",
+    password: "",
+    address: "",
+    role_id: "",
+    city: "",
+  });
+
+  // Then trigger the form to open
+  setEditingUser("new");
+}}
+
+
           >
             + New
           </button>
@@ -162,12 +221,8 @@ const UsersPage = () => {
                       : "—"}
                   </td>
                   <td>
-                    <button
-                      className="edit-btn"
-                      onClick={() => handleEditClick(u)}
-                    >
-                      Edit
-                    </button>
+                  
+                 
                     <button
                       className="delete-btn"
                       onClick={() => handleDelete(u._id)}
@@ -181,9 +236,10 @@ const UsersPage = () => {
           </tbody>
         </table>
 
-        {editingUser && (
-          <div className="edit-user-form">
-            <h3>{editingUser === "new" ? "New User" : "Edit User"}</h3>
+       {(editingUser === "new" || typeof editingUser === "string") && (
+  <div className="edit-user-form">
+    <h3>{editingUser === "new" ? "New User" : "Edit User"}</h3>
+
 
             <form onSubmit={(e) => e.preventDefault()}>
               <input
@@ -198,12 +254,13 @@ const UsersPage = () => {
                 placeholder="Last Name"
                 onChange={handleInputChange}
               />
-              <input
-                name="email_address"
-                value={formData.email_address || ""}
-                placeholder="Email"
-                onChange={handleInputChange}
-              />
+             <input
+  name="email_address"
+  value={formData.email_address || ""}
+  onChange={handleInputChange}
+  placeholder="Email"
+/>
+
               <input
                 name="phone_num"
                 value={formData.phone_num || ""}
