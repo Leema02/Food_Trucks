@@ -15,63 +15,64 @@ const TrucksPage = () => {
   const [limit, setLimit] = useState(10); // Items per page
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [searchName, setSearchName] = useState("");
+const [searchCity, setSearchCity] = useState("");
+const [searchCuisine, setSearchCuisine] = useState("");
+
 
   // useCallback for fetchTrucks to optimize performance
-  const fetchTrucks = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setError("Authentication token not found. Please log in.");
-        setLoading(false);
-        return;
-      }
-
-      // Parameters for pagination
-      const params = { page, limit };
-
-      const res = await axios.get("http://localhost:5000/api/trucks/admin", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params: params, // Pass pagination parameters
-      });
-      setTrucks(res.data.trucks);
-      setTotalPages(res.data.totalPages);
-      setTotalItems(res.data.totalItems);
-    } catch (err) {
-      console.error("Error fetching trucks:", err);
-      if (err.response) {
-        if (err.response.status === 401 || err.response.status === 403) {
-          setError(
-            "You are not authorized to view trucks. Please check your permissions."
-          );
-        } else if (err.response.status === 404) {
-          setError(
-            "The trucks endpoint was not found. Please check the backend URL."
-          );
-        } else {
-          setError(
-            `Failed to fetch trucks: ${
-              err.response.data.message || err.response.statusText
-            }`
-          );
-        }
-      } else if (err.request) {
-        setError("No response from server. Check if the backend is running.");
-      } else {
-        setError("An unexpected error occurred while setting up the request.");
-      }
-    } finally {
+ const fetchTrucks = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Authentication token not found. Please log in.");
       setLoading(false);
+      return;
     }
-  }, [page, limit]); // Dependencies for useCallback
+
+    const params = {
+      page,
+      limit,
+      truck_name: searchName || undefined,
+      city: searchCity || undefined,
+      cuisine_type: searchCuisine || undefined,
+    };
+
+const res = await axios.get("http://localhost:5000/api/trucks/admin-search", {      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      params, // ✅ send all filters + pagination
+    });
+
+    setTrucks(res.data.trucks);
+    setTotalPages(res.data.totalPages);
+    setTotalItems(res.data.totalItems);
+  } catch (err) {
+    console.error("Error fetching trucks:", err);
+    if (err.response) {
+      if (err.response.status === 401 || err.response.status === 403) {
+        setError("You are not authorized to view trucks. Please check your permissions.");
+      } else if (err.response.status === 404) {
+        setError("The trucks endpoint was not found. Please check the backend URL.");
+      } else {
+        setError(`Failed to fetch trucks: ${err.response.data.message || err.response.statusText}`);
+      }
+    } else if (err.request) {
+      setError("No response from server. Check if the backend is running.");
+    } else {
+      setError("An unexpected error occurred while setting up the request.");
+    }
+  } finally {
+    setLoading(false);
+  }
+}, [page, limit, searchName, searchCity, searchCuisine]); // ✅ Add these dependencies
 
   // useEffect to call fetchTrucks when component mounts or page/limit changes
-  useEffect(() => {
-    fetchTrucks();
-  }, [fetchTrucks]);
+useEffect(() => {
+ fetchTrucks();
+}, [fetchTrucks, searchName, searchCity, searchCuisine]); // <-- ADDED HERE
 
   // Handle click on Edit button
   const handleEditClick = (truck) => {
@@ -158,48 +159,64 @@ const TrucksPage = () => {
     // Clean up flattened fields from payload
     delete payload.operating_hours_open;
     delete payload.operating_hours_close;
-
     try {
       if (editingTruck === "new") {
         // Validation for new truck
         if (
-          !payload.owner_id ||
+          // Remove the !payload.owner_id check
           !payload.truck_name ||
           !payload.cuisine_type ||
           !payload.city
         ) {
           alert(
-            "Please fill in all required fields for a new truck (Owner ID, Name, Cuisine, City)."
+            // Update the alert message accordingly
+            "Please fill in all required fields for a new truck (Name, Cuisine, City)."
           );
           return;
         }
 
+        // --- IMPORTANT ADDITION ---
+        // Ensure owner_id is NOT sent from the frontend for new trucks,
+        // as the backend automatically assigns it from the logged-in user's token.
+        delete payload.owner_id;
+        // --- END IMPORTANT ADDITION ---
+
         const res = await axios.post(
           "http://localhost:5000/api/trucks", // Admin can use this endpoint to create trucks
-          payload,
+          payload, // This 'payload' now correctly excludes owner_id
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        alert("✅ Truck created successfully!");
-      } else {
-        // Admin update uses the specific admin route
-        const res = await axios.put(
-          `http://localhost:5000/api/trucks/admin/${editingTruck}`,
-          payload,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        alert("✅ Truck updated successfully!");
-      }
-      setEditingTruck(null);
-      setFormData({}); // Clear form
-      fetchTrucks(); // Re-fetch to update the table
+      alert("✅ Truck created successfully!");
+      } else {
+        // Admin update uses the specific admin route
+  // Old: const res = await axios.put(
+// New:
+await axios.put( // ✅ Remove 'const res ='
+  `http://localhost:5000/api/trucks/admin/${editingTruck}`,
+  payload,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
+alert("✅ Truck updated successfully!");
+     }
+     setEditingTruck(null);
+     setFormData({}); // Clear form
+
+      // --- CRITICAL ADDITIONS HERE ---
+     setSearchName("");    // ✅ Reset search name
+     setSearchCity("");    // ✅ Reset search city
+     setSearchCuisine(""); // ✅ Reset search cuisine
+     setPage(1);           // ✅ Reset to the first page
+      // --- END CRITICAL ADDITIONS ---
+
+     fetchTrucks(); // Re-fetch to update the table (now with cleared filters/page)
     } catch (err) {
       console.error("Error saving truck:", err);
       if (err.response) {
@@ -214,6 +231,23 @@ const TrucksPage = () => {
     }
   };
 
+  const handleAddTruckClick = () => {
+    setEditingTruck("new"); // Set editingTruck to "new" to indicate creation mode
+    // Initialize formData with empty values for a clean new truck form
+    setFormData({
+      truck_name: "",
+      cuisine_type: "",
+      description: "",
+      logo_image_url: "",
+      city: "",
+      location_latitude: "",
+      location_longitude: "",
+      location_address_string: "",
+      operating_hours_open: "",
+      operating_hours_close: "",
+      // Important: Do NOT include owner_id here, as it's set by the backend based on the admin's token.
+    });
+  };
   // Handle truck deletion
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
@@ -269,6 +303,83 @@ const TrucksPage = () => {
     <div className="dashboard-container">
       <Sidebar />
       <div className="main-panel">
+  
+  {/* 🔍 INSERT FILTERS HERE */}
+  <div
+    style={{
+      display: "flex",
+      gap: "15px",
+      flexWrap: "wrap",
+      marginBottom: "20px",
+    }}
+  >
+    <input
+      placeholder="Search by Name"
+      value={searchName}
+      onChange={(e) => setSearchName(e.target.value)}
+      style={{
+        padding: "8px",
+        borderRadius: "4px",
+        border: "1px solid #ccc",
+        width: "200px",
+      }}
+    />
+    <input
+      placeholder="Search by City"
+      value={searchCity}
+      onChange={(e) => setSearchCity(e.target.value)}
+      style={{
+        padding: "8px",
+        borderRadius: "4px",
+        border: "1px solid #ccc",
+        width: "200px",
+      }}
+    />
+    <input
+      placeholder="Search by Cuisine"
+      value={searchCuisine}
+      onChange={(e) => setSearchCuisine(e.target.value)}
+      style={{
+        padding: "8px",
+        borderRadius: "4px",
+        border: "1px solid #ccc",
+        width: "200px",
+      }}
+    />
+    <button
+      onClick={() => setPage(1)}
+      style={{
+        padding: "8px 16px",
+        backgroundColor: "#007bff",
+        color: "white",
+        border: "none",
+        borderRadius: "4px",
+        cursor: "pointer",
+        fontWeight: "bold",
+      }}
+    >
+      🔍 Search
+    </button>
+    <button
+      onClick={() => {
+        setSearchName("");
+        setSearchCity("");
+        setSearchCuisine("");
+        setPage(1);
+      }}
+      style={{
+        padding: "8px 16px",
+        backgroundColor: "#6c757d",
+        color: "white",
+        border: "none",
+        borderRadius: "4px",
+        cursor: "pointer",
+      }}
+    >
+      ❌ Clear
+    </button>
+  </div>
+
         {/* TOP CONTROLS: TRUCK TITLE ON LEFT, BUTTONS & PAGINATION ON RIGHT */}
         <div
           style={{
@@ -279,6 +390,7 @@ const TrucksPage = () => {
             flexWrap: "wrap", // Allow items to wrap on smaller screens
             gap: "15px", // Space between items when wrapped
           }}
+          
         >
           {/* Page Title - Now on the left */}
           <h2>🚚 Manage Trucks (Admin)</h2>
@@ -294,40 +406,25 @@ const TrucksPage = () => {
             }}
           >
             {/* Add New Truck Button - Modified Styling */}
-            <button
-              className="add-truck-btn" // New class for distinct styling
-              onClick={() => {
-                setEditingTruck("new"); // Set to "new" to indicate creation mode
-                setFormData({
-                  truck_name: "",
-                  cuisine_type: "",
-                  description: "",
-                  logo_image_url: "",
-                  location_latitude: "",
-                  location_longitude: "",
-                  location_address_string: "",
-                  operating_hours_open: "",
-                  operating_hours_close: "",
-                  city: "",
-                  owner_id: "", // Important: Admin needs to specify owner_id for new trucks
-                });
-              }}
-              style={{
-                padding: "12px 25px", // Larger padding
-                backgroundColor: "#28a745", // Green color
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-                fontSize: "1rem", // Larger font size
-                fontWeight: "bold",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.2)", // Subtle shadow
-                transition: "background-color 0.3s ease",
-              }}
-            >
-              ➕ Add New Truck
-            </button>
-
+         <button
+              className="add-truck-btn"
+              onClick={handleAddTruckClick} // <--- DIRECTLY CALL THE FUNCTION!
+              style={{
+                padding: "12px 25px",
+                backgroundColor: "#28a745",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                fontSize: "1rem",
+                fontWeight: "bold",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                transition: "background-color 0.3s ease",
+              }}
+            >
+              ➕ Add New Truck
+            </button>
+             
             {/* Pagination Controls */}
             <div
               className="pagination-controls"

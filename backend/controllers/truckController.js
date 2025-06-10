@@ -218,7 +218,6 @@ const removeUnavailableDate = async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 };
-
 const getAllTrucks = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -234,7 +233,6 @@ const getAllTrucks = async (req, res) => {
     // 🔶 Get current time in HH:mm format
     const now = new Date();
     const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    console.log(now, "Current time:", currentTime); // Debugging line to check current time 
 
     // 🔷 Base aggregation pipeline
     const pipeline = [
@@ -307,7 +305,6 @@ const getAllTrucks = async (req, res) => {
     console.error("❌ Error in getAllTrucks:", err);
     res.status(500).json({ message: "Server error while fetching trucks." });
   }
-  
 };
 
 
@@ -399,6 +396,58 @@ const getAllCuisines = async (req, res) => {
   }
 };
 
+const getTrucksForAdmin = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const { truck_name, city, cuisine_type } = req.query;
+        const filter = {};
+
+        if (truck_name) {
+            filter.truck_name = { $regex: truck_name, $options: "i" }; // Case-insensitive search
+        }
+        if (city) {
+            filter.city = { $regex: city, $options: "i" }; // Case-insensitive search
+        }
+        if (cuisine_type) {
+            filter.cuisine_type = { $regex: cuisine_type, $options: "i" }; // Case-insensitive search
+        }
+
+        const totalTrucks = await Truck.countDocuments(filter); // Count total documents matching the filter
+        const trucks = await Truck.find(filter)
+            .populate("owner_id", "F_name L_name email_address") // Populate owner details
+            .skip(skip)
+            .limit(limit);
+
+        res.json({
+            trucks,
+            currentPage: page,
+            totalPages: Math.ceil(totalTrucks / limit),
+            totalItems: totalTrucks,
+        });
+
+    } catch (err) {
+        console.error("Error in getTrucksForAdmin:", err);
+        res.status(500).json({ message: "Server error while fetching trucks for admin." });
+    }
+};
+
+// New method for Admin to get a single truck by ID
+const getAdminTruckById = async (req, res) => {
+  try {
+    const truck = await Truck.findById(req.params.id);
+    if (!truck) {
+      return res.status(404).json({ message: "Truck not found" });
+    }
+    res.json(truck);
+  } catch (error) {
+    console.error("Error fetching truck by ID (admin):", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 module.exports = {
   createTruck,
@@ -413,6 +462,8 @@ module.exports = {
   adminUpdateTruck,
   adminDeleteTruck,
   getTotalTrucks,
-  getAllCuisines
+  getAllCuisines,
+  getTrucksForAdmin,
+  getAdminTruckById
 
-};
+}; 

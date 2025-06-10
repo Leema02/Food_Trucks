@@ -13,6 +13,11 @@ const {
  getAllOrders, 
  getOrderById, 
  deleteOrder, 
+ getAllCustomersOrders,   
+ getAllTrucksOrders, 
+ adminSearchOrders,     
+ updateAnyOrderStatus, 
+ getTop5OrdersByTruck, 
 } = require("../controllers/orderController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -60,12 +65,7 @@ router.get(
   authorizeRoles("admin"),
   getPopularCuisines
 );
-router.get(
-  "/popular-cuisines",
-  protect,
-  authorizeRoles("admin"),
-  getPopularCuisines
-);
+
 
 router.get(
   "/status-summary",
@@ -76,8 +76,16 @@ router.get(
 
 // --- ADMIN ROUTES  ---
 
+router.get('/admin-search', protect, authorizeRoles("admin"), adminSearchOrders);
+
 router.get("/", protect, authorizeRoles("admin"), getAllOrders); 
 router.get("/:id", protect, authorizeRoles("admin"), getOrderById); 
 router.delete("/:id", protect, authorizeRoles("admin"), deleteOrder); 
 
+router.get('/stats/top5-by-truck', protect, authorizeRoles('admin'), getTop5OrdersByTruck);
+
+
+router.get("/admin/customer/:customerId", protect, authorizeRoles("admin"), getAllCustomersOrders);
+router.get("/admin/truck/:truckId", protect, authorizeRoles("admin"), getAllTrucksOrders);
+router.put("/admin/status/:id", protect, authorizeRoles("admin"), updateAnyOrderStatus);
 module.exports = router;
