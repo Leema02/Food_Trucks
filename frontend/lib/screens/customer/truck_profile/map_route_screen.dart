@@ -28,19 +28,14 @@ class MapRouteScreen extends StatefulWidget {
 }
 
 class _MapRouteScreenState extends State<MapRouteScreen> with TickerProviderStateMixin {
-  // Your OpenRouteService API Key
   final String _orsApiKey = '5b3ce3597851110001cf6248f8616c270ca14ab89dcc5495a548f5d9';
 
   late final MapController _mapController;
   final List<LatLng> _routePoints = [];
   bool _isLoading = true;
   String _errorMessage = '';
-
-  // --- MODIFIED: State for live values ---
-  // Store raw numeric values for calculations
   double _totalDistanceMeters = 0;
   double _totalDurationSeconds = 0;
-  // Store formatted strings for display
   String _displayDistance = '';
   String _displayDuration = '';
 

@@ -307,6 +307,7 @@ const getAllTrucks = async (req, res) => {
     console.error("❌ Error in getAllTrucks:", err);
     res.status(500).json({ message: "Server error while fetching trucks." });
   }
+  
 };
 
 
