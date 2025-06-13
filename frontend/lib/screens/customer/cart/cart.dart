@@ -78,6 +78,12 @@ class _CartPageState extends State<CartPage> {
                     itemCount: cart.length,
                     itemBuilder: (context, index) {
                       final item = cart[index];
+
+                      String imageUrl = item['image_url'] ?? '';
+                      if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
+                        imageUrl = 'http://10.0.2.2:5000$imageUrl';
+                      }
+
                       return Card(
                         margin: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 10),
@@ -91,12 +97,16 @@ class _CartPageState extends State<CartPage> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
-                                child: item['image_url'] != null
+                                child: imageUrl.isNotEmpty
                                     ? Image.network(
-                                        item['image_url'],
+                                        imageUrl,
                                         width: 70,
                                         height: 70,
                                         fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(Icons.fastfood,
+                                                    size: 50),
                                       )
                                     : const Icon(Icons.fastfood, size: 50),
                               ),

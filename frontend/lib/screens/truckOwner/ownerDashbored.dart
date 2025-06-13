@@ -83,10 +83,10 @@ class TruckOwnerDashboard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildInfoCard(
-                        'total_orders'.tr(), '0', Icons.shopping_cart_outlined),
-                    _buildInfoCard('bookings'.tr(), '0', Icons.calendar_today),
-                    _buildInfoCard('reviews'.tr(), '0', Icons.star_outline),
+                    _buildInfoCard('total_orders'.tr(), '35',
+                        Icons.shopping_cart_outlined),
+                    _buildInfoCard('bookings'.tr(), '25', Icons.calendar_today),
+                    _buildInfoCard('reviews'.tr(), '50', Icons.star_outline),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -183,10 +183,10 @@ class TruckOwnerDashboard extends StatelessWidget {
   Widget _buildInfoCard(String title, String count, IconData icon) {
     return Container(
       width: 100,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         boxShadow: const [
           BoxShadow(
             color: Colors.black12,
@@ -198,7 +198,7 @@ class TruckOwnerDashboard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 30, color: Colors.deepOrange),
+          Icon(icon, size: 25, color: Colors.deepOrange),
           const SizedBox(height: 8),
           Text(count,
               style:
@@ -223,14 +223,14 @@ class TruckOwnerDashboard extends StatelessWidget {
         foregroundColor: color,
         shadowColor: Colors.orangeAccent,
         elevation: 4,
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 24),
-          const SizedBox(height: 10),
+          Icon(icon, size: 25),
+          const SizedBox(height: 6),
           Text(label,
               textAlign: TextAlign.center,
               style: const TextStyle(fontWeight: FontWeight.w600)),

@@ -10,7 +10,6 @@ import 'package:myapp/core/services/menu_service.dart';
 import 'package:myapp/screens/customer/menu/menu_card.dart';
 import '../explore/event_booking/truck_booking_screen.dart';
 
-
 const Color ffPrimaryColor = Color(0xFFFF6B35);
 const Color ffPrimaryDark = Color(0xFFE55A2A);
 const Color ffSurfaceColor = Color(0xFFFFFFFF);
@@ -106,9 +105,8 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              MapRouteScreen(truckPosition: truckPosition, truckName: truckName),
-
+          builder: (context) => MapRouteScreen(
+              truckPosition: truckPosition, truckName: truckName),
         ),
       );
     }
@@ -135,7 +133,9 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: isOpen ? ffSuccessColor.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+        color: isOpen
+            ? ffSuccessColor.withOpacity(0.1)
+            : Colors.red.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isOpen ? ffSuccessColor : Colors.red.shade400,
@@ -162,8 +162,10 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
       final openTime = DateFormat("hh:mm a").parse(openTimeStr);
       final closeTime = DateFormat("hh:mm a").parse(closeTimeStr);
 
-      final todayOpen = DateTime(now.year, now.month, now.day, openTime.hour, openTime.minute);
-      final todayClose = DateTime(now.year, now.month, now.day, closeTime.hour, closeTime.minute);
+      final todayOpen = DateTime(
+          now.year, now.month, now.day, openTime.hour, openTime.minute);
+      final todayClose = DateTime(
+          now.year, now.month, now.day, closeTime.hour, closeTime.minute);
 
       final bool isOpen = now.isAfter(todayOpen) && now.isBefore(todayClose);
 
@@ -212,7 +214,8 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
     });
 
     try {
-      final String truckUrl = 'http://10.0.2.2:5000/api/trucks/${widget.truckId}';
+      final String truckUrl =
+          'http://10.0.2.2:5000/api/trucks/${widget.truckId}';
       final truckResponse = await http.get(Uri.parse(truckUrl), headers: {
         'Authorization': 'Bearer $token'
       }).timeout(const Duration(seconds: 15));
@@ -309,11 +312,14 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
       return Scaffold(
         backgroundColor: ffBackgroundColor,
         appBar: AppBar(
-          title: Text(_errorMessage.contains("truck details") ? "Error Loading Truck" : "Truck Not Found"),
+          title: Text(_errorMessage.contains("truck details")
+              ? "Error Loading Truck"
+              : "Truck Not Found"),
           backgroundColor: ffSurfaceColor,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: ffOnSurfaceColor),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: ffOnSurfaceColor),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -323,12 +329,17 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline_rounded, size: 64, color: Colors.red.shade300),
+                Icon(Icons.error_outline_rounded,
+                    size: 64, color: Colors.red.shade300),
                 const SizedBox(height: ffPaddingMd),
-                Text("Oops! Something went wrong", style: ffTitleStyle.copyWith(fontSize: 24), textAlign: TextAlign.center),
+                Text("Oops! Something went wrong",
+                    style: ffTitleStyle.copyWith(fontSize: 24),
+                    textAlign: TextAlign.center),
                 const SizedBox(height: ffPaddingSm),
                 Text(
-                  _errorMessage.isNotEmpty ? _errorMessage : "Could not load truck details. Please check your connection and try again.",
+                  _errorMessage.isNotEmpty
+                      ? _errorMessage
+                      : "Could not load truck details. Please check your connection and try again.",
                   style: ffBodyStyle,
                   textAlign: TextAlign.center,
                 ),
@@ -337,10 +348,13 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
                   onPressed: _fetchTruckAndMenuDetails,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ffPrimaryColor,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
                   ),
-                  child: Text("Try Again", style: ffBodyStyle.copyWith(color: ffOnPrimaryColor)),
+                  child: Text("Try Again",
+                      style: ffBodyStyle.copyWith(color: ffOnPrimaryColor)),
                 ),
               ],
             ),
@@ -352,7 +366,9 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
     final truck = _truckData!;
     final String? imagePath = truck['logo_image_url'] as String?;
     final String imageUrl = imagePath != null
-        ? (imagePath.startsWith('http') ? imagePath : 'http://10.0.2.2:5000$imagePath')
+        ? (imagePath.startsWith('http')
+            ? imagePath
+            : 'http://10.0.2.2:5000$imagePath')
         : 'https://via.placeholder.com/800x400.png?text=${Uri.encodeComponent(truck['truck_name'] ?? 'Truck')}';
 
     final Widget infoCard = Container(
@@ -376,7 +392,10 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: Text(truck['truck_name'] ?? 'Truck Name', style: ffTitleStyle),),
+              Expanded(
+                child: Text(truck['truck_name'] ?? 'Truck Name',
+                    style: ffTitleStyle),
+              ),
               const SizedBox(height: ffPaddingXs / 2),
               _getTruckStatus(
                 truck['operating_hours']?['open'],
@@ -385,13 +404,13 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
             ],
           ),
           const SizedBox(height: ffPaddingXs / 2),
-
-
           Row(
             children: [
-              Icon(Icons.location_city_rounded, color: ffSecondaryTextColor, size: 18),
+              Icon(Icons.location_city_rounded,
+                  color: ffSecondaryTextColor, size: 18),
               const SizedBox(width: ffPaddingXs),
-              Text(truck['city'] ?? 'N/A', style: ffBodyStyle.copyWith(fontWeight: FontWeight.w600)),
+              Text(truck['city'] ?? 'N/A',
+                  style: ffBodyStyle.copyWith(fontWeight: FontWeight.w600)),
             ],
           ),
           Padding(
@@ -401,17 +420,28 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildCompactInfoItem(Icons.place_rounded, content: Text(truck['location']?['address_string'] ?? 'Not specified')),
-              _buildCompactInfoItem(Icons.access_time_filled_rounded, content: Text('${truck['operating_hours']?['open'] ?? '--'} - ${truck['operating_hours']?['close'] ?? '--'}')),
+              _buildCompactInfoItem(Icons.place_rounded,
+                  content: Text(
+                      truck['location']?['address_string'] ?? 'Not specified')),
+              _buildCompactInfoItem(Icons.access_time_filled_rounded,
+                  content: Text(
+                      '${truck['operating_hours']?['open'] ?? '--'} - ${truck['operating_hours']?['close'] ?? '--'}')),
               _buildCompactInfoItem(
                 Icons.star_rounded,
-                content: (_displayReviewCount > 0 && _displayAverageRating != null)
-                    ? Column(
-                  children: [
-                    Text('${_displayAverageRating!.toStringAsFixed(1)} / 5.0', style: ffInfoStyle.copyWith(fontSize: 14.5)),
-                    Text('($_displayReviewCount Reviews)', style: ffBodyStyle.copyWith(fontSize: 12, height: 1.2)),
-                  ],
-                ) : Text('No Reviews', style: ffBodyStyle.copyWith(fontSize: 14.5)),
+                content:
+                    (_displayReviewCount > 0 && _displayAverageRating != null)
+                        ? Column(
+                            children: [
+                              Text(
+                                  '${_displayAverageRating!.toStringAsFixed(1)} / 5.0',
+                                  style: ffInfoStyle.copyWith(fontSize: 14.5)),
+                              Text('($_displayReviewCount Reviews)',
+                                  style: ffBodyStyle.copyWith(
+                                      fontSize: 12, height: 1.2)),
+                            ],
+                          )
+                        : Text('No Reviews',
+                            style: ffBodyStyle.copyWith(fontSize: 14.5)),
               ),
             ],
           ),
@@ -424,15 +454,21 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
             children: [
               Chip(
                 backgroundColor: ffPrimaryColor.withOpacity(0.1),
-                label: Text(truck['cuisine_type'] ?? 'Cuisine', style: ffInfoStyle.copyWith(color: ffPrimaryDark, fontSize: 14)),
-                padding: const EdgeInsets.symmetric(horizontal: ffPaddingSm, vertical: ffPaddingXs),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                label: Text(truck['cuisine_type'] ?? 'Cuisine',
+                    style: ffInfoStyle.copyWith(
+                        color: ffPrimaryDark, fontSize: 14)),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: ffPaddingSm, vertical: ffPaddingXs),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
               ),
               Row(
                 children: [
-                  _buildActionButton(Icons.directions_car_filled_rounded, "Route", _openRouteInMap),
+                  _buildActionButton(Icons.directions_car_filled_rounded,
+                      "Route", _openRouteInMap),
                   const SizedBox(width: ffPaddingXs),
-                  _buildActionButton(Icons.share_location_rounded, "Share", () {}),
+                  // _buildActionButton(
+                  //     Icons.share_location_rounded, "Share", () {}),
                 ],
               )
             ],
@@ -444,7 +480,8 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
     const cardOverlap = 50.0;
     const fixedCardHeight = 240.0;
     final cardTopPosition = ffProfileImageHeight - cardOverlap;
-    double scrollOffset = _scrollController.hasClients ? _scrollController.offset : 0;
+    double scrollOffset =
+        _scrollController.hasClients ? _scrollController.offset : 0;
 
     return Scaffold(
       backgroundColor: ffBackgroundColor,
@@ -457,14 +494,22 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
                 expandedHeight: ffProfileImageHeight,
                 pinned: false,
                 backgroundColor: ffSurfaceColor,
-                elevation: scrollOffset > (cardTopPosition - kToolbarHeight) ? 2.0 : 0.0,
+                elevation: scrollOffset > (cardTopPosition - kToolbarHeight)
+                    ? 2.0
+                    : 0.0,
                 leading: Padding(
                   padding: const EdgeInsets.all(ffPaddingXs),
                   child: CircleAvatar(
-                    backgroundColor: ffSurfaceColor.withOpacity( scrollOffset > (cardTopPosition - kToolbarHeight) ? 0.0 : 0.7),
+                    backgroundColor: ffSurfaceColor.withOpacity(
+                        scrollOffset > (cardTopPosition - kToolbarHeight)
+                            ? 0.0
+                            : 0.7),
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-                      color: scrollOffset > (cardTopPosition - kToolbarHeight) ? ffPrimaryColor : ffOnSurfaceColor,
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                          size: 20),
+                      color: scrollOffset > (cardTopPosition - kToolbarHeight)
+                          ? ffPrimaryColor
+                          : ffOnSurfaceColor,
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
@@ -473,11 +518,21 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
                   Padding(
                     padding: const EdgeInsets.all(ffPaddingXs),
                     child: CircleAvatar(
-                      backgroundColor: ffSurfaceColor.withOpacity(scrollOffset > (cardTopPosition - kToolbarHeight) ? 0.0 : 0.7),
+                      backgroundColor: ffSurfaceColor.withOpacity(
+                          scrollOffset > (cardTopPosition - kToolbarHeight)
+                              ? 0.0
+                              : 0.7),
                       child: IconButton(
                         icon: Icon(
-                          _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                          color: _isFavorite ? Colors.redAccent : (scrollOffset > (cardTopPosition - kToolbarHeight) ? ffPrimaryColor : ffOnSurfaceColor),
+                          _isFavorite
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          color: _isFavorite
+                              ? Colors.redAccent
+                              : (scrollOffset >
+                                      (cardTopPosition - kToolbarHeight)
+                                  ? ffPrimaryColor
+                                  : ffOnSurfaceColor),
                         ),
                         onPressed: _toggleFavorite,
                       ),
@@ -487,19 +542,32 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.parallax,
                   centerTitle: true,
-                  titlePadding: const EdgeInsets.symmetric(horizontal: 50, vertical: ffPaddingSm + 2),
+                  titlePadding: const EdgeInsets.symmetric(
+                      horizontal: 50, vertical: ffPaddingSm + 2),
                   title: scrollOffset > (cardTopPosition - kToolbarHeight)
                       ? Text(
-                    truck['truck_name'] ?? 'Truck Profile',
-                    style: const TextStyle(color: ffPrimaryColor, fontSize: 18, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
-                  )
+                          truck['truck_name'] ?? 'Truck Profile',
+                          style: const TextStyle(
+                              color: ffPrimaryColor,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        )
                       : null,
                   background: CachedNetworkImage(
                     imageUrl: imageUrl,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(color: Colors.grey.shade200, child: const Center(child: CircularProgressIndicator(color: ffPrimaryColor))),
-                    errorWidget: (context, url, error) => Container(color: Colors.grey.shade200, child: const Icon(Icons.food_bank_rounded, size: 80, color: Colors.grey)),
+                    placeholder: (context, url) => Container(
+                        color: Colors.grey.shade200,
+                        child: const Center(
+                            child: CircularProgressIndicator(
+                                color: ffPrimaryColor))),
+                    errorWidget: (context, url, error) => Container(
+                        color: Colors.grey.shade200,
+                        child: const Icon(Icons.food_bank_rounded,
+                            size: 80, color: Colors.grey)),
                   ),
                 ),
               ),
@@ -516,19 +584,23 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
               // padding, which restores the space between the card area and the "About Us" title.
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(ffPaddingMd, ffPaddingLg, ffPaddingMd, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                      ffPaddingMd, ffPaddingLg, ffPaddingMd, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (truck['description'] != null && (truck['description'] as String).isNotEmpty) ...[
+                      if (truck['description'] != null &&
+                          (truck['description'] as String).isNotEmpty) ...[
                         const SizedBox(height: 30.0),
-
                         Text("About Us", style: ffSectionTitleStyle),
                         const SizedBox(height: ffPaddingSm),
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(ffPaddingMd),
-                          decoration: BoxDecoration(color: ffSurfaceColor, borderRadius: BorderRadius.circular(ffBorderRadius - ffPaddingXs)),
+                          decoration: BoxDecoration(
+                              color: ffSurfaceColor,
+                              borderRadius: BorderRadius.circular(
+                                  ffBorderRadius - ffPaddingXs)),
                           child: Text(truck['description'], style: ffBodyStyle),
                         ),
                         const SizedBox(height: ffPaddingLg - ffPaddingXs),
@@ -539,9 +611,16 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
                           const SizedBox(width: ffPaddingXs),
                           if (_menuItems.isNotEmpty)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(color: ffPrimaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                              child: Text("${_menuItems.length} items", style: ffBodyStyle.copyWith(color: ffPrimaryDark, fontWeight: FontWeight.w600, fontSize: 13)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                  color: ffPrimaryColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20)),
+                              child: Text("${_menuItems.length} items",
+                                  style: ffBodyStyle.copyWith(
+                                      color: ffPrimaryDark,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13)),
                             ),
                         ],
                       ),
@@ -553,13 +632,17 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
 
               if (_menuItems.isNotEmpty)
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(ffPaddingMd, 0, ffPaddingMd, ffPaddingMd),
+                  padding: const EdgeInsets.fromLTRB(
+                      ffPaddingMd, 0, ffPaddingMd, ffPaddingMd),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                          (context, index) {
+                      (context, index) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: ffPaddingMd),
-                          child: MenuCard(item: _menuItems[index], truckId: widget.truckId, truckCity: truck['city'] ?? 'N/A'),
+                          child: MenuCard(
+                              item: _menuItems[index],
+                              truckId: widget.truckId,
+                              truckCity: truck['city'] ?? 'N/A'),
                         );
                       },
                       childCount: _menuItems.length,
@@ -569,35 +652,46 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
               else
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: ffPaddingLg, horizontal: ffPaddingMd),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: ffPaddingLg, horizontal: ffPaddingMd),
                     child: Column(
                       children: [
                         const SizedBox(height: ffPaddingMd),
-                        Icon(Icons.menu_book_rounded, size: 60, color: Colors.grey.shade300),
+                        Icon(Icons.menu_book_rounded,
+                            size: 60, color: Colors.grey.shade300),
                         const SizedBox(height: ffPaddingSm),
                         Text(
-                          _errorMessage.contains('menu') && _menuItems.isEmpty ? "Could not load menu at this time." : "Menu coming soon!",
-                          style: ffBodyStyle.copyWith(fontSize: 18, color: ffSecondaryTextColor),
+                          _errorMessage.contains('menu') && _menuItems.isEmpty
+                              ? "Could not load menu at this time."
+                              : "Menu coming soon!",
+                          style: ffBodyStyle.copyWith(
+                              fontSize: 18, color: ffSecondaryTextColor),
                           textAlign: TextAlign.center,
                         ),
-                        if (!_errorMessage.contains('menu') && _menuItems.isEmpty)
+                        if (!_errorMessage.contains('menu') &&
+                            _menuItems.isEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: ffPaddingXs),
-                            child: Text("Check back later for delicious updates.", style: ffBodyStyle.copyWith(fontSize: 14, color: Colors.grey.shade500), textAlign: TextAlign.center),
+                            child: Text(
+                                "Check back later for delicious updates.",
+                                style: ffBodyStyle.copyWith(
+                                    fontSize: 14, color: Colors.grey.shade500),
+                                textAlign: TextAlign.center),
                           ),
                       ],
                     ),
                   ),
                 ),
-              const SliverToBoxAdapter(child: SizedBox(height: ffPaddingLg * 2.5)),
+              const SliverToBoxAdapter(
+                  child: SizedBox(height: ffPaddingLg * 2.5)),
             ],
           ),
-
           AnimatedBuilder(
             animation: _scrollController,
             builder: (context, child) {
               double top = cardTopPosition;
-              if (_scrollController.hasClients && _scrollController.offset > 0) {
+              if (_scrollController.hasClients &&
+                  _scrollController.offset > 0) {
                 top -= _scrollController.offset;
               }
               // **FIX**: The check that made the card "stick" at the top has been removed.
@@ -613,7 +707,6 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
             },
             child: infoCard,
           ),
-
           if (_truckData != null)
             Positioned(
               bottom: ffPaddingMd,
@@ -621,12 +714,17 @@ class _TruckProfileScreenState extends State<TruckProfileScreen> {
               right: ffPaddingMd,
               child: FloatingActionButton.extended(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => TruckBookingScreen(truck: truck)));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => TruckBookingScreen(truck: truck)));
                 },
                 backgroundColor: ffPrimaryDark,
                 foregroundColor: ffOnPrimaryColor,
                 icon: const Icon(Icons.calendar_month_rounded),
-                label: const Text("Book Event", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                label: const Text("Book Event",
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ),
             ),
         ],

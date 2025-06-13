@@ -51,13 +51,21 @@ class TruckCard extends StatelessWidget {
     }
     try {
       final now = DateTime.now();
-      final openTime = DateFormat("hh:mm a").parse(openTimeStr);
-      final closeTime = DateFormat("hh:mm a").parse(closeTimeStr);
 
-      final todayOpen = DateTime(now.year, now.month, now.day, openTime.hour, openTime.minute);
-      final todayClose = DateTime(now.year, now.month, now.day, closeTime.hour, closeTime.minute);
+      final open = DateFormat("hh:mm a").parse(openTimeStr);
+      final close = DateFormat("hh:mm a").parse(closeTimeStr);
 
-      final bool isOpen = now.isAfter(todayOpen) && now.isBefore(todayClose);
+      final openTime =
+          DateTime(now.year, now.month, now.day, open.hour, open.minute);
+      DateTime closeTime =
+          DateTime(now.year, now.month, now.day, close.hour, close.minute);
+
+      // If close is earlier than open, it means it's overnight (e.g., 6PM to 2AM)
+      if (closeTime.isBefore(openTime)) {
+        closeTime = closeTime.add(const Duration(days: 1)); // move to next day
+      }
+
+      final isOpen = now.isAfter(openTime) && now.isBefore(closeTime);
 
       return _buildStatusPill(isOpen: isOpen);
     } catch (e) {
@@ -67,7 +75,8 @@ class TruckCard extends StatelessWidget {
 
   Widget _buildInfoChip(IconData icon, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: ffPaddingSm, vertical: ffPaddingXs + 2),
+      padding: const EdgeInsets.symmetric(
+          horizontal: ffPaddingSm, vertical: ffPaddingXs + 2),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8),
@@ -90,14 +99,13 @@ class TruckCard extends StatelessWidget {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final String? imagePath = truck['logo_image_url'] as String?;
     final String imageUrl = imagePath != null && imagePath.isNotEmpty
         ? (imagePath.startsWith('http')
-        ? imagePath
-        : 'http://10.0.2.2:5000$imagePath')
+            ? imagePath
+            : 'http://10.0.2.2:5000$imagePath')
         : 'https://via.placeholder.com/800x400.png?text=${Uri.encodeComponent(truck['truck_name'] ?? 'Food Truck')}';
 
     final double? averageRating = (truck['average_rating'] as num?)?.toDouble();
@@ -117,7 +125,8 @@ class TruckCard extends StatelessWidget {
         );
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: ffPaddingMd, vertical: ffPaddingSm),
+        margin: const EdgeInsets.symmetric(
+            horizontal: ffPaddingMd, vertical: ffPaddingSm),
         decoration: BoxDecoration(
           color: ffSurfaceColor,
           borderRadius: BorderRadius.circular(ffBorderRadius),
@@ -135,7 +144,8 @@ class TruckCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(ffBorderRadius)),
+                  borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(ffBorderRadius)),
                   child: CachedNetworkImage(
                     imageUrl: imageUrl,
                     height: 180,
@@ -144,20 +154,28 @@ class TruckCard extends StatelessWidget {
                     placeholder: (context, url) => Container(
                         height: 180,
                         color: Colors.grey.shade200,
-                        child: const Center(child: CircularProgressIndicator(color: ffPrimaryColor, strokeWidth: 2.5))),
+                        child: const Center(
+                            child: CircularProgressIndicator(
+                                color: ffPrimaryColor, strokeWidth: 2.5))),
                     errorWidget: (context, url, error) => Container(
                       height: 180,
                       color: Colors.grey.shade100,
-                      child: Icon(Icons.no_food_rounded, color: Colors.grey.shade400, size: 48),
+                      child: Icon(Icons.no_food_rounded,
+                          color: Colors.grey.shade400, size: 48),
                     ),
                   ),
                 ),
                 Positioned.fill(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(ffBorderRadius)),
+                      borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(ffBorderRadius)),
                       gradient: LinearGradient(
-                        colors: [Colors.black.withOpacity(0.5), Colors.transparent, Colors.black.withOpacity(0.6)],
+                        colors: [
+                          Colors.black.withOpacity(0.5),
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.6)
+                        ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         stops: const [0.0, 0.6, 1.0],
@@ -177,20 +195,24 @@ class TruckCard extends StatelessWidget {
                   top: ffPaddingMd,
                   right: ffPaddingMd,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.6),
                       borderRadius: BorderRadius.circular(50),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.star_rounded, color: ffAccentColor, size: 16),
+                        const Icon(Icons.star_rounded,
+                            color: ffAccentColor, size: 16),
                         const SizedBox(width: ffPaddingSm),
                         Text(
-                          reviewCount > 0 ? averageRating!.toStringAsFixed(1) : 'New',
+                          reviewCount > 0
+                              ? averageRating!.toStringAsFixed(1)
+                              : 'New',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontWeight: FontWeight.w900 ,
+                            fontWeight: FontWeight.w900,
                             fontSize: 15,
                           ),
                         ),
@@ -216,16 +238,16 @@ class TruckCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: ffPaddingSm),
-
                   Row(
                     children: [
-                      _buildInfoChip(Icons.location_on_outlined, truck['city'] ?? 'Unknown City'),
+                      _buildInfoChip(Icons.location_on_outlined,
+                          truck['city'] ?? 'Unknown City'),
                       const SizedBox(width: ffPaddingSm),
-                      _buildInfoChip(Icons.restaurant_menu_rounded, truck['cuisine_type'] ?? 'N/A'),
+                      _buildInfoChip(Icons.restaurant_menu_rounded,
+                          truck['cuisine_type'] ?? 'N/A'),
                     ],
                   ),
                   const SizedBox(height: ffPaddingMd),
-
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -242,11 +264,14 @@ class TruckCard extends StatelessWidget {
                         );
                       },
                       icon: const Icon(Icons.menu_book_rounded),
-                      label: const Text('View Menu', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      label: const Text('View Menu',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ffPrimaryColor,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: ffPaddingMd - 2),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: ffPaddingMd - 2),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),

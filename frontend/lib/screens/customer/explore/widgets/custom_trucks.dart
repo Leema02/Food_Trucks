@@ -22,8 +22,11 @@ class CustomTruckListPage extends StatelessWidget {
               itemCount: trucks.length,
               padding: const EdgeInsets.only(top: 8, bottom: 24),
               itemBuilder: (context, index) {
+                final truckData = Map<String, dynamic>.from(trucks[index]);
+                truckData['menu_items'] = truckData['menu_items'] ?? [];
+
                 return TruckCard(
-                  truck: trucks[index],
+                  truck: truckData,
                   activeSearchTerms: [title],
                 );
               },

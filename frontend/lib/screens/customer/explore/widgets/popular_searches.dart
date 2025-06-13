@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/customer/explore/widgets/custom_trucks.dart';
 import 'package:myapp/core/services/truckOwner_service.dart';
+import 'package:intl/intl.dart';
 
 class PopularSearchesSection extends StatelessWidget {
   const PopularSearchesSection({super.key});
@@ -11,7 +12,34 @@ class PopularSearchesSection extends StatelessWidget {
       _PopularSearchTileData(
         title: "Open Now",
         imagePath: "assets/image/explore/open.jpg",
-        fetchTrucks: TruckOwnerService.getOpenNowTrucks,
+        fetchTrucks: () async {
+          final allTrucks = await TruckOwnerService.getPublicTrucks();
+          final now = DateTime.now();
+
+          return allTrucks.where((truck) {
+            final openStr = truck['operating_hours']?['open'];
+            final closeStr = truck['operating_hours']?['close'];
+            if (openStr == null || closeStr == null) return false;
+
+            try {
+              final open = DateFormat("hh:mm a").parse(openStr);
+              final close = DateFormat("hh:mm a").parse(closeStr);
+
+              final openTime = DateTime(
+                  now.year, now.month, now.day, open.hour, open.minute);
+              DateTime closeTime = DateTime(
+                  now.year, now.month, now.day, close.hour, close.minute);
+
+              if (closeTime.isBefore(openTime)) {
+                closeTime = closeTime.add(const Duration(days: 1));
+              }
+
+              return now.isAfter(openTime) && now.isBefore(closeTime);
+            } catch (e) {
+              return false;
+            }
+          }).toList();
+        },
       ),
       _PopularSearchTileData(
         title: "Highest Rated",

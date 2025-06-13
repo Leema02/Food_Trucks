@@ -32,7 +32,8 @@ class _TruckMenuPageState extends State<TruckMenuPage> {
     fetchAndFilterMenuItems();
   }
 
-  Future<void> fetchAndFilterMenuItems() async { // Renamed for clarity
+  Future<void> fetchAndFilterMenuItems() async {
+    // Renamed for clarity
     setState(() {
       isLoading = true;
       errorMessage = '';
@@ -64,11 +65,13 @@ class _TruckMenuPageState extends State<TruckMenuPage> {
       // If no search terms, display all items
       _displayedMenuItems = List.from(_allMenuItems);
     } else {
-      final searchTerms = widget.activeSearchTerms!.map((t) => t.toLowerCase()).toList();
+      final searchTerms =
+          widget.activeSearchTerms!.map((t) => t.toLowerCase()).toList();
       _displayedMenuItems = _allMenuItems.where((item) {
         if (item is Map<String, dynamic>) {
           final itemName = (item['name'] as String?)?.toLowerCase() ?? '';
-          final itemDescription = (item['description'] as String?)?.toLowerCase() ?? '';
+          final itemDescription =
+              (item['description'] as String?)?.toLowerCase() ?? '';
           final isVegan = item['isVegan'] as bool? ?? false;
           final isSpicy = item['isSpicy'] as bool? ?? false;
           // Potentially category as well
