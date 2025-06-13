@@ -70,7 +70,6 @@ app.use('/api/reports', reportRoutes);
 
 // Make uploads folder public
 app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
-
 // Start the server
 server.listen(PORT, () => {
   console.log(`Server is running on port http://localhost:${PORT}`);

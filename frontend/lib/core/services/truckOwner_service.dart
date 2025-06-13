@@ -131,25 +131,4 @@ class TruckOwnerService {
       throw Exception('Failed to load highest rated trucks');
     }
   }
-
-  /// ✅ Get trucks that are currently open
-  static Future<List<dynamic>> getOpenNowTrucks() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-
-    final response = await http.get(
-      Uri.parse('$baseUrl?openNow=true&limit=20'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['trucks'];
-    } else {
-      throw Exception('Failed to load open now trucks');
-    }
-  }
 }

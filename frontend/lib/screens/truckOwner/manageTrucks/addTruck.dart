@@ -171,9 +171,13 @@ class _AddTruckPageState extends State<AddTruckPage> {
               const SizedBox(height: 12),
               _buildCityDropdown(),
               const SizedBox(height: 12),
-              _buildTimePicker('opening_time'.tr(), true),
-              const SizedBox(height: 12),
-              _buildTimePicker('closing_time'.tr(), false),
+              Row(
+                children: [
+                  Expanded(child: _buildTimePicker('opening_time'.tr(), true)),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildTimePicker('closing_time'.tr(), false)),
+                ],
+              ),
               const SizedBox(height: 12),
               _buildImagePicker(),
               const SizedBox(height: 24),

@@ -165,7 +165,7 @@ function getRandomSentimentScore() {
         address_string: coords.address_string
       },
 operating_hours: getRandomOperatingHours(),
-      logo_image_url: faker.image.urlLoremFlickr({ category: 'food' }),
+      logo_image_url:  `/uploads/1748348316290-perfect-food-truck.jpg`,
       unavailable_dates
     });
 
@@ -182,7 +182,7 @@ for (let i = 0; i < 70; i++) {
     price: faker.commerce.price({ min: 5, max: 20 }),
     category: faker.commerce.department(),
     isAvailable: true,
-    image_url: faker.image.urlLoremFlickr({ category: 'food' }),
+    image_url: `/uploads/1745837907866-1000000035.jpg`,
 
     // 🆕 Enhanced fields
     calories: faker.number.int({ min: 100, max: 800 }),
