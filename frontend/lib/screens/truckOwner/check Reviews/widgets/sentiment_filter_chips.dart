@@ -20,7 +20,8 @@ class SentimentFilterChips extends StatelessWidget {
         spacing: 10,
         children: sentiments.map((s) {
           final isSelected = selected == s;
-          return ChoiceChip(
+          return InputChip(
+            // Changed from ChoiceChip to InputChip
             label: Text(s),
             selected: isSelected,
             onSelected: (_) => onChanged(s),
@@ -29,6 +30,7 @@ class SentimentFilterChips extends StatelessWidget {
               color: isSelected ? Colors.white : Colors.black,
               fontWeight: FontWeight.w500,
             ),
+            showCheckmark: false, // Explicitly disable checkmark
           );
         }).toList(),
       ),
