@@ -7,7 +7,7 @@ const String baseUrl = 'http://10.0.2.2:5000';
 class MealSearchCard extends StatelessWidget {
   final Map<String, dynamic> meal;
 
-  const MealSearchCard({Key? key, required this.meal}) : super(key: key);
+  const MealSearchCard({super.key, required this.meal});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +16,7 @@ class MealSearchCard extends StatelessWidget {
         ? (imagePath.startsWith('http') ? imagePath : '$baseUrl$imagePath')
         : '';
 
-    void _handleAddToCart() {
+    void handleAddToCart() {
       final cartItem = {
         'menu_id': meal['_id'],
         'name': meal['name'],
@@ -39,7 +39,8 @@ class MealSearchCard extends StatelessWidget {
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 2),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -50,7 +51,8 @@ class MealSearchCard extends StatelessWidget {
             backgroundColor: Colors.red[800],
             duration: const Duration(seconds: 3),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -161,8 +163,8 @@ class MealSearchCard extends StatelessWidget {
                                 _buildBadge('VEGAN', Colors.green[800]!,
                                     Colors.green[50]!),
                               if (meal['isSpicy'] == true)
-                                _buildBadge('SPICY', Colors.red[800]!,
-                                    Colors.red[50]!),
+                                _buildBadge(
+                                    'SPICY', Colors.red[800]!, Colors.red[50]!),
                             ],
                           ),
                           Text(
@@ -187,13 +189,16 @@ class MealSearchCard extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: Colors.orange,
                     boxShadow: [
-                      BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0,2))
-                    ]
-                ),
+                      BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 4,
+                          offset: Offset(0, 2))
+                    ]),
                 child: IconButton(
                   padding: EdgeInsets.zero,
-                  icon: const Icon(Icons.add_shopping_cart_outlined, color: Colors.white, size: 22),
-                  onPressed: _handleAddToCart,
+                  icon: const Icon(Icons.add_shopping_cart_outlined,
+                      color: Colors.white, size: 22),
+                  onPressed: handleAddToCart,
                   tooltip: 'Add to Cart',
                 ),
               ),
