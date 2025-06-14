@@ -9,10 +9,10 @@ class SearchResultsPage extends StatefulWidget {
   final String selectedCity;
 
   const SearchResultsPage({
-    Key? key,
+    super.key,
     required this.allTrucksWithMenus,
     required this.selectedCity,
-  }) : super(key: key);
+  });
 
   @override
   _SearchResultsPageState createState() => _SearchResultsPageState();
@@ -65,14 +65,17 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     final filteredMeals = <Map<String, dynamic>>[];
     final Set<String> matchedTruckIds = {};
 
-    final termsToUse = searchTerms.isNotEmpty ? searchTerms : [query.toLowerCase()];
+    final termsToUse =
+        searchTerms.isNotEmpty ? searchTerms : [query.toLowerCase()];
 
     for (final truck in widget.allTrucksWithMenus) {
       final truckId = truck['_id'];
       final truckName = (truck['truck_name'] as String?)?.toLowerCase() ?? '';
-      final cuisineType = (truck['cuisine_type'] as String?)?.toLowerCase() ?? '';
+      final cuisineType =
+          (truck['cuisine_type'] as String?)?.toLowerCase() ?? '';
 
-      if (termsToUse.any((term) => truckName.contains(term) || cuisineType.contains(term))) {
+      if (termsToUse.any(
+          (term) => truckName.contains(term) || cuisineType.contains(term))) {
         if (!matchedTruckIds.contains(truckId)) {
           filteredTrucks.add(truck);
           matchedTruckIds.add(truckId);
@@ -83,12 +86,14 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       for (var item in menuItems) {
         if (item is Map<String, dynamic>) {
           final itemName = (item['name'] as String?)?.toLowerCase() ?? '';
-          final itemDescription = (item['description'] as String?)?.toLowerCase() ?? '';
+          final itemDescription =
+              (item['description'] as String?)?.toLowerCase() ?? '';
           final isVegan = item['isVegan'] as bool? ?? false;
           final isSpicy = item['isSpicy'] as bool? ?? false;
 
           bool itemMatches = termsToUse.any((term) {
-            if (itemName.contains(term) || itemDescription.contains(term)) return true;
+            if (itemName.contains(term) || itemDescription.contains(term))
+              return true;
             if (term == 'vegan' && isVegan) return true;
             if (term == 'spicy' && isSpicy) return true;
             return false;
@@ -292,7 +297,6 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
           toolbarHeight: 0,
           pinned: true,
         ),
-
         if (_matchingMeals.isNotEmpty) ..._buildSectionHeader("Matching Meals"),
         if (_matchingMeals.isNotEmpty)
           SliverList(
@@ -300,29 +304,30 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               (context, index) {
                 final meal = _matchingMeals[index];
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
                   child: MealSearchCard(meal: meal),
                 );
               },
               childCount: _matchingMeals.length,
             ),
           ),
-
-        if (_matchingTrucks.isNotEmpty) ..._buildSectionHeader("Matching Trucks"),
+        if (_matchingTrucks.isNotEmpty)
+          ..._buildSectionHeader("Matching Trucks"),
         if (_matchingTrucks.isNotEmpty)
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 final truck = _matchingTrucks[index];
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
                   child: TruckSearchCard(truck: truck),
                 );
               },
               childCount: _matchingTrucks.length,
             ),
           ),
-
         const SliverToBoxAdapter(
           child: SizedBox(height: 24),
         ),

@@ -7,7 +7,7 @@ const String baseUrl = 'http://10.0.2.2:5000';
 class TruckSearchCard extends StatelessWidget {
   final Map<String, dynamic> truck;
 
-  const TruckSearchCard({Key? key, required this.truck}) : super(key: key);
+  const TruckSearchCard({super.key, required this.truck});
 
   @override
   Widget build(BuildContext context) {
@@ -79,15 +79,12 @@ class TruckSearchCard extends StatelessWidget {
                       errorWidget: (context, url, error) => Container(
                         color: Colors.grey[200],
                         child: const Icon(Icons.local_shipping_rounded,
-                            size: 36,
-                            color: Colors.grey),
+                            size: 36, color: Colors.grey),
                       ),
                     ),
                   ),
                 ),
-
                 const SizedBox(width: 16),
-
                 Expanded(
                   child: SizedBox(
                     height: 80,
@@ -108,9 +105,7 @@ class TruckSearchCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-
                             const SizedBox(height: 4),
-
                             Text(
                               truck['cuisine_type'] ?? 'No cuisine specified',
                               style: TextStyle(
@@ -124,15 +119,13 @@ class TruckSearchCard extends StatelessWidget {
                             ),
                           ],
                         ),
-
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Row(
                               children: [
                                 Icon(Icons.location_on_rounded,
-                                    size: 18,
-                                    color: Colors.orange[700]),
+                                    size: 18, color: Colors.orange[700]),
                                 const SizedBox(width: 4),
                                 Text(
                                   truck['city'] ?? 'Unknown City',
@@ -144,12 +137,10 @@ class TruckSearchCard extends StatelessWidget {
                                 ),
                               ],
                             ),
-
                             Row(
                               children: [
                                 Icon(Icons.star_rounded,
-                                    size: 18,
-                                    color: Colors.orange[700]),
+                                    size: 18, color: Colors.orange[700]),
                                 const SizedBox(width: 4),
                                 Text(
                                   averageRating?.toStringAsFixed(1) ?? '0.0',
@@ -174,7 +165,6 @@ class TruckSearchCard extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 Container(
                   width: 36,
                   height: 36,

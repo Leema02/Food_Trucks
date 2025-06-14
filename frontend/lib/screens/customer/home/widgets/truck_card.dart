@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
-import 'package:myapp/screens/customer/menu/truck_menu.dart';
 import 'package:myapp/screens/customer/truck_profile/truck_profile_screen.dart';
 
 const Color ffPrimaryColor = Color(0xFFFF6B35);
-const Color ffSurfaceColor = Colors.white;
-const Color ffOnSurfaceColor = Color(0xFF2D2D2D);
-const Color ffSecondaryTextColor = Color(0xFF6C757D);
 const Color ffAccentColor = Color(0xFFFFD166);
 const Color ffSuccessColor = Color(0xFF2E7D32);
 const Color ffErrorColor = Color(0xFFC62828);
 
-const double ffPaddingXs = 4.0;
 const double ffPaddingSm = 8.0;
 const double ffPaddingMd = 16.0;
 const double ffBorderRadius = 18.0;
@@ -51,7 +46,6 @@ class TruckCard extends StatelessWidget {
     }
     try {
       final now = DateTime.now();
-
       final open = DateFormat("hh:mm a").parse(openTimeStr);
       final close = DateFormat("hh:mm a").parse(closeTimeStr);
 
@@ -60,13 +54,11 @@ class TruckCard extends StatelessWidget {
       DateTime closeTime =
           DateTime(now.year, now.month, now.day, close.hour, close.minute);
 
-      // If close is earlier than open, it means it's overnight (e.g., 6PM to 2AM)
       if (closeTime.isBefore(openTime)) {
-        closeTime = closeTime.add(const Duration(days: 1)); // move to next day
+        closeTime = closeTime.add(const Duration(days: 1));
       }
 
       final isOpen = now.isAfter(openTime) && now.isBefore(closeTime);
-
       return _buildStatusPill(isOpen: isOpen);
     } catch (e) {
       return const SizedBox.shrink();
@@ -75,21 +67,20 @@ class TruckCard extends StatelessWidget {
 
   Widget _buildInfoChip(IconData icon, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: ffPaddingSm, vertical: ffPaddingXs + 2),
+      padding: const EdgeInsets.symmetric(horizontal: ffPaddingSm, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: const Color.fromARGB(255, 255, 132, 0).withOpacity(0.7),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: ffSecondaryTextColor, size: 16),
+          Icon(icon, color: Colors.white, size: 16),
           const SizedBox(width: ffPaddingSm),
           Text(
             text,
             style: const TextStyle(
-              color: ffSecondaryTextColor,
+              color: Colors.white,
               fontWeight: FontWeight.w600,
               fontSize: 13,
             ),
@@ -111,178 +102,167 @@ class TruckCard extends StatelessWidget {
     final double? averageRating = (truck['average_rating'] as num?)?.toDouble();
     final int reviewCount = truck['review_count'] as int? ?? 0;
 
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => TruckProfileScreen(
-              truckId: truck['_id'] as String,
-              initialAverageRating: averageRating,
-              initialReviewCount: reviewCount,
-            ),
-          ),
-        );
-      },
-      child: Container(
+    return SizedBox(
+      height: 240,
+      child: Card(
         margin: const EdgeInsets.symmetric(
             horizontal: ffPaddingMd, vertical: ffPaddingSm),
-        decoration: BoxDecoration(
-          color: ffSurfaceColor,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ffBorderRadius),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(ffBorderRadius)),
-                  child: CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                        height: 180,
-                        color: Colors.grey.shade200,
-                        child: const Center(
-                            child: CircularProgressIndicator(
-                                color: ffPrimaryColor, strokeWidth: 2.5))),
-                    errorWidget: (context, url, error) => Container(
-                      height: 180,
-                      color: Colors.grey.shade100,
-                      child: Icon(Icons.no_food_rounded,
-                          color: Colors.grey.shade400, size: 48),
+        clipBehavior: Clip.antiAlias,
+        elevation: 4,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TruckProfileScreen(
+                  truckId: truck['_id'] as String,
+                  initialAverageRating: averageRating,
+                  initialReviewCount: reviewCount,
+                ),
+              ),
+            );
+          },
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Background image
+              CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: Colors.grey.shade200,
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      color: ffPrimaryColor,
+                      strokeWidth: 2.5,
                     ),
                   ),
                 ),
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(ffBorderRadius)),
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.black.withOpacity(0.5),
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.6)
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        stops: const [0.0, 0.6, 1.0],
-                      ),
-                    ),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey.shade100,
+                  child: Icon(
+                    Icons.no_food_rounded,
+                    color: Colors.grey.shade400,
+                    size: 48,
                   ),
                 ),
-                Positioned(
-                  top: ffPaddingMd,
-                  left: ffPaddingMd,
-                  child: _getTruckStatus(
-                    truck['operating_hours']?['open'],
-                    truck['operating_hours']?['close'],
+              ),
+
+              // Gradient overlay
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.1),
+                      Colors.black.withOpacity(0.5),
+                    ],
                   ),
                 ),
-                Positioned(
-                  top: ffPaddingMd,
-                  right: ffPaddingMd,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.star_rounded,
-                            color: ffAccentColor, size: 16),
-                        const SizedBox(width: ffPaddingSm),
-                        Text(
-                          reviewCount > 0
-                              ? averageRating!.toStringAsFixed(1)
-                              : 'New',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 15,
-                          ),
+              ),
+
+              // Status and rating badges
+              Positioned(
+                top: ffPaddingMd,
+                left: ffPaddingMd,
+                child: _getTruckStatus(
+                  truck['operating_hours']?['open'],
+                  truck['operating_hours']?['close'],
+                ),
+              ),
+
+              Positioned(
+                top: ffPaddingMd,
+                right: ffPaddingMd,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.star_rounded,
+                          color: ffAccentColor, size: 16),
+                      const SizedBox(width: ffPaddingSm),
+                      Text(
+                        reviewCount > 0
+                            ? averageRating!.toStringAsFixed(1)
+                            : 'New',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 15,
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Truck info at bottom
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(ffPaddingMd),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.7),
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.all(ffPaddingMd),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    truck['truck_name'] ?? 'Unnamed Truck',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: ffOnSurfaceColor,
-                      fontSize: 20,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: ffPaddingSm),
-                  Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildInfoChip(Icons.location_on_outlined,
-                          truck['city'] ?? 'Unknown City'),
-                      const SizedBox(width: ffPaddingSm),
-                      _buildInfoChip(Icons.restaurant_menu_rounded,
-                          truck['cuisine_type'] ?? 'N/A'),
+                      Text(
+                        truck['truck_name'] ?? 'Unnamed Truck',
+                        style: const TextStyle(
+                          color: Color.fromARGB(255, 255, 255, 255),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 20,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 6,
+                              color: Colors.black,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: ffPaddingSm),
+                      Wrap(
+                        spacing: ffPaddingSm,
+                        children: [
+                          _buildInfoChip(
+                            Icons.location_on_outlined,
+                            truck['city'] ?? 'Unknown City',
+                          ),
+                          _buildInfoChip(
+                            Icons.restaurant_menu_rounded,
+                            truck['cuisine_type'] ?? 'N/A',
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                  const SizedBox(height: ffPaddingMd),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => TruckMenuPage(
-                              truckId: truck['_id'],
-                              truckCity: truck['city'],
-                              activeSearchTerms: activeSearchTerms,
-                            ),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.menu_book_rounded),
-                      label: const Text('View Menu',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ffPrimaryColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                            vertical: ffPaddingMd - 2),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

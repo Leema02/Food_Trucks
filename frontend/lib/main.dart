@@ -42,7 +42,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Food Truck',
-      theme: ThemeData(primarySwatch: Colors.orange),
+
+      // ✅ Theme with Google Font
+      theme: ThemeData(
+        primarySwatch: Colors.orange,
+        fontFamily: 'Huninn',
+      ),
 
       // ✅ Enable localization support
       locale: context.locale,
