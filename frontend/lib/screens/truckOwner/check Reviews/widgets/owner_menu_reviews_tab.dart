@@ -1,5 +1,8 @@
+// lib/screens/truckOwner/check Reviews/widgets/owner_menu_reviews_tab.dart
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:myapp/screens/truckOwner/check%20Reviews/widgets/sentiment_pie_chart.dart'; // Import the chart
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:myapp/core/services/review_service.dart';
 import 'package:myapp/core/services/menu_service.dart';
@@ -23,10 +26,33 @@ class _OwnerMenuReviewsTabState extends State<OwnerMenuReviewsTab> {
   String selectedSentiment = 'All';
   bool isLoading = true;
 
+  // New state variables for chart data
+  int positiveCount = 0;
+  int neutralCount = 0;
+  int negativeCount = 0;
+
   @override
   void initState() {
     super.initState();
     fetchTrucks();
+  }
+
+  // New function to calculate counts
+  void _calculateSentimentCounts(List<dynamic> reviews) {
+    positiveCount = 0;
+    neutralCount = 0;
+    negativeCount = 0;
+
+    for (var review in reviews) {
+      final sentiment = (review['sentiment'] ?? '').toLowerCase();
+      if (sentiment == 'positive') {
+        positiveCount++;
+      } else if (sentiment == 'neutral') {
+        neutralCount++;
+      } else if (sentiment == 'negative') {
+        negativeCount++;
+      }
+    }
   }
 
   Future<void> fetchTrucks() async {
@@ -82,6 +108,8 @@ class _OwnerMenuReviewsTabState extends State<OwnerMenuReviewsTab> {
         allFetched.addAll(reviews);
       }
 
+      _calculateSentimentCounts(allFetched); // Calculate counts here
+
       setState(() {
         allReviews = allFetched;
         menuItemNames = namesMap;
@@ -117,6 +145,17 @@ class _OwnerMenuReviewsTabState extends State<OwnerMenuReviewsTab> {
             });
           },
         ),
+        // Add the chart here
+        if (!isLoading && allReviews.isNotEmpty)
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: SentimentPieChart(
+              positiveCount: positiveCount,
+              neutralCount: neutralCount,
+              negativeCount: negativeCount,
+            ),
+          ),
         SentimentFilterChips(
           selected: selectedSentiment,
           onChanged: (val) => setState(() => selectedSentiment = val),
