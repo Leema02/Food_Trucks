@@ -224,36 +224,36 @@ class TruckCard extends StatelessWidget {
                       _buildInfoChip(Icons.restaurant_menu_rounded, truck['cuisine_type'] ?? 'N/A'),
                     ],
                   ),
-                  const SizedBox(height: ffPaddingMd),
+                  const SizedBox(height: 2),
 
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => TruckMenuPage(
-                              truckId: truck['_id'],
-                              truckCity: truck['city'],
-                              activeSearchTerms: activeSearchTerms,
-                            ),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.menu_book_rounded),
-                      label: const Text('View Menu', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ffPrimaryColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: ffPaddingMd - 2),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                      ),
-                    ),
-                  ),
+                  // SizedBox(
+                  //   width: double.infinity,
+                  //   child: ElevatedButton.icon(
+                  //     onPressed: () {
+                  //       Navigator.push(
+                  //         context,
+                  //         MaterialPageRoute(
+                  //           builder: (_) => TruckMenuPage(
+                  //             truckId: truck['_id'],
+                  //             truckCity: truck['city'],
+                  //             activeSearchTerms: activeSearchTerms,
+                  //           ),
+                  //         ),
+                  //       );
+                  //     },
+                  //     icon: const Icon(Icons.menu_book_rounded),
+                  //     label: const Text('View Menu', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  //     style: ElevatedButton.styleFrom(
+                  //       backgroundColor: ffPrimaryColor,
+                  //       foregroundColor: Colors.white,
+                  //       padding: const EdgeInsets.symmetric(vertical: ffPaddingMd - 2),
+                  //       shape: RoundedRectangleBorder(
+                  //         borderRadius: BorderRadius.circular(12),
+                  //       ),
+                  //       elevation: 2,
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),
