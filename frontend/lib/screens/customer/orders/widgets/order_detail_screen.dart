@@ -337,6 +337,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           final bool isCurrent = index == currentIndex;
           final Color activeColor = ffDetailPrimaryColor;
           final Color inactiveColor = Colors.grey.shade300;
+          final Color arrowColor = isActive ? activeColor : inactiveColor;
 
           return Expanded(
             child: Column(
@@ -345,22 +346,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 Stack(
                   alignment: Alignment.center,
                   children: [
+                    // Stylish arrow between stages
                     if (index > 0)
                       Positioned(
                         left: 0,
                         right: 0,
-                        child: Container(
-                          height: 3,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                isActive ? activeColor : inactiveColor,
-                                index < currentIndex ? activeColor : inactiveColor,
-                              ],
-                            ),
+                        child: CustomPaint(
+                          painter: _ArrowPainter(
+                            color: arrowColor,
+                            isActive: isActive,
                           ),
+                          size: const Size(double.infinity, 12),
                         ),
                       ),
+                    // Status circle
                     Container(
                       width: 36,
                       height: 36,
@@ -412,7 +411,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       ),
     );
   }
-
   Widget _buildPreparationProgressWidget() {
     if (_isLoadingTimeEstimate && _estimatedPrepTimeMinutes == null) {
       return Container(
@@ -1070,4 +1068,53 @@ class SemiCircleProgressPainter extends CustomPainter {
         oldDelegate.progressColor != progressColor ||
         oldDelegate.strokeWidth != strokeWidth;
   }
+}
+
+// Custom painter for stylish arrow
+class _ArrowPainter extends CustomPainter {
+  final Color color;
+  final bool isActive;
+
+  _ArrowPainter({required this.color, required this.isActive});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = isActive ? 2.5 : 2.0
+      ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+    final centerY = size.height / 2;
+    final segmentWidth = size.width / 8;
+
+    // Draw dashed line with stylish arrow head
+    for (var i = 0; i < 6; i++) {
+      final xStart = i * segmentWidth;
+      final xEnd = xStart + segmentWidth * 0.8;
+
+      if (xEnd < size.width - 15) {
+        path.moveTo(xStart, centerY);
+        path.lineTo(xEnd, centerY);
+      }
+    }
+
+    // Draw arrow head
+    path.moveTo(size.width - 15, centerY);
+    path.lineTo(size.width - 5, centerY);
+    path.lineTo(size.width - 10, centerY - 7);
+    path.moveTo(size.width - 5, centerY);
+    path.lineTo(size.width - 10, centerY + 7);
+
+    // Add arrow tail decoration
+    path.moveTo(2, centerY - 3);
+    path.lineTo(0, centerY);
+    path.lineTo(2, centerY + 3);
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
