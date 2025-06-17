@@ -339,78 +339,71 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           final Color inactiveColor = Colors.grey.shade300;
           final Color arrowColor = isActive ? activeColor : inactiveColor;
 
-          return Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Stylish arrow between stages
-                    if (index > 0)
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        child: CustomPaint(
-                          painter: _ArrowPainter(
-                            color: arrowColor,
-                            isActive: isActive,
-                          ),
-                          size: const Size(double.infinity, 12),
-                        ),
+            return Row(
+            children: [
+                if (index > 0) // Add arrow between stages
+                Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8).copyWith(bottom: 19), // Adjust top padding to move the icon up
+                child: Icon(
+                  Icons.arrow_forward,
+                  color: arrowColor,
+                  size: 25,
+                ),
+                ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isActive ? activeColor : Colors.white,
+                      border: Border.all(
+                        color: isActive ? activeColor : inactiveColor,
+                        width: 2,
                       ),
-                    // Status circle
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isActive ? activeColor : Colors.white,
-                        border: Border.all(
-                          color: isActive ? activeColor : inactiveColor,
-                          width: 2,
-                        ),
-                        boxShadow: isCurrent
-                            ? [
-                          BoxShadow(
-                            color: activeColor.withOpacity(0.3),
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                          )
-                        ]
-                            : [],
-                      ),
-                      child: Center(
-                        child: Icon(
-                          isCurrent
-                              ? _getStatusIcon(stages[index])
-                              : (isActive ? Icons.check_rounded : Icons.circle_outlined),
-                          color: isActive ? Colors.white : inactiveColor,
-                          size: isCurrent ? 18 : 16,
-                        ),
+                      boxShadow: isCurrent
+                          ? [
+                        BoxShadow(
+                          color: activeColor.withOpacity(0.3),
+                          blurRadius: 8,
+                          spreadRadius: 2,
+                        )
+                      ]
+                          : [],
+                    ),
+                    child: Center(
+                      child: Icon(
+                        isCurrent
+                            ? _getStatusIcon(stages[index])
+                            : (isActive ? Icons.check_rounded : Icons.circle_outlined),
+                        color: isActive ? Colors.white : inactiveColor,
+                        size: isCurrent ? 18 : 16,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: ffDetailPaddingXs),
-                Text(
-                  stages[index],
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                    color: isCurrent ? activeColor : (isActive ? ffDetailOnSurfaceColor : ffDetailSecondaryTextColor),
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
+                  const SizedBox(height: ffDetailPaddingXs),
+                  Text(
+                    stages[index],
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                      color: isCurrent ? activeColor : (isActive ? ffDetailOnSurfaceColor : ffDetailSecondaryTextColor),
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ],
           );
         }),
       ),
     );
   }
+
   Widget _buildPreparationProgressWidget() {
     if (_isLoadingTimeEstimate && _estimatedPrepTimeMinutes == null) {
       return Container(
