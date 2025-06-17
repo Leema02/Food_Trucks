@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -14,6 +15,8 @@ const Color ffDetailPrimaryLight = Color(0xFFFF9D4D);
 const Color ffDetailPrimaryDark = Color(0xFFD95B00);
 const Color ffDetailSurfaceColor = Colors.white;
 const Color ffDetailBackgroundColor = Color(0xFFF8F9FA);
+const Color ffDetailBackgroundColorr = Color(0xFFD9DCDE);
+
 const Color ffDetailOnPrimaryColor = Colors.white;
 const Color ffDetailOnSurfaceColor = Color(0xFF2D2D2D);
 const Color ffDetailSecondaryTextColor = Color(0xFF6C757D);
@@ -67,13 +70,13 @@ TextStyle ffDetailItemDetailStyle = TextStyle(
 );
 
 TextStyle ffDetailTimerMainStyle = const TextStyle(
-  fontSize: 22.0,
+  fontSize: 28.0,
   fontWeight: FontWeight.w800,
   color: ffDetailPrimaryColor,
 );
 
 TextStyle ffDetailTimerSubStyle = TextStyle(
-  fontSize: 12.0,
+  fontSize: 14.0,
   color: ffDetailSecondaryTextColor,
   fontWeight: FontWeight.w500,
 );
@@ -103,6 +106,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   DateTime? _prepStartTime;
   bool _alreadyRated = false;
   bool _checkingIfRated = true;
+  Timer? _timer;
+  Duration _remainingDuration = Duration.zero;
+  bool _isFinishingUp = false;
 
   @override
   void initState() {
@@ -116,6 +122,51 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     } else {
       _checkingIfRated = false;
     }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    if (_estimatedPrepTimeMinutes == null || _prepStartTime == null) return;
+
+    // Calculate initial remaining time
+    final totalDuration = Duration(minutes: _estimatedPrepTimeMinutes!);
+    final elapsedDuration = DateTime.now().difference(_prepStartTime!);
+    final remaining = totalDuration - elapsedDuration;
+
+    if (remaining.isNegative) {
+      setState(() {
+        _remainingDuration = Duration.zero;
+        _isFinishingUp = true;
+      });
+      return;
+    }
+
+    setState(() {
+      _remainingDuration = remaining;
+      _isFinishingUp = false;
+    });
+
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      setState(() {
+        if (_remainingDuration.inSeconds > 0) {
+          _remainingDuration = _remainingDuration - const Duration(seconds: 1);
+        } else {
+          _isFinishingUp = true;
+          timer.cancel();
+        }
+      });
+    });
   }
 
   String _formatDateTime(String? isoDate) {
@@ -162,19 +213,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       if (mounted) setState(() => _isLoadingTimeEstimate = false);
       return;
     }
+
     final itemNamesAndQuantities = items.map((item) => "${(item['quantity'] as num?)?.toInt() ?? 1} x ${item['name'] as String? ?? 'Item'}").toList();
     final String prompt = """
     Estimate total preparation time in minutes for food order:
-    but put an actual time please like if he order 3 items at least it must be 30 minutes and like this
     Items: ${itemNamesAndQuantities.join(", ")}.
     Return ONLY an integer (e.g., 35).
     Minutes:
     """;
+
     try {
       final response = await http.post(_geminiUrlOrderDetail,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'contents': [{'parts': [{'text': prompt}]}], "generationConfig": {"temperature": 0.2}}),
       ).timeout(const Duration(seconds: 20));
+
       if (!mounted) return;
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -187,6 +240,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               String startTimeStr = widget.order['updatedAt'] ?? widget.order['createdAt'];
               _prepStartTime = DateTime.tryParse(startTimeStr)?.toLocal() ?? DateTime.now().subtract(Duration(minutes: estimatedMinutes ~/ 2));
             });
+            _startTimer();
           }
         }
       }
@@ -246,116 +300,116 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: ffDetailPaddingSm),
         child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-            Icon(_getStatusIcon(currentStatus)), // Fixed: removed extra parenthesis
-        const SizedBox(width: ffDetailPaddingXs),
-        Text(
-          currentStatusStr.toUpperCase(),
-          style: TextStyle(
-            color: _getStatusColor(currentStatus),
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(_getStatusIcon(currentStatus)),
+            const SizedBox(width: ffDetailPaddingXs),
+            Text(
+              currentStatusStr.toUpperCase(),
+              style: TextStyle(
+                color: _getStatusColor(currentStatus),
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+          ],
         ),
-        ],
-      ),
-    );
+      );
     }
     if (currentIndex == -1) currentIndex = 0;
 
     return Container(
-    padding: const EdgeInsets.symmetric(vertical: ffDetailPaddingSm + 2, horizontal: ffDetailPaddingMd),
-    decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(ffDetailBorderRadius),
-    boxShadow: [
-    BoxShadow(
-    color: Colors.black.withOpacity(0.05),
-    blurRadius: 12,
-    offset: const Offset(0, 4),
-    ),
-    ],
-    ),
-    child: Row(
-    children: List.generate(stages.length, (index) {
-    final bool isActive = index <= currentIndex;
-    final bool isCurrent = index == currentIndex;
-    final Color activeColor = ffDetailPrimaryColor;
-    final Color inactiveColor = Colors.grey.shade300;
+      padding: const EdgeInsets.symmetric(vertical: ffDetailPaddingSm + 2, horizontal: ffDetailPaddingMd),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(ffDetailBorderRadius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: List.generate(stages.length, (index) {
+          final bool isActive = index <= currentIndex;
+          final bool isCurrent = index == currentIndex;
+          final Color activeColor = ffDetailPrimaryColor;
+          final Color inactiveColor = Colors.grey.shade300;
 
-    return Expanded(
-    child: Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-    Stack(
-    alignment: Alignment.center,
-    children: [
-    if (index > 0)
-    Positioned(
-    left: 0,
-    right: 0,
-    child: Container(
-    height: 3,
-    decoration: BoxDecoration(
-    gradient: LinearGradient(
-    colors: [
-    isActive ? activeColor : inactiveColor,
-    index < currentIndex ? activeColor : inactiveColor,
-    ],
-    ),
-    ),
-    ),
-    ),
-    Container(
-    width: 36,
-    height: 36,
-    decoration: BoxDecoration(
-    shape: BoxShape.circle,
-    color: isActive ? activeColor : Colors.white,
-    border: Border.all(
-    color: isActive ? activeColor : inactiveColor,
-    width: 2,
-    ),
-    boxShadow: isCurrent
-    ? [
-    BoxShadow(
-    color: activeColor.withOpacity(0.3),
-    blurRadius: 8,
-    spreadRadius: 2,
-    )
-    ]
-        : [],
-    ),
-    child: Center(
-    child: Icon(
-    isCurrent
-    ? _getStatusIcon(stages[index])
-        : (isActive ? Icons.check_rounded : Icons.circle_outlined),
-    color: isActive ? Colors.white : inactiveColor,
-    size: isCurrent ? 18 : 16,
-    ),
-    ),
-    ),
-    ],
-    ),
-    const SizedBox(height: ffDetailPaddingXs),
-    Text(
-    stages[index],
-    style: TextStyle(
-    fontSize: 12,
-    fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-    color: isCurrent ? activeColor : (isActive ? ffDetailOnSurfaceColor : ffDetailSecondaryTextColor),
-    ),
-    textAlign: TextAlign.center,
-    maxLines: 1,
-    overflow: TextOverflow.ellipsis,
-    ),
-    ],
-    ),
-    );
-    }),
-    ),
+          return Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    if (index > 0)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          height: 3,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                isActive ? activeColor : inactiveColor,
+                                index < currentIndex ? activeColor : inactiveColor,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isActive ? activeColor : Colors.white,
+                        border: Border.all(
+                          color: isActive ? activeColor : inactiveColor,
+                          width: 2,
+                        ),
+                        boxShadow: isCurrent
+                            ? [
+                          BoxShadow(
+                            color: activeColor.withOpacity(0.3),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          )
+                        ]
+                            : [],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          isCurrent
+                              ? _getStatusIcon(stages[index])
+                              : (isActive ? Icons.check_rounded : Icons.circle_outlined),
+                          color: isActive ? Colors.white : inactiveColor,
+                          size: isCurrent ? 18 : 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: ffDetailPaddingXs),
+                Text(
+                  stages[index],
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                    color: isCurrent ? activeColor : (isActive ? ffDetailOnSurfaceColor : ffDetailSecondaryTextColor),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
     );
   }
 
@@ -403,11 +457,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return const SizedBox.shrink();
     }
 
-    final Duration totalDuration = Duration(minutes: _estimatedPrepTimeMinutes!);
-    final Duration elapsedDuration = DateTime.now().difference(_prepStartTime!);
-    double progress = (elapsedDuration.inSeconds / totalDuration.inSeconds).clamp(0.0, 1.0);
-    final int remainingMinutes = (totalDuration - elapsedDuration).inMinutes;
-    final bool isFinishingUp = remainingMinutes < 0;
+    final progress = _isFinishingUp ? 1.0 : 1.0 - (_remainingDuration.inSeconds / (_estimatedPrepTimeMinutes! * 60));
 
     return Container(
       margin: const EdgeInsets.only(bottom: ffDetailPaddingMd),
@@ -433,31 +483,36 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
           ),
           const SizedBox(height: ffDetailPaddingSm),
+
           SizedBox(
-            height: 140,
+            height: 160,
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Background circle
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: ffDetailBackgroundColor,
+                // Semi-circle progress background
+                SizedBox(
+                  width: 240,
+                  height: 100,
+                  child: CustomPaint(
+                    painter: SemiCircleProgressPainter(
+                      progress: 1.0,
+                      backgroundColor: ffDetailBackgroundColorr,
+                      progressColor: Colors.transparent,
+                      strokeWidth: 12,
+                    ),
                   ),
                 ),
 
                 // Progress arc
                 SizedBox(
-                  width: 120,
-                  height: 120,
+                  width: 240,
+                  height: 100,
                   child: CustomPaint(
-                    painter: _CircularProgressPainter(
-                      progress: progress,
-                      backgroundColor: ffDetailBackgroundColor,
+                    painter: SemiCircleProgressPainter(
+                      progress: progress.clamp(0.0, 1.0),
+                      backgroundColor: Colors.transparent,
                       progressColor: ffDetailPrimaryColor,
-                      strokeWidth: 8,
+                      strokeWidth: 12,
                     ),
                   ),
                 ),
@@ -466,15 +521,31 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      isFinishingUp ? "FINISHING UP!" : "~$remainingMinutes MIN",
+                    _isFinishingUp
+                        ? Text(
+                      "FINISHING UP!",
                       style: ffDetailTimerMainStyle.copyWith(
-                        fontSize: isFinishingUp ? 20 : 24,
+                        fontSize: 22,
+                        color: ffDetailSuccessColor,
+                      ),
+                    )
+                        : Text(
+                      "${_remainingDuration.inMinutes.remainder(60)}:${(_remainingDuration.inSeconds.remainder(60)).toString().padLeft(2, '0')}",
+                      style: ffDetailTimerMainStyle.copyWith(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        shadows: [
+                          Shadow(
+                            color: ffDetailPrimaryColor.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Text(
-                      isFinishingUp ? "Almost ready!" : "remaining",
+                      _isFinishingUp ? "Your food is almost ready!" : "Estimated time remaining",
                       style: ffDetailTimerSubStyle,
                     ),
                   ],
@@ -484,7 +555,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ),
 
           // Progress bar
-          const SizedBox(height: ffDetailPaddingSm),
+          const SizedBox(height: ffDetailPaddingMd),
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: LinearProgressIndicator(
@@ -493,6 +564,22 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               backgroundColor: ffDetailBackgroundColor,
               color: ffDetailPrimaryColor,
             ),
+          ),
+
+          // Time labels
+          const SizedBox(height: ffDetailPaddingSm),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Started: ${DateFormat('h:mm a').format(_prepStartTime!)}",
+                style: ffDetailLabelStyle.copyWith(fontSize: 12),
+              ),
+              Text(
+                "Estimated: ${_prepStartTime!.add(Duration(minutes: _estimatedPrepTimeMinutes!)).hour}:${_prepStartTime!.add(Duration(minutes: _estimatedPrepTimeMinutes!)).minute.toString().padLeft(2, '0')}",
+                style: ffDetailLabelStyle.copyWith(fontSize: 12),
+              ),
+            ],
           ),
         ],
       ),
@@ -925,13 +1012,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 }
 
-class _CircularProgressPainter extends CustomPainter {
+class SemiCircleProgressPainter extends CustomPainter {
   final double progress;
   final Color backgroundColor;
   final Color progressColor;
   final double strokeWidth;
 
-  _CircularProgressPainter({
+  SemiCircleProgressPainter({
     required this.progress,
     required this.backgroundColor,
     required this.progressColor,
@@ -940,29 +1027,36 @@ class _CircularProgressPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
+    final center = Offset(size.width / 2, size.height);
     final radius = size.width / 2 - strokeWidth / 2;
 
-    // Draw background circle
+    // Draw background semi-circle
     final backgroundPaint = Paint()
       ..color = backgroundColor
       ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-    canvas.drawCircle(center, radius, backgroundPaint);
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
 
-    // Draw progress arc
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      math.pi,
+      math.pi,
+      false,
+      backgroundPaint,
+    );
+
+    // Draw progress semi-circle
     final progressPaint = Paint()
       ..color = progressColor
       ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    final startAngle = -math.pi / 2;
-    final sweepAngle = 2 * math.pi * progress;
+    final sweepAngle = math.pi * progress;
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
-      startAngle,
+      math.pi,
       sweepAngle,
       false,
       progressPaint,
@@ -970,7 +1064,7 @@ class _CircularProgressPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _CircularProgressPainter oldDelegate) {
+  bool shouldRepaint(covariant SemiCircleProgressPainter oldDelegate) {
     return oldDelegate.progress != progress ||
         oldDelegate.backgroundColor != backgroundColor ||
         oldDelegate.progressColor != progressColor ||
