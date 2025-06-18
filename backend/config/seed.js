@@ -18,6 +18,29 @@ const supportedCities = [
   'Jericho', 'Tulkarm', 'Jenin', 'Qalqilya', 'Salfit', 'Tubas'
 ];
 
+const logoImages = [
+  
+  '/uploads/1748348245316-perfect-food-truck.jpg',
+  '/uploads/1750194101304-wielkie-otwarcie-food.jpg',
+  '/uploads/1750194118139-TFTF1.jpg',
+  '/uploads/1750194126776-Courtesy-Downtown-Fingers.jpg',
+  '/uploads/1750194137056-food_truck_street_food_imballaggi360_4_1024x1024.png',
+  '/uploads/1750194193452-maracaiba-flotta-food-truck-costi-bassi-business-scalabile.jpg'
+];
+
+const menuImages=[
+  '/uploads/1745837907866-1000000035.jpg',
+  '/uploads/1745920332458-1000000034.jpg',
+  '/uploads/1746612843832-1000000033.jpg',
+  '/uploads/1750193713315-images.jpg',
+  '/uploads/1750193731527-Chicken-rice-meal-prep-9-1.jpg',
+  '/uploads/1750193850552-premium_photo-1683619761464-6b7c9a2716a8.jpg',
+  '/uploads/1750193861932-cropped-IMG-16a-450x450.jpg',
+  '/uploads/1750193893350-hot-and-spicy-fast-food-restaurant-mit-muzaffarpur-restaurants-fr6nmhvbsm.jpg',
+  '/uploads/1750193911181-fast_food_better_choices.jpg'
+
+]
+
 const getRandomLocation = (city) => {
   const baseCoords = {
     Ramallah: [31.8996, 35.2042],
@@ -165,7 +188,7 @@ function getRandomSentimentScore() {
         address_string: coords.address_string
       },
 operating_hours: getRandomOperatingHours(),
-      logo_image_url:  `/uploads/1748348316290-perfect-food-truck.jpg`,
+      logo_image_url: faker.helpers.arrayElement(logoImages),
       unavailable_dates
     });
 
@@ -182,7 +205,7 @@ for (let i = 0; i < 70; i++) {
     price: faker.commerce.price({ min: 5, max: 20 }),
     category: faker.commerce.department(),
     isAvailable: true,
-    image_url: `/uploads/1745837907866-1000000035.jpg`,
+    image_url: faker.helpers.arrayElement(menuImages),
 
     // 🆕 Enhanced fields
     calories: faker.number.int({ min: 100, max: 800 }),

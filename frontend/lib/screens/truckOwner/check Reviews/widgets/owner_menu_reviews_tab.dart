@@ -171,8 +171,8 @@ class _OwnerMenuReviewsTabState extends State<OwnerMenuReviewsTab> {
               itemCount: filtered.length,
               itemBuilder: (context, index) {
                 final review = filtered[index];
-                final itemId = review['menu_item_id'];
-                final itemName = menuItemNames[itemId] ?? 'Unnamed Item';
+                final itemName =
+                    review['menu_item_id']?['name'] ?? 'Unnamed Item';
                 return ReviewCard(review: review, menuItemName: itemName);
               },
             ),

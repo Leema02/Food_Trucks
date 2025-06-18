@@ -92,8 +92,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
           final isSpicy = item['isSpicy'] as bool? ?? false;
 
           bool itemMatches = termsToUse.any((term) {
-            if (itemName.contains(term) || itemDescription.contains(term))
+            if (itemName.contains(term) || itemDescription.contains(term)) {
               return true;
+            }
             if (term == 'vegan' && isVegan) return true;
             if (term == 'spicy' && isSpicy) return true;
             return false;
