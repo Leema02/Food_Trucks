@@ -2,47 +2,123 @@ const Order = require("../models/orderModel");
 const User = require("../models/userModel");
 const Truck = require("../models/truckModel");
 const Notification=require("../models/NotificationModel");
+const OrderEstimate      = require("../models/OrderEstimate");
+
 const { sendToClient } = require("../services/CustomSocketService");
+
+// <-- Add these two lines:
+const { computeEstimate }    = require("../services/estimateService");
+const { recordPrepDuration } = require("../services/statsService");
+
 // 🟢 Place a new order
 const placeOrder = async (req, res) => {
   try {
     const { truck_id, items, total_price, order_type } = req.body;
     const customer_id = req.user._id;
 
+    // fetch & validate
     const customer = await User.findById(customer_id);
-    const truck = await Truck.findById(truck_id);
-
+    const truck    = await Truck.findById(truck_id);
     if (!customer || !truck) {
       return res.status(404).json({ message: "Customer or truck not found" });
     }
-
-    // ❌ Prevent cross-city ordering
     if (customer.city !== truck.city) {
       return res.status(400).json({
         message: "You can only order from trucks in your city.",
       });
     }
 
+    // save order
     const newOrder = new Order({
-      customer_id,
-      truck_id,
-      items,
-      total_price,
-      order_type,
+      customer_id, truck_id, items, total_price, order_type
+    });
+    const savedOrder = await newOrder.save();
+
+    // notify truck owner
+    const not = await Notification.create({
+      userId:  truck.owner_id.toString(),
+      title:   "New Order",
+      message: `${customer.F_name} ${customer.L_name} placed a new order`
+    });
+    sendToClient(truck.owner_id.toString(), "Notification", not);
+
+    // compute initial estimate
+    const { partOne, partTwo, estimatedTime, maxConcurrent } =
+      await computeEstimate(savedOrder._id);
+
+    // upsert into OrderEstimate collection
+    await OrderEstimate.findOneAndUpdate(
+      { orderId: savedOrder._id },
+      { partOne, partTwo, estimatedTime, maxConcurrent, calculatedAt: new Date() },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    // return both order + estimate
+    res.status(201).json({
+      success:  true,
+      order:    savedOrder,
+      estimate: { partOne, partTwo, estimatedTime, maxConcurrent }
     });
 
-    const savedOrder = await newOrder.save();
-    const not =await Notification.create({
-      userId:truck.owner_id.toString(),
-      title:"New Order",
-      message:`${customer.F_name} ${customer.L_name} placed a new order`
-    });
-    sendToClient(truck.owner_id.toString(),"Notification",not);
-    res.status(201).json(savedOrder);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
+// 🔴 Update order status
+const updateOrderStatus = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    // stamp new status
+    order.status = req.body.status;
+    await order.save();
+
+    // notifications as before
+    if (order.status === "Preparing") {
+      const not = await Notification.create({
+        userId:  order.customer_id.toString(),
+        title:   "Order Update",
+        message: "Your order is being prepared"
+      });
+      sendToClient(order.customer_id.toString(), "Notification", not);
+
+      // recompute estimate when we actually start preparing
+      const { partOne, partTwo, estimatedTime, maxConcurrent } =
+        await computeEstimate(order._id);
+      await OrderEstimate.findOneAndUpdate(
+        { orderId: order._id },
+        { partOne, partTwo, estimatedTime, maxConcurrent, calculatedAt: new Date() },
+        { upsert: true, new: true }
+      );
+    }
+
+    if (order.status === "Ready") {
+      const not = await Notification.create({
+        userId:  order.customer_id.toString(),
+        title:   "Order Update",
+        message: "Your order is ready"
+      });
+      sendToClient(order.customer_id.toString(), "Notification", not);
+
+      // record the real prep duration for stats
+      await recordPrepDuration(order._id);
+
+      // optional: clear or zero‐out the estimate now that it's done
+      await OrderEstimate.findOneAndUpdate(
+        { orderId: order._id },
+        { partOne: 0, partTwo: 0, estimatedTime: 0, calculatedAt: new Date() }
+      );
+    }
+
+    res.json({ success: true, order });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 
 // 🟡 Get logged-in customer orders
 const getMyOrders = async (req, res) => {
@@ -70,37 +146,6 @@ const getTruckOrders = async (req, res) => {
   }
 };
 
-// 🔴 Update order status
-const updateOrderStatus = async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ message: "Order not found" });
-
-    order.status = req.body.status;
-    await order.save();
-    console.log(order.status);
-    console.log(order.customer_id.toString())
-    if(order.status=="Preparing"){
-      const not =await Notification.create({
-        userId:order.customer_id.toString(),
-        title:"Order Update",
-        message:`your order is being prepared`
-      });
-      sendToClient(order.customer_id.toString(),"Notification",not);
-    }
-    if(order.status=="Ready"){
-      const not =await Notification.create({
-        userId:order.customer_id.toString(),
-        title:"Order Update",
-        message:`your order is ready`
-      });
-      sendToClient(order.customer_id.toString(),"Notification",not);
-    }
-    res.json(order);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
 
 const getTotalOrders = async (req, res) => {
   try {
