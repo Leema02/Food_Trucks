@@ -4,10 +4,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:myapp/core/services/review_service.dart';
 import 'package:myapp/screens/customer/review/rate_truck_page.dart';
+
+// --- Import your new service ---
+import 'package:myapp/core/services/estimate_service.dart';
 
 // --- Enhanced Styles for Order Detail (Foodie Fleet Theme) ---
 const Color ffDetailPrimaryColor = Color(0xFFFF6B00);
@@ -82,10 +84,6 @@ TextStyle ffDetailTimerSubStyle = TextStyle(
 );
 // --- End Styles ---
 
-const String _geminiApiKeyOrderDetail = 'AIzaSyCsfzNXk_nP9V5my0gqNc5wV0-kPcPZ9YU';
-final Uri _geminiUrlOrderDetail = Uri.parse(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=$_geminiApiKeyOrderDetail');
-
 class OrderDetailScreen extends StatefulWidget {
   final Map<String, dynamic> order;
   final String truckName;
@@ -101,22 +99,30 @@ class OrderDetailScreen extends StatefulWidget {
 }
 
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
+  // Timer State Variables
   bool _isLoadingTimeEstimate = false;
-  int? _estimatedPrepTimeMinutes;
-  DateTime? _prepStartTime;
-  bool _alreadyRated = false;
-  bool _checkingIfRated = true;
-  Timer? _timer;
+  int? _pendingTimeMinutes;
+  int? _preparingTimeMinutes;
+  DateTime? _timerStartTime;
+  Duration? _currentTimerTotalDuration;
   Duration _remainingDuration = Duration.zero;
   bool _isFinishingUp = false;
+  Timer? _timer;
+
+  // Rating State Variables
+  bool _alreadyRated = false;
+  bool _checkingIfRated = true;
 
   @override
   void initState() {
     super.initState();
     final String status = (widget.order['status'] as String? ?? '').toLowerCase();
-    if (status == 'preparing') {
-      _fetchEstimatedTimeForOrder();
+
+    // Fetch estimates for 'pending' or 'preparing' statuses
+    if (status == 'preparing' || status == 'pending') {
+      _fetchEstimateAndStartTimer();
     }
+
     if (status == 'completed') {
       _checkIfOrderRated();
     } else {
@@ -130,13 +136,28 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     super.dispose();
   }
 
-  void _startTimer() {
-    if (_estimatedPrepTimeMinutes == null || _prepStartTime == null) return;
+  /// Sets up the timer based on the current order status.
+  void _setupTimerForCurrentStatus() {
+    final status = (widget.order['status'] as String? ?? '').toLowerCase();
 
-    // Calculate initial remaining time
-    final totalDuration = Duration(minutes: _estimatedPrepTimeMinutes!);
-    final elapsedDuration = DateTime.now().difference(_prepStartTime!);
-    final remaining = totalDuration - elapsedDuration;
+    if (status == 'pending' && _pendingTimeMinutes != null && _pendingTimeMinutes! > 0) {
+      String startTimeStr = widget.order['createdAt'] as String;
+      _timerStartTime = DateTime.tryParse(startTimeStr)?.toLocal() ?? DateTime.now();
+      _currentTimerTotalDuration = Duration(minutes: _pendingTimeMinutes!);
+      _startTimer();
+    } else if (status == 'preparing' && _preparingTimeMinutes != null && _preparingTimeMinutes! > 0) {
+      String startTimeStr = widget.order['updatedAt'] ?? widget.order['createdAt'];
+      _timerStartTime = DateTime.tryParse(startTimeStr)?.toLocal() ?? DateTime.now();
+      _currentTimerTotalDuration = Duration(minutes: _preparingTimeMinutes!);
+      _startTimer();
+    }
+  }
+
+  void _startTimer() {
+    if (_currentTimerTotalDuration == null || _timerStartTime == null) return;
+
+    final elapsedDuration = DateTime.now().difference(_timerStartTime!);
+    final remaining = _currentTimerTotalDuration! - elapsedDuration;
 
     if (remaining.isNegative) {
       setState(() {
@@ -169,6 +190,32 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     });
   }
 
+  /// Fetches estimate from the backend service and starts the appropriate timer.
+  Future<void> _fetchEstimateAndStartTimer() async {
+    if (!mounted) return;
+    final String orderId = widget.order['_id'] as String? ?? '';
+    if (orderId.isEmpty) return;
+
+    setState(() => _isLoadingTimeEstimate = true);
+
+    try {
+      final estimateData = await EstimateService.getEstimate(orderId);
+      if (!mounted) return;
+
+      if (estimateData != null) {
+        setState(() {
+          _pendingTimeMinutes = (estimateData['partOne'] as num?)?.toInt();
+          _preparingTimeMinutes = (estimateData['partTwo'] as num?)?.toInt();
+        });
+        _setupTimerForCurrentStatus();
+      }
+    } catch (e) {
+      print("Error fetching estimate from service: $e");
+    } finally {
+      if (mounted) setState(() => _isLoadingTimeEstimate = false);
+    }
+  }
+
   String _formatDateTime(String? isoDate) {
     if (isoDate == null || isoDate.isEmpty) return 'N/A';
     try {
@@ -198,56 +245,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       case 'pending': return Icons.hourglass_top_rounded;
       case 'cancelled': case 'rejected': return Icons.cancel_rounded;
       default: return Icons.receipt_long_rounded;
-    }
-  }
-
-  Future<void> _fetchEstimatedTimeForOrder() async {
-    if (!mounted) return;
-    final String orderId = widget.order['_id'] as String? ?? '';
-    if (orderId.isEmpty) return;
-
-    setState(() => _isLoadingTimeEstimate = true);
-
-    final List<dynamic> items = widget.order['items'] as List<dynamic>? ?? [];
-    if (items.isEmpty) {
-      if (mounted) setState(() => _isLoadingTimeEstimate = false);
-      return;
-    }
-
-    final itemNamesAndQuantities = items.map((item) => "${(item['quantity'] as num?)?.toInt() ?? 1} x ${item['name'] as String? ?? 'Item'}").toList();
-    final String prompt = """
-    Estimate total preparation time in minutes for food order:
-    Items: ${itemNamesAndQuantities.join(", ")}.
-    Return ONLY an integer (e.g., 35).
-    Minutes:
-    """;
-
-    try {
-      final response = await http.post(_geminiUrlOrderDetail,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'contents': [{'parts': [{'text': prompt}]}], "generationConfig": {"temperature": 0.2}}),
-      ).timeout(const Duration(seconds: 20));
-
-      if (!mounted) return;
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final content = data['candidates']?[0]?['content']?['parts']?[0]?['text'] as String?;
-        if (content != null) {
-          final estimatedMinutes = int.tryParse(content.replaceAll(RegExp(r'[^0-9]'), ''));
-          if (estimatedMinutes != null && estimatedMinutes > 0) {
-            setState(() {
-              _estimatedPrepTimeMinutes = estimatedMinutes;
-              String startTimeStr = widget.order['updatedAt'] ?? widget.order['createdAt'];
-              _prepStartTime = DateTime.tryParse(startTimeStr)?.toLocal() ?? DateTime.now().subtract(Duration(minutes: estimatedMinutes ~/ 2));
-            });
-            _startTimer();
-          }
-        }
-      }
-    } catch (e) {
-      print("AI Time Estimate Error: $e");
-    } finally {
-      if (mounted) setState(() => _isLoadingTimeEstimate = false);
     }
   }
 
@@ -339,16 +336,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           final Color inactiveColor = Colors.grey.shade300;
           final Color arrowColor = isActive ? activeColor : inactiveColor;
 
-            return Row(
+          return Row(
             children: [
-                if (index > 0) // Add arrow between stages
+              if (index > 0)
                 Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8).copyWith(bottom: 19), // Adjust top padding to move the icon up
-                child: Icon(
-                  Icons.arrow_forward,
-                  color: arrowColor,
-                  size: 25,
-                ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8).copyWith(bottom: 19),
+                  child: Icon(
+                    Icons.arrow_forward,
+                    color: arrowColor,
+                    size: 25,
+                  ),
                 ),
               Column(
                 mainAxisSize: MainAxisSize.min,
@@ -404,20 +401,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
-  Widget _buildPreparationProgressWidget() {
-    if (_isLoadingTimeEstimate && _estimatedPrepTimeMinutes == null) {
+  Widget _buildTimerProgressWidget() {
+    final status = (widget.order['status'] as String? ?? '').toLowerCase();
+
+    if (_isLoadingTimeEstimate && _currentTimerTotalDuration == null) {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: ffDetailPaddingMd),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(ffDetailBorderRadius),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -425,30 +417,33 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             SizedBox(
               width: 24,
               height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: ffDetailPrimaryColor,
-              ),
+              child: CircularProgressIndicator(strokeWidth: 2, color: ffDetailPrimaryColor),
             ),
             const SizedBox(width: ffDetailPaddingSm),
             Text(
-              "Estimating prep time...",
-              style: TextStyle(
-                fontSize: 14,
-                color: ffDetailSecondaryTextColor,
-                fontStyle: FontStyle.italic,
-              ),
+              "Getting estimated time...",
+              style: TextStyle(fontSize: 14, color: ffDetailSecondaryTextColor, fontStyle: FontStyle.italic),
             ),
           ],
         ),
       );
     }
 
-    if (_estimatedPrepTimeMinutes == null || _prepStartTime == null || _estimatedPrepTimeMinutes! <= 0) {
+    // Only show if we have a valid timer running for the current state.
+    final hasValidTimer = (status == 'pending' && _pendingTimeMinutes != null && _pendingTimeMinutes! > 0) ||
+        (status == 'preparing' && _preparingTimeMinutes != null && _preparingTimeMinutes! > 0);
+    if (!hasValidTimer || _timerStartTime == null || _currentTimerTotalDuration == null) {
       return const SizedBox.shrink();
     }
 
-    final progress = _isFinishingUp ? 1.0 : 1.0 - (_remainingDuration.inSeconds / (_estimatedPrepTimeMinutes! * 60));
+    final progress = _isFinishingUp ? 1.0 : 1.0 - (_remainingDuration.inSeconds / _currentTimerTotalDuration!.inSeconds);
+
+    // Dynamic UI elements based on status
+    final String titleText = status == 'pending' ? "AWAITING CONFIRMATION" : "PREPARATION STATUS";
+    final String subtitleText = _isFinishingUp
+        ? "Should be ready soon!"
+        : (status == 'pending' ? "Estimated time until accepted" : "Estimated time remaining");
+    final DateTime estimatedFinishTime = _timerStartTime!.add(_currentTimerTotalDuration!);
 
     return Container(
       margin: const EdgeInsets.only(bottom: ffDetailPaddingMd),
@@ -467,20 +462,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       child: Column(
         children: [
           Text(
-            "PREPARATION STATUS",
+            titleText,
             style: ffDetailLabelStyle.copyWith(
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5,
             ),
           ),
           const SizedBox(height: ffDetailPaddingSm),
-
           SizedBox(
             height: 160,
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Semi-circle progress background
                 SizedBox(
                   width: 240,
                   height: 100,
@@ -493,8 +486,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     ),
                   ),
                 ),
-
-                // Progress arc
                 SizedBox(
                   width: 240,
                   height: 100,
@@ -507,8 +498,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     ),
                   ),
                 ),
-
-                // Timer content
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -536,7 +525,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _isFinishingUp ? "Your food is almost ready!" : "Estimated time remaining",
+                      subtitleText,
                       style: ffDetailTimerSubStyle,
                     ),
                   ],
@@ -544,8 +533,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ],
             ),
           ),
-
-          // Progress bar
           const SizedBox(height: ffDetailPaddingMd),
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
@@ -556,18 +543,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               color: ffDetailPrimaryColor,
             ),
           ),
-
-          // Time labels
           const SizedBox(height: ffDetailPaddingSm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Started: ${DateFormat('h:mm a').format(_prepStartTime!)}",
+                "Started: ${DateFormat('h:mm a').format(_timerStartTime!)}",
                 style: ffDetailLabelStyle.copyWith(fontSize: 12),
               ),
               Text(
-                "Estimated: ${_prepStartTime!.add(Duration(minutes: _estimatedPrepTimeMinutes!)).hour}:${_prepStartTime!.add(Duration(minutes: _estimatedPrepTimeMinutes!)).minute.toString().padLeft(2, '0')}",
+                "Estimated: ${DateFormat('h:mm a').format(estimatedFinishTime)}",
                 style: ffDetailLabelStyle.copyWith(fontSize: 12),
               ),
             ],
@@ -723,6 +708,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final double total = (widget.order['total_price'] as num?)?.toDouble() ?? 0.0;
     final List<dynamic> items = widget.order['items'] as List<dynamic>? ?? [];
     final String createdAt = _formatDateTime(widget.order['createdAt'] as String?);
+    final String currentStatus = status.toLowerCase();
 
     return Scaffold(
       backgroundColor: ffDetailBackgroundColor,
@@ -742,14 +728,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Status tracker
             _buildOrderStatusStagesWidget(status),
             const SizedBox(height: ffDetailPaddingMd),
 
-            // Preparation timer
-            if (status.toLowerCase() == 'preparing') _buildPreparationProgressWidget(),
+            if (currentStatus == 'pending' || currentStatus == 'preparing')
+              _buildTimerProgressWidget(),
 
-            // Order summary card
             Container(
               padding: const EdgeInsets.all(ffDetailPaddingMd),
               decoration: BoxDecoration(
@@ -861,7 +845,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
             const SizedBox(height: ffDetailPaddingMd),
 
-            // Items list
             if (items.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.only(left: ffDetailPaddingXs, bottom: ffDetailPaddingSm),
@@ -968,7 +951,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               const SizedBox(height: ffDetailPaddingMd),
             ],
 
-            // Review section
             _buildReviewSectionWidget(context),
             const SizedBox(height: ffDetailPaddingLg),
           ],
@@ -1021,7 +1003,6 @@ class SemiCircleProgressPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height);
     final radius = size.width / 2 - strokeWidth / 2;
 
-    // Draw background semi-circle
     final backgroundPaint = Paint()
       ..color = backgroundColor
       ..strokeWidth = strokeWidth
@@ -1036,7 +1017,6 @@ class SemiCircleProgressPainter extends CustomPainter {
       backgroundPaint,
     );
 
-    // Draw progress semi-circle
     final progressPaint = Paint()
       ..color = progressColor
       ..strokeWidth = strokeWidth
@@ -1063,7 +1043,6 @@ class SemiCircleProgressPainter extends CustomPainter {
   }
 }
 
-// Custom painter for stylish arrow
 class _ArrowPainter extends CustomPainter {
   final Color color;
   final bool isActive;
@@ -1082,7 +1061,6 @@ class _ArrowPainter extends CustomPainter {
     final centerY = size.height / 2;
     final segmentWidth = size.width / 8;
 
-    // Draw dashed line with stylish arrow head
     for (var i = 0; i < 6; i++) {
       final xStart = i * segmentWidth;
       final xEnd = xStart + segmentWidth * 0.8;
@@ -1093,14 +1071,12 @@ class _ArrowPainter extends CustomPainter {
       }
     }
 
-    // Draw arrow head
     path.moveTo(size.width - 15, centerY);
     path.lineTo(size.width - 5, centerY);
     path.lineTo(size.width - 10, centerY - 7);
     path.moveTo(size.width - 5, centerY);
     path.lineTo(size.width - 10, centerY + 7);
 
-    // Add arrow tail decoration
     path.moveTo(2, centerY - 3);
     path.lineTo(0, centerY);
     path.lineTo(2, centerY + 3);
