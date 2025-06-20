@@ -12,7 +12,8 @@ const OrderEstimateSchema = new Schema({
   // how many orders can prepare in parallel (pulled from env on creation)
   maxConcurrent: {
     type: Number,
-    default: () => parseInt(process.env.MAX_CONCURRENT_ORDERS, 10) || 5
+    //default: () => parseInt(process.env.MAX_CONCURRENT_ORDERS, 10) || 5
+    required: true,
   },
   partOne: {
     type: Number, // minutes until a preparation slot frees up
@@ -30,6 +31,15 @@ const OrderEstimateSchema = new Schema({
     type: Date,
     default: Date.now
   }
-}, { timestamps: true });
+}, { timestamps: true,
+      toJSON: {
+      transform: function (doc, ret) {
+        delete ret.__v;
+        delete ret.updatedAt;
+        delete ret.createdAt;
+        return ret;
+      }
+    }
+ });
 
 module.exports = mongoose.model('OrderEstimate', OrderEstimateSchema);
