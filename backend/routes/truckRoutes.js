@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const TruckController = require("../controllers/truckController");
+const capacityController= require("../controllers/truckCapController")
 const { protect } = require("../middleware/authMiddleware");
 const { authorizeRoles } = require("../middleware/roleMiddleware");
 
@@ -31,5 +32,9 @@ router.put("/:id", authorizeRoles("truck owner", "admin"), TruckController.updat
 router.delete("/:id", authorizeRoles("truck owner", "admin"), TruckController.deleteTruck);
 router.post("/:id/unavailable", authorizeRoles("truck owner"), TruckController.addUnavailableDate);
 router.delete("/:id/unavailable", authorizeRoles("truck owner"), TruckController.removeUnavailableDate);
+
+
+router.post('/capacity', capacityController.setCapacity);
+router.get('/capacity/:truckId', capacityController.getCapacityByTruckId);
 
 module.exports = router;

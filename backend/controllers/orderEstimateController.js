@@ -5,12 +5,17 @@ const { computeEstimate } = require('../services/estimateService');
 exports.calculateAndCreate = async (req, res, next) => {
   try {
     const { orderId } = req.params;
-    const data = await computeEstimate(orderId);
+    const { maxConcurrent } = req.body;
 
-    // upsert so we only ever keep one per order
+    if (!maxConcurrent || isNaN(maxConcurrent)) {
+      return res.status(400).json({ error: 'maxConcurrent is required and must be a number' });
+    }
+
+    const data = await computeEstimate(orderId, maxConcurrent);
+
     const estimate = await OrderEstimate.findOneAndUpdate(
       { orderId },
-      { ...data, calculatedAt: new Date() },
+      { ...data, maxConcurrent, calculatedAt: new Date() },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
@@ -19,6 +24,7 @@ exports.calculateAndCreate = async (req, res, next) => {
     next(err);
   }
 };
+
 
 exports.getByOrder = async (req, res, next) => {
   try {

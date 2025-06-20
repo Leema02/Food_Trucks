@@ -7,7 +7,8 @@ import 'package:myapp/screens/truckOwner/manage%20bookings/bookings_page.dart';
 import 'package:myapp/screens/truckOwner/manageAvailability/availability_calendar.dart';
 import 'package:myapp/screens/truckOwner/manageTrucks/addTruck.dart';
 import 'package:myapp/screens/truckOwner/manageTrucks/viewTrucks.dart';
-import 'package:myapp/screens/truckOwner/owner_orders.dart';
+import 'package:myapp/screens/truckOwner/orders/TruckOrdersChartPage.dart';
+import 'package:myapp/screens/truckOwner/orders/owner_orders.dart';
 
 void main() {
   runApp(const MaterialApp(
@@ -96,82 +97,112 @@ class TruckOwnerDashboard extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Expanded(
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 1.3,
+                  child: Column(
                     children: [
-                      _buildActionButton(
-                        context,
-                        'add_truck'.tr(),
-                        Icons.add_business,
-                        Colors.orange,
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const AddTruckPage()),
+                      Expanded(
+                        child: GridView.count(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 10,
+                          childAspectRatio: 1.7,
+                          children: [
+                            _buildActionButton(
+                              context,
+                              'add_truck'.tr(),
+                              Icons.add_business,
+                              Colors.orange,
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const AddTruckPage()),
+                              ),
+                            ),
+                            _buildActionButton(
+                              context,
+                              'view_trucks'.tr(),
+                              Icons.directions_bus,
+                              Colors.deepOrange,
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ViewTrucksScreen()),
+                              ),
+                            ),
+                            _buildActionButton(
+                              context,
+                              'manage_availability'.tr(),
+                              Icons.calendar_month,
+                              Colors.deepPurple,
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AvailabilityCalendar(),
+                                ),
+                              ),
+                            ),
+                            _buildActionButton(
+                              context,
+                              'view_orders'.tr(),
+                              Icons.receipt_long,
+                              Colors.teal,
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const OwnerOrdersPage()),
+                              ),
+                            ),
+                            _buildActionButton(
+                              context,
+                              'event_bookings'.tr(),
+                              Icons.event,
+                              Colors.amber,
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const OwnerBookingsPage()),
+                              ),
+                            ),
+                            _buildActionButton(
+                              context,
+                              'reviews'.tr(),
+                              Icons.rate_review,
+                              Colors.indigo,
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const OwnerReviewsPage()),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      _buildActionButton(
-                        context,
-                        'view_trucks'.tr(),
-                        Icons.directions_bus,
-                        Colors.deepOrange,
-                        onPressed: () => Navigator.push(
+                      // New wide button at the bottom
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: _buildWideActionButton(
                           context,
-                          MaterialPageRoute(
-                              builder: (context) => const ViewTrucksScreen()),
-                        ),
-                      ),
-                      _buildActionButton(
-                        context,
-                        'manage_availability'.tr(),
-                        Icons.calendar_month,
-                        Colors.deepPurple,
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AvailabilityCalendar(),
-                          ),
-                        ),
-                      ),
-                      _buildActionButton(
-                        context,
-                        'view_orders'.tr(),
-                        Icons.receipt_long,
-                        Colors.teal,
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const OwnerOrdersPage()),
-                        ),
-                      ),
-                      _buildActionButton(
-                        context,
-                        'event_bookings'.tr(),
-                        Icons.event,
-                        Colors.amber,
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const OwnerBookingsPage()),
-                        ),
-                      ),
-                      _buildActionButton(
-                        context,
-                        'reviews'.tr(),
-                        Icons.rate_review,
-                        Colors.indigo,
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const OwnerReviewsPage()),
+                          'view_statistics'.tr(),
+                          Icons.analytics,
+                          Colors.blue,
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const TruckOrdersChartPage()),
+                            );
+                          },
                         ),
                       ),
                     ],
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -234,6 +265,36 @@ class TruckOwnerDashboard extends StatelessWidget {
           Text(label,
               textAlign: TextAlign.center,
               style: const TextStyle(fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWideActionButton(
+    BuildContext context,
+    String label,
+    IconData icon,
+    Color color, {
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: color,
+        shadowColor: Colors.orangeAccent,
+        elevation: 4,
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 6),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 28),
+          const SizedBox(width: 10),
+          Text(label,
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         ],
       ),
     );

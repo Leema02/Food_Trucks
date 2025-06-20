@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:myapp/screens/truckOwner/manageTrucks/manage_cap.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:myapp/core/services/truckOwner_service.dart';
 import 'package:myapp/core/utils/url_helper.dart';
@@ -244,29 +245,53 @@ class _ViewTrucksScreenState extends State<ViewTrucksScreen> {
                                       Padding(
                                         padding: const EdgeInsets.only(
                                             bottom: 12, left: 12, right: 12),
-                                        child: Align(
-                                          alignment: Alignment.centerRight,
-                                          child: ElevatedButton.icon(
-                                            onPressed: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (_) =>
-                                                      ManageMenuPage(
-                                                    truckId: truck['_id'],
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            ElevatedButton.icon(
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        ManageMenuPage(
+                                                      truckId: truck['_id'],
+                                                    ),
                                                   ),
-                                                ),
-                                              );
-                                            },
-                                            icon: const Icon(
-                                                Icons.restaurant_menu),
-                                            label: Text('manage_menu'.tr()),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  Colors.deepOrange,
-                                              foregroundColor: Colors.white,
+                                                );
+                                              },
+                                              icon: const Icon(
+                                                  Icons.restaurant_menu),
+                                              label: Text('manage_menu'.tr()),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Colors.deepOrange,
+                                                foregroundColor: Colors.white,
+                                              ),
                                             ),
-                                          ),
+                                            const SizedBox(width: 12),
+                                            ElevatedButton.icon(
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        ManageCapacityPage(
+                                                      truckId: truck['_id'],
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              icon: const Icon(Icons.settings),
+                                              label: const Text("Set Capacity"),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Colors.orange.shade700,
+                                                foregroundColor: Colors.white,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
