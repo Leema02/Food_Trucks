@@ -116,7 +116,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   @override
   void initState() {
     super.initState();
-    final String status = (widget.order['status'] as String? ?? '').toLowerCase();
+    final String status =
+        (widget.order['status'] as String? ?? '').toLowerCase();
 
     // Fetch estimates for 'pending' or 'preparing' statuses
     if (status == 'preparing' || status == 'pending') {
@@ -140,14 +141,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   void _setupTimerForCurrentStatus() {
     final status = (widget.order['status'] as String? ?? '').toLowerCase();
 
-    if (status == 'pending' && _pendingTimeMinutes != null && _pendingTimeMinutes! > 0) {
+    if (status == 'pending' &&
+        _pendingTimeMinutes != null &&
+        _pendingTimeMinutes! > 0) {
       String startTimeStr = widget.order['createdAt'] as String;
-      _timerStartTime = DateTime.tryParse(startTimeStr)?.toLocal() ?? DateTime.now();
+      _timerStartTime =
+          DateTime.tryParse(startTimeStr)?.toLocal() ?? DateTime.now();
       _currentTimerTotalDuration = Duration(minutes: _pendingTimeMinutes!);
       _startTimer();
-    } else if (status == 'preparing' && _preparingTimeMinutes != null && _preparingTimeMinutes! > 0) {
-      String startTimeStr = widget.order['updatedAt'] ?? widget.order['createdAt'];
-      _timerStartTime = DateTime.tryParse(startTimeStr)?.toLocal() ?? DateTime.now();
+    } else if (status == 'preparing' &&
+        _preparingTimeMinutes != null &&
+        _preparingTimeMinutes! > 0) {
+      String startTimeStr =
+          widget.order['updatedAt'] ?? widget.order['createdAt'];
+      _timerStartTime =
+          DateTime.tryParse(startTimeStr)?.toLocal() ?? DateTime.now();
       _currentTimerTotalDuration = Duration(minutes: _preparingTimeMinutes!);
       _startTimer();
     }
@@ -228,23 +236,37 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'completed': return ffDetailSuccessColor;
-      case 'ready': return Colors.blue.shade600;
-      case 'preparing': return ffDetailWarningColor;
-      case 'pending': return Colors.amber.shade700;
-      case 'cancelled': case 'rejected': return ffDetailErrorColor;
-      default: return ffDetailSecondaryTextColor;
+      case 'completed':
+        return ffDetailSuccessColor;
+      case 'ready':
+        return Colors.blue.shade600;
+      case 'preparing':
+        return ffDetailWarningColor;
+      case 'pending':
+        return Colors.amber.shade700;
+      case 'cancelled':
+      case 'rejected':
+        return ffDetailErrorColor;
+      default:
+        return ffDetailSecondaryTextColor;
     }
   }
 
   IconData _getStatusIcon(String status) {
     switch (status.toLowerCase()) {
-      case 'completed': return Icons.check_circle_rounded;
-      case 'ready': return Icons.restaurant_menu_rounded;
-      case 'preparing': return Icons.outdoor_grill_rounded;
-      case 'pending': return Icons.hourglass_top_rounded;
-      case 'cancelled': case 'rejected': return Icons.cancel_rounded;
-      default: return Icons.receipt_long_rounded;
+      case 'completed':
+        return Icons.check_circle_rounded;
+      case 'ready':
+        return Icons.restaurant_menu_rounded;
+      case 'preparing':
+        return Icons.outdoor_grill_rounded;
+      case 'pending':
+        return Icons.hourglass_top_rounded;
+      case 'cancelled':
+      case 'rejected':
+        return Icons.cancel_rounded;
+      default:
+        return Icons.receipt_long_rounded;
     }
   }
 
@@ -262,16 +284,19 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       final String truckId = widget.order['truck_id'] as String;
       final List items = widget.order['items'] as List<dynamic>? ?? [];
 
-      final bool truckRated = await ReviewService.checkIfTruckRated(token: token, orderId: orderId, truckId: truckId);
+      final bool truckRated = await ReviewService.checkIfTruckRated(
+          token: token, orderId: orderId, truckId: truckId);
       if (!truckRated) {
         if (mounted) setState(() => _alreadyRated = false);
         return;
       }
       for (final item in items) {
         if (item is Map<String, dynamic>) {
-          final itemId = item['menu_id'] as String? ?? item['item_id'] as String? ?? '';
+          final itemId =
+              item['menu_id'] as String? ?? item['item_id'] as String? ?? '';
           if (itemId.isNotEmpty) {
-            final bool itemRated = await ReviewService.checkIfMenuItemRated(token: token, orderId: orderId, itemId: itemId);
+            final bool itemRated = await ReviewService.checkIfMenuItemRated(
+                token: token, orderId: orderId, itemId: itemId);
             if (!itemRated) {
               if (mounted) setState(() => _alreadyRated = false);
               return;
@@ -291,9 +316,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Widget _buildOrderStatusStagesWidget(String currentStatusStr) {
     final stages = ['Pending', 'Preparing', 'Ready', 'Completed'];
     final currentStatus = currentStatusStr.toLowerCase();
-    int currentIndex = stages.indexWhere((s) => s.toLowerCase() == currentStatus);
+    int currentIndex =
+        stages.indexWhere((s) => s.toLowerCase() == currentStatus);
 
-    if (currentIndex == -1 && (currentStatus == 'cancelled' || currentStatus == 'rejected')) {
+    if (currentIndex == -1 &&
+        (currentStatus == 'cancelled' || currentStatus == 'rejected')) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: ffDetailPaddingSm),
         child: Row(
@@ -316,7 +343,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     if (currentIndex == -1) currentIndex = 0;
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: ffDetailPaddingSm + 2, horizontal: ffDetailPaddingMd),
+      padding: const EdgeInsets.symmetric(
+          vertical: ffDetailPaddingSm + 2, horizontal: ffDetailPaddingMd),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(ffDetailBorderRadius),
@@ -340,7 +368,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             children: [
               if (index > 0)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8).copyWith(bottom: 19),
+                  padding: const EdgeInsets.symmetric(horizontal: 8)
+                      .copyWith(bottom: 19),
                   child: Icon(
                     Icons.arrow_forward,
                     color: arrowColor,
@@ -362,19 +391,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       ),
                       boxShadow: isCurrent
                           ? [
-                        BoxShadow(
-                          color: activeColor.withOpacity(0.3),
-                          blurRadius: 8,
-                          spreadRadius: 2,
-                        )
-                      ]
+                              BoxShadow(
+                                color: activeColor.withOpacity(0.3),
+                                blurRadius: 8,
+                                spreadRadius: 2,
+                              )
+                            ]
                           : [],
                     ),
                     child: Center(
                       child: Icon(
                         isCurrent
                             ? _getStatusIcon(stages[index])
-                            : (isActive ? Icons.check_rounded : Icons.circle_outlined),
+                            : (isActive
+                                ? Icons.check_rounded
+                                : Icons.circle_outlined),
                         color: isActive ? Colors.white : inactiveColor,
                         size: isCurrent ? 18 : 16,
                       ),
@@ -385,8 +416,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     stages[index],
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                      color: isCurrent ? activeColor : (isActive ? ffDetailOnSurfaceColor : ffDetailSecondaryTextColor),
+                      fontWeight:
+                          isCurrent ? FontWeight.bold : FontWeight.normal,
+                      color: isCurrent
+                          ? activeColor
+                          : (isActive
+                              ? ffDetailOnSurfaceColor
+                              : ffDetailSecondaryTextColor),
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 1,
@@ -417,12 +453,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             SizedBox(
               width: 24,
               height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2, color: ffDetailPrimaryColor),
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: ffDetailPrimaryColor),
             ),
             const SizedBox(width: ffDetailPaddingSm),
             Text(
               "Getting estimated time...",
-              style: TextStyle(fontSize: 14, color: ffDetailSecondaryTextColor, fontStyle: FontStyle.italic),
+              style: TextStyle(
+                  fontSize: 14,
+                  color: ffDetailSecondaryTextColor,
+                  fontStyle: FontStyle.italic),
             ),
           ],
         ),
@@ -430,20 +470,34 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
 
     // Only show if we have a valid timer running for the current state.
-    final hasValidTimer = (status == 'pending' && _pendingTimeMinutes != null && _pendingTimeMinutes! > 0) ||
-        (status == 'preparing' && _preparingTimeMinutes != null && _preparingTimeMinutes! > 0);
-    if (!hasValidTimer || _timerStartTime == null || _currentTimerTotalDuration == null) {
+    final hasValidTimer = (status == 'pending' &&
+            _pendingTimeMinutes != null &&
+            _pendingTimeMinutes! > 0) ||
+        (status == 'preparing' &&
+            _preparingTimeMinutes != null &&
+            _preparingTimeMinutes! > 0);
+    if (!hasValidTimer ||
+        _timerStartTime == null ||
+        _currentTimerTotalDuration == null) {
       return const SizedBox.shrink();
     }
 
-    final progress = _isFinishingUp ? 1.0 : 1.0 - (_remainingDuration.inSeconds / _currentTimerTotalDuration!.inSeconds);
+    final progress = _isFinishingUp
+        ? 1.0
+        : 1.0 -
+            (_remainingDuration.inSeconds /
+                _currentTimerTotalDuration!.inSeconds);
 
     // Dynamic UI elements based on status
-    final String titleText = status == 'pending' ? "AWAITING CONFIRMATION" : "PREPARATION STATUS";
+    final String titleText =
+        status == 'pending' ? "AWAITING CONFIRMATION" : "PREPARATION STATUS";
     final String subtitleText = _isFinishingUp
         ? "Should be ready soon!"
-        : (status == 'pending' ? "Estimated time until accepted" : "Estimated time remaining");
-    final DateTime estimatedFinishTime = _timerStartTime!.add(_currentTimerTotalDuration!);
+        : (status == 'pending'
+            ? "Estimated time until accepted"
+            : "Estimated time remaining");
+    final DateTime estimatedFinishTime =
+        _timerStartTime!.add(_currentTimerTotalDuration!);
 
     return Container(
       margin: const EdgeInsets.only(bottom: ffDetailPaddingMd),
@@ -503,26 +557,26 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   children: [
                     _isFinishingUp
                         ? Text(
-                      "FINISHING UP!",
-                      style: ffDetailTimerMainStyle.copyWith(
-                        fontSize: 22,
-                        color: ffDetailSuccessColor,
-                      ),
-                    )
+                            "FINISHING UP!",
+                            style: ffDetailTimerMainStyle.copyWith(
+                              fontSize: 22,
+                              color: ffDetailSuccessColor,
+                            ),
+                          )
                         : Text(
-                      "${_remainingDuration.inMinutes.remainder(60)}:${(_remainingDuration.inSeconds.remainder(60)).toString().padLeft(2, '0')}",
-                      style: ffDetailTimerMainStyle.copyWith(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        shadows: [
-                          Shadow(
-                            color: ffDetailPrimaryColor.withOpacity(0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
+                            "${_remainingDuration.inMinutes.remainder(60)}:${(_remainingDuration.inSeconds.remainder(60)).toString().padLeft(2, '0')}",
+                            style: ffDetailTimerMainStyle.copyWith(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              shadows: [
+                                Shadow(
+                                  color: ffDetailPrimaryColor.withOpacity(0.2),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                    ),
                     const SizedBox(height: 8),
                     Text(
                       subtitleText,
@@ -563,7 +617,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildReviewSectionWidget(BuildContext context) {
-    final String status = (widget.order['status'] as String? ?? '').toLowerCase();
+    final String status =
+        (widget.order['status'] as String? ?? '').toLowerCase();
     if (status != 'completed') return const SizedBox.shrink();
 
     if (_checkingIfRated) {
@@ -644,33 +699,34 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ElevatedButton(
             onPressed: _alreadyRated
                 ? () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Viewing review feature coming soon!"),
-                ),
-              );
-            }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Viewing review feature coming soon!"),
+                      ),
+                    );
+                  }
                 : () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => RateTruckPage(
-                    orderId: widget.order['_id'] as String,
-                    truckId: widget.order['truck_id'] as String,
-                    items: widget.order['items'] as List<dynamic>? ?? [],
-                  ),
-                ),
-              );
-              if (result == true && mounted) {
-                _checkIfOrderRated();
-              }
-            },
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => RateTruckPage(
+                          orderId: widget.order['_id'] as String,
+                          truckId: widget.order['truck_id'] as String,
+                          items: widget.order['items'] as List<dynamic>? ?? [],
+                        ),
+                      ),
+                    );
+                    if (result == true && mounted) {
+                      _checkIfOrderRated();
+                    }
+                  },
             style: ElevatedButton.styleFrom(
               backgroundColor: _alreadyRated
                   ? ffDetailSecondaryTextColor.withOpacity(0.7)
                   : ffDetailPrimaryColor,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: ffDetailPaddingSm + 4),
+              padding:
+                  const EdgeInsets.symmetric(vertical: ffDetailPaddingSm + 4),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(ffDetailBorderRadius),
               ),
@@ -681,7 +737,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  _alreadyRated ? Icons.rate_review_rounded : Icons.star_rounded,
+                  _alreadyRated
+                      ? Icons.rate_review_rounded
+                      : Icons.star_rounded,
                   size: 20,
                 ),
                 const SizedBox(width: ffDetailPaddingXs),
@@ -702,18 +760,26 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final String orderIdShort = (widget.order['_id'] as String? ?? 'N/A').characters.takeLast(8).toString().toUpperCase();
-    final String orderType = (widget.order['order_type'] as String?)?.toUpperCase() ?? 'N/A';
+    final String orderIdShort = (widget.order['_id'] as String? ?? 'N/A')
+        .characters
+        .takeLast(8)
+        .toString()
+        .toUpperCase();
+    final String orderType =
+        (widget.order['order_type'] as String?)?.toUpperCase() ?? 'N/A';
     final String status = widget.order['status'] as String? ?? 'UNKNOWN';
-    final double total = (widget.order['total_price'] as num?)?.toDouble() ?? 0.0;
+    final double total =
+        (widget.order['total_price'] as num?)?.toDouble() ?? 0.0;
     final List<dynamic> items = widget.order['items'] as List<dynamic>? ?? [];
-    final String createdAt = _formatDateTime(widget.order['createdAt'] as String?);
+    final String createdAt =
+        _formatDateTime(widget.order['createdAt'] as String?);
     final String currentStatus = status.toLowerCase();
 
     return Scaffold(
       backgroundColor: ffDetailBackgroundColor,
       appBar: AppBar(
-        title: Text('Order #$orderIdShort', style: const TextStyle(fontWeight: FontWeight.w700)),
+        title: Text('Order #$orderIdShort',
+            style: const TextStyle(fontWeight: FontWeight.w700)),
         backgroundColor: ffDetailPrimaryColor,
         foregroundColor: ffDetailOnPrimaryColor,
         elevation: 0,
@@ -730,10 +796,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           children: [
             _buildOrderStatusStagesWidget(status),
             const SizedBox(height: ffDetailPaddingMd),
-
             if (currentStatus == 'pending' || currentStatus == 'preparing')
               _buildTimerProgressWidget(),
-
             Container(
               padding: const EdgeInsets.all(ffDetailPaddingMd),
               decoration: BoxDecoration(
@@ -775,11 +839,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: ffDetailPaddingMd),
-
                   _buildDetailRow("Order ID:", orderIdShort),
                   _buildDetailRow("Date Placed:", createdAt),
                   _buildDetailRow("Order Type:", orderType),
-
                   const SizedBox(height: ffDetailPaddingSm),
                   Row(
                     children: [
@@ -815,11 +877,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: ffDetailPaddingMd),
                   const Divider(height: 1, color: ffDetailDividerColor),
                   const SizedBox(height: ffDetailPaddingMd),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -844,10 +904,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ),
             const SizedBox(height: ffDetailPaddingMd),
-
             if (items.isNotEmpty) ...[
               Padding(
-                padding: const EdgeInsets.only(left: ffDetailPaddingXs, bottom: ffDetailPaddingSm),
+                padding: const EdgeInsets.only(
+                    left: ffDetailPaddingXs, bottom: ffDetailPaddingSm),
                 child: Text(
                   "ITEMS ORDERED (${items.length})",
                   style: ffDetailSectionTitleStyle.copyWith(fontSize: 18),
@@ -857,19 +917,22 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: items.length,
-                separatorBuilder: (context, index) => const SizedBox(height: ffDetailPaddingSm),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: ffDetailPaddingSm),
                 itemBuilder: (context, index) {
                   final item = items[index] as Map<String, dynamic>;
                   final String itemName = item['name'] ?? 'Unknown Item';
                   final int quantity = (item['quantity'] as num?)?.toInt() ?? 0;
-                  final double price = (item['price'] as num?)?.toDouble() ?? 0.0;
+                  final double price =
+                      (item['price'] as num?)?.toDouble() ?? 0.0;
                   final String? itemImageUrl = item['image_url'] as String?;
 
                   return Container(
                     padding: const EdgeInsets.all(ffDetailPaddingSm),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(ffDetailBorderRadius - 4),
+                      borderRadius:
+                          BorderRadius.circular(ffDetailBorderRadius - 4),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.03),
@@ -896,7 +959,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                 height: 70,
                                 color: Colors.grey.shade200,
                                 child: const Center(
-                                  child: Icon(Icons.image_outlined, color: Colors.grey),
+                                  child: Icon(Icons.image_outlined,
+                                      color: Colors.grey),
                                 ),
                               ),
                               errorWidget: (ctx, url, err) => Container(
@@ -904,13 +968,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                 height: 70,
                                 color: Colors.grey.shade100,
                                 child: const Center(
-                                  child: Icon(Icons.broken_image_outlined, color: Colors.grey),
+                                  child: Icon(Icons.broken_image_outlined,
+                                      color: Colors.grey),
                                 ),
                               ),
                             ),
                           ),
-                        if (itemImageUrl != null) const SizedBox(width: ffDetailPaddingSm),
-
+                        if (itemImageUrl != null)
+                          const SizedBox(width: ffDetailPaddingSm),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -935,7 +1000,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             ],
                           ),
                         ),
-
                         Text(
                           "₪${(price * quantity).toStringAsFixed(2)}",
                           style: ffDetailValueStyle.copyWith(
@@ -950,7 +1014,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
               const SizedBox(height: ffDetailPaddingMd),
             ],
-
             _buildReviewSectionWidget(context),
             const SizedBox(height: ffDetailPaddingLg),
           ],
