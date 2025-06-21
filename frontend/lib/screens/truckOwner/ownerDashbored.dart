@@ -7,7 +7,7 @@ import 'package:myapp/screens/truckOwner/manage%20bookings/bookings_page.dart';
 import 'package:myapp/screens/truckOwner/manageAvailability/availability_calendar.dart';
 import 'package:myapp/screens/truckOwner/manageTrucks/addTruck.dart';
 import 'package:myapp/screens/truckOwner/manageTrucks/viewTrucks.dart';
-import 'package:myapp/screens/truckOwner/orders/TruckOrdersChartPage.dart';
+import 'package:myapp/screens/truckOwner/statictics/truck_statistics_page.dart';
 import 'package:myapp/screens/truckOwner/orders/owner_orders.dart';
 
 void main() {
@@ -195,7 +195,7 @@ class TruckOwnerDashboard extends StatelessWidget {
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
-                                      const TruckOrdersChartPage()),
+                                      const TruckStatisticsPage()),
                             );
                           },
                         ),
