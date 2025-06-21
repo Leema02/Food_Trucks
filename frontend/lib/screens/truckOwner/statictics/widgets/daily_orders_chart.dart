@@ -1,19 +1,21 @@
+// lib/screens/truckOwner/orders/daily_orders_chart.dart
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:myapp/core/services/order_service.dart';
 
-class TruckOrdersChart extends StatefulWidget {
+// Renamed widget
+class DailyOrdersChart extends StatefulWidget {
   final String truckId;
 
-  const TruckOrdersChart({super.key, required this.truckId});
+  const DailyOrdersChart({super.key, required this.truckId});
 
   @override
-  State<TruckOrdersChart> createState() => _TruckOrdersChartState();
+  State<DailyOrdersChart> createState() => _DailyOrdersChartState();
 }
 
-class _TruckOrdersChartState extends State<TruckOrdersChart> {
+class _DailyOrdersChartState extends State<DailyOrdersChart> {
   late Future<Map<int, int>> _processedDataFuture;
 
   @override
@@ -23,7 +25,7 @@ class _TruckOrdersChartState extends State<TruckOrdersChart> {
   }
 
   @override
-  void didUpdateWidget(covariant TruckOrdersChart oldWidget) {
+  void didUpdateWidget(covariant DailyOrdersChart oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.truckId != widget.truckId) {
       setState(() {
@@ -37,17 +39,9 @@ class _TruckOrdersChartState extends State<TruckOrdersChart> {
       final response = await OrderService.getOrdersByTruck(widget.truckId);
       if (response.statusCode == 200) {
         final List<dynamic> orders = jsonDecode(response.body);
-        final Map<int, int> weeklyOrderCounts = {
-          1: 0,
-          2: 0,
-          3: 0,
-          4: 0,
-          5: 0,
-          6: 0,
-          7: 0
-        };
-
+        final Map<int, int> weeklyOrderCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
         final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+
         for (var order in orders) {
           if (order['createdAt'] == null) continue;
           final orderDate = DateTime.parse(order['createdAt']);
@@ -95,80 +89,88 @@ class _TruckOrdersChartState extends State<TruckOrdersChart> {
         final maxOrderCount = weeklyData.values.reduce(max);
         final maxY = (maxOrderCount < 5 ? 5.0 : (maxOrderCount * 1.2));
 
-        return Align(
-          alignment: Alignment.topCenter,
-          child: SizedBox(
-            height: 320,
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              color: const Color(0xFFFFE0B2),
-              margin: const EdgeInsets.all(16),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                child: BarChart(
-                  BarChartData(
-                    maxY: maxY,
-                    barTouchData: _buildBarTouchData(),
-                    titlesData: FlTitlesData(
-                      show: true,
-                      rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      topTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: _getBottomTitles,
-                          reservedSize: 36,
-                        ),
-                      ),
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 30,
-                          getTitlesWidget: (value, meta) =>
-                              _getLeftTitles(value, meta, maxY),
-                        ),
-                      ),
-                    ),
-                    borderData: FlBorderData(show: false),
-                    gridData: FlGridData(
-                      show: true,
-                      drawVerticalLine: false,
-                      horizontalInterval: 1,
-                      getDrawingHorizontalLine: (value) => FlLine(
-                        color: Colors.orange.shade100,
-                        strokeWidth: 1,
-                      ),
-                    ),
-                    barGroups: weeklyData.entries.map((entry) {
-                      return BarChartGroupData(
-                        x: entry.key,
-                        barRods: [
-                          BarChartRodData(
-                            toY: entry.value.toDouble(),
-                            color: const Color(0xFFFF600A),
-                            width: 16,
-                            borderRadius: BorderRadius.circular(6),
+        return Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          color: const Color(0xFFFFE0B2),
+          margin: const EdgeInsets.all(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16).copyWith(top: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Orders Per Day (Last 30 Days)',
+                  style: TextStyle(
+                    color: Color(0xFFBF360C),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                AspectRatio(
+                  aspectRatio: 1.5,
+                  child: BarChart(
+                    BarChartData(
+                      maxY: maxY,
+                      barTouchData: _buildBarTouchData(),
+                      titlesData: FlTitlesData(
+                        show: true,
+                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: _getBottomTitles,
+                            reservedSize: 36,
                           ),
-                        ],
-                      );
-                    }).toList(),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 30,
+                            getTitlesWidget: (value, meta) => _getLeftTitles(value, meta, maxY),
+                          ),
+                        ),
+                      ),
+                      borderData: FlBorderData(show: false),
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        horizontalInterval: max(1, (maxY / 4).floorToDouble()),
+                        getDrawingHorizontalLine: (value) => FlLine(
+                          color: Colors.orange.shade100,
+                          strokeWidth: 1,
+                        ),
+                      ),
+                      barGroups: weeklyData.entries.map((entry) {
+                        return BarChartGroupData(
+                          x: entry.key,
+                          barRods: [
+                            BarChartRodData(
+                              toY: entry.value.toDouble(),
+                              color: const Color(0xFFFF600A),
+                              width: 16,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         );
+
       },
     );
   }
 
+  // --- Helper methods remain the same ---
   BarTouchData _buildBarTouchData() {
     return BarTouchData(
       touchTooltipData: BarTouchTooltipData(
@@ -214,8 +216,8 @@ class _TruckOrdersChartState extends State<TruckOrdersChart> {
   }
 
   Widget _getLeftTitles(double value, TitleMeta meta, double maxY) {
-    if (value == 0 || value == maxY) return Container();
-
+    if (value == 0 || value >= maxY) return Container();
+    if(value % max(1, (maxY / 4).floorToDouble()) != 0) return Container();
     const style = TextStyle(
       color: Color(0xFF6D4C41),
       fontWeight: FontWeight.bold,
@@ -225,11 +227,7 @@ class _TruckOrdersChartState extends State<TruckOrdersChart> {
     return SideTitleWidget(
       axisSide: meta.axisSide,
       space: 4,
-      child: Text(
-        value.toInt().toString(),
-        style: style,
-        textAlign: TextAlign.center,
-      ),
+      child: Text(value.toInt().toString(), style: style, textAlign: TextAlign.center,),
     );
   }
 }
