@@ -39,7 +39,15 @@ class _DailyOrdersChartState extends State<DailyOrdersChart> {
       final response = await OrderService.getOrdersByTruck(widget.truckId);
       if (response.statusCode == 200) {
         final List<dynamic> orders = jsonDecode(response.body);
-        final Map<int, int> weeklyOrderCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
+        final Map<int, int> weeklyOrderCounts = {
+          1: 0,
+          2: 0,
+          3: 0,
+          4: 0,
+          5: 0,
+          6: 0,
+          7: 0
+        };
         final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
 
         for (var order in orders) {
@@ -91,17 +99,19 @@ class _DailyOrdersChartState extends State<DailyOrdersChart> {
 
         return Card(
           elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           color: const Color(0xFFFFE0B2),
           margin: const EdgeInsets.all(16),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16).copyWith(top: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16)
+                .copyWith(top: 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text(
-                  'Orders Per Day (Last 30 Days)',
+                  'Orders Per WeekDays (Last 30 Days)',
                   style: TextStyle(
                     color: Color(0xFFBF360C),
                     fontSize: 18,
@@ -118,8 +128,10 @@ class _DailyOrdersChartState extends State<DailyOrdersChart> {
                       barTouchData: _buildBarTouchData(),
                       titlesData: FlTitlesData(
                         show: true,
-                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
+                        topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
                         bottomTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
@@ -131,7 +143,8 @@ class _DailyOrdersChartState extends State<DailyOrdersChart> {
                           sideTitles: SideTitles(
                             showTitles: true,
                             reservedSize: 30,
-                            getTitlesWidget: (value, meta) => _getLeftTitles(value, meta, maxY),
+                            getTitlesWidget: (value, meta) =>
+                                _getLeftTitles(value, meta, maxY),
                           ),
                         ),
                       ),
@@ -165,7 +178,6 @@ class _DailyOrdersChartState extends State<DailyOrdersChart> {
             ),
           ),
         );
-
       },
     );
   }
@@ -217,7 +229,7 @@ class _DailyOrdersChartState extends State<DailyOrdersChart> {
 
   Widget _getLeftTitles(double value, TitleMeta meta, double maxY) {
     if (value == 0 || value >= maxY) return Container();
-    if(value % max(1, (maxY / 4).floorToDouble()) != 0) return Container();
+    if (value % max(1, (maxY / 4).floorToDouble()) != 0) return Container();
     const style = TextStyle(
       color: Color(0xFF6D4C41),
       fontWeight: FontWeight.bold,
@@ -227,7 +239,11 @@ class _DailyOrdersChartState extends State<DailyOrdersChart> {
     return SideTitleWidget(
       axisSide: meta.axisSide,
       space: 4,
-      child: Text(value.toInt().toString(), style: style, textAlign: TextAlign.center,),
+      child: Text(
+        value.toInt().toString(),
+        style: style,
+        textAlign: TextAlign.center,
+      ),
     );
   }
 }

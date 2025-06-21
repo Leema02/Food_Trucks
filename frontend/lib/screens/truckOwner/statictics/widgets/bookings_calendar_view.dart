@@ -1,5 +1,3 @@
-// lib/screens/truckOwner/orders/bookings_calendar_view.dart
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -42,14 +40,16 @@ class _BookingsCalendarViewState extends State<BookingsCalendarView> {
 
   Future<Map<DateTime, List<dynamic>>> _fetchAndProcessBookings() async {
     try {
-      final List<dynamic> allBookings = await EventBookingService.getOwnerBookings();
+      final List<dynamic> allBookings =
+          await EventBookingService.getOwnerBookings();
 
       final Map<DateTime, List<dynamic>> eventSource = {};
 
       for (var booking in allBookings) {
         if (booking['truck_id']?['_id'] == widget.truckId &&
             booking['status'] == 'confirmed') {
-          if (booking['event_start_date'] == null || booking['event_end_date'] == null) {
+          if (booking['event_start_date'] == null ||
+              booking['event_end_date'] == null) {
             continue;
           }
 
@@ -57,8 +57,8 @@ class _BookingsCalendarViewState extends State<BookingsCalendarView> {
           final endDate = DateTime.parse(booking['event_end_date']).toUtc();
 
           for (var day = startDate;
-          day.isBefore(endDate.add(const Duration(days: 1)));
-          day = day.add(const Duration(days: 1))) {
+              day.isBefore(endDate.add(const Duration(days: 1)));
+              day = day.add(const Duration(days: 1))) {
             final dateKey = DateTime.utc(day.year, day.month, day.day);
             if (eventSource[dateKey] == null) {
               eventSource[dateKey] = [];
@@ -68,7 +68,8 @@ class _BookingsCalendarViewState extends State<BookingsCalendarView> {
         }
       }
 
-      final todayUtc = DateTime.utc(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+      final todayUtc = DateTime.utc(
+          DateTime.now().year, DateTime.now().month, DateTime.now().day);
       _selectedEvents.value = eventSource[todayUtc] ?? [];
 
       return eventSource;
@@ -90,21 +91,24 @@ class _BookingsCalendarViewState extends State<BookingsCalendarView> {
         future: _eventsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(heightFactor: 5, child: CircularProgressIndicator());
+            return const Center(
+                heightFactor: 5, child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
             return Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Text('Error loading bookings: ${snapshot.error}', textAlign: TextAlign.center),
-                ));
+              padding: const EdgeInsets.all(20.0),
+              child: Text('Error loading bookings: ${snapshot.error}',
+                  textAlign: TextAlign.center),
+            ));
           }
 
           final events = snapshot.data ?? {};
           if (events.isEmpty) {
             return Card(
               elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               color: const Color(0xFFE3F2FD),
               margin: const EdgeInsets.all(16),
               child: const Padding(
@@ -113,14 +117,21 @@ class _BookingsCalendarViewState extends State<BookingsCalendarView> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.calendar_today_outlined, size: 40, color: Colors.grey),
+                      Icon(Icons.calendar_today_outlined,
+                          size: 40, color: Colors.grey),
                       SizedBox(height: 16),
                       Text(
                         'No Confirmed Bookings Found',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0D47A1)),
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0D47A1)),
                       ),
                       SizedBox(height: 4),
-                      Text("This truck doesn't have any confirmed event bookings yet.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+                      Text(
+                          "This truck doesn't have any confirmed event bookings yet.",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey)),
                     ],
                   ),
                 ),
@@ -135,7 +146,8 @@ class _BookingsCalendarViewState extends State<BookingsCalendarView> {
 
           return Card(
             elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             color: const Color(0xFFE3F2FD),
             margin: const EdgeInsets.all(16),
             child: Padding(
@@ -144,14 +156,19 @@ class _BookingsCalendarViewState extends State<BookingsCalendarView> {
                 children: [
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 12.0),
-                    child: Text('Confirmed Bookings Calendar', style: TextStyle(color: Color(0xFF0D47A1), fontSize: 18, fontWeight: FontWeight.bold)),
+                    child: Text('Confirmed Bookings Calendar',
+                        style: TextStyle(
+                            color: Color(0xFF0D47A1),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold)),
                   ),
                   TableCalendar<dynamic>(
                     firstDay: DateTime.utc(2020, 1, 1),
                     lastDay: DateTime.utc(2030, 12, 31),
                     focusedDay: _focusedDay,
                     calendarFormat: _calendarFormat,
-                    eventLoader: getEventsForDay, // This still provides data for the builder
+                    eventLoader:
+                        getEventsForDay, // This still provides data for the builder
                     startingDayOfWeek: StartingDayOfWeek.monday,
                     selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                     onDaySelected: (selectedDay, focusedDay) {
@@ -193,7 +210,8 @@ class _BookingsCalendarViewState extends State<BookingsCalendarView> {
                     calendarBuilders: CalendarBuilders(
                       // Builder for regular days
                       defaultBuilder: (context, day, focusedDay) {
-                        final utcDay = DateTime.utc(day.year, day.month, day.day);
+                        final utcDay =
+                            DateTime.utc(day.year, day.month, day.day);
                         // If this day has an event, build our custom red circle
                         if (events.containsKey(utcDay)) {
                           return Center(
@@ -217,10 +235,16 @@ class _BookingsCalendarViewState extends State<BookingsCalendarView> {
                       },
                       dowBuilder: (context, day) {
                         final text = DateFormat.E().format(day);
-                        if (day.weekday == DateTime.saturday || day.weekday == DateTime.sunday) {
-                          return Center(child: Text(text, style: TextStyle(color: Colors.red.shade400)));
+                        if (day.weekday == DateTime.saturday ||
+                            day.weekday == DateTime.sunday) {
+                          return Center(
+                              child: Text(text,
+                                  style:
+                                      TextStyle(color: Colors.red.shade400)));
                         }
-                        return Center(child: Text(text, style: TextStyle(color: Colors.blue.shade800)));
+                        return Center(
+                            child: Text(text,
+                                style: TextStyle(color: Colors.blue.shade800)));
                       },
                       markerBuilder: (context, day, events) {
                         return Container(); // Returning an empty container removes the dot
@@ -235,7 +259,9 @@ class _BookingsCalendarViewState extends State<BookingsCalendarView> {
                       if (value.isEmpty) {
                         return Padding(
                           padding: const EdgeInsets.all(16.0),
-                          child: Text("No bookings for ${DateFormat.yMMMd().format(_selectedDay!)}", style: TextStyle(color: Colors.grey.shade600)),
+                          child: Text(
+                              "No bookings for ${DateFormat.yMMMd().format(_selectedDay!)}",
+                              style: TextStyle(color: Colors.grey.shade600)),
                         );
                       }
                       return ListView.builder(
@@ -245,7 +271,8 @@ class _BookingsCalendarViewState extends State<BookingsCalendarView> {
                         itemBuilder: (context, index) {
                           final booking = value[index];
                           return Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 12.0, vertical: 4.0),
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.blue.shade100),
                               borderRadius: BorderRadius.circular(12.0),
@@ -254,10 +281,13 @@ class _BookingsCalendarViewState extends State<BookingsCalendarView> {
                             child: ListTile(
                               leading: CircleAvatar(
                                 backgroundColor: Colors.blue.shade300,
-                                child: const Icon(Icons.event_available, color: Colors.white, size: 20),
+                                child: const Icon(Icons.event_available,
+                                    color: Colors.white, size: 20),
                               ),
-                              title: Text(booking['truck_id']?['truck_name'] ?? 'Booking'),
-                              subtitle: Text('Location: ${booking['city'] ?? 'N/A'} | Time: ${booking['start_time']}'),
+                              title: Text(booking['truck_id']?['truck_name'] ??
+                                  'Booking'),
+                              subtitle: Text(
+                                  'Location: ${booking['city'] ?? 'N/A'} | Time: ${booking['start_time']}'),
                               onTap: () {},
                             ),
                           );

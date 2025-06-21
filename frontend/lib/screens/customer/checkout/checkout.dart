@@ -3,7 +3,8 @@ import 'package:myapp/screens/customer/checkout/payment_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../cart/cart_controller.dart';
 import '../../../core/services/order_service.dart';
-import '../../../core/services/estimate_service.dart';
+// NEW: Import your EstimateService
+import '../../../core/services/estimate_service.dart'; // <-- Make sure this path is correct
 
 class CheckoutPage extends StatefulWidget {
   final String truckId;
@@ -23,8 +24,6 @@ class CheckoutPage extends StatefulWidget {
 
 class _CheckoutPageState extends State<CheckoutPage> {
   bool isSubmitting = false;
-  bool isEstimating = false;
-  int? estimatedTime;
   String orderType = 'pickup';
   String deliveryAddress = '';
 
@@ -34,7 +33,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
     if (!_citiesMatch()) {
       orderType = 'pickup';
     }
-    _loadEstimate();
   }
 
   bool _citiesMatch() {
@@ -42,36 +40,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
         widget.truckCity.trim().toLowerCase();
   }
 
-  Future<void> _loadEstimate() async {
-    setState(() {
-      isEstimating = true;
-      estimatedTime = null;
-    });
-
-    final cartItems = CartController.getCartItems();
-    final items = cartItems.map((item) {
-      return {
-        "menu_id": item['menu_id'],
-        "quantity": item['quantity'],
-        "name": item['name'],
-        "price": item['price'],
-      };
-    }).toList();
-
-    final time = await EstimateService.previewEstimate(
-      truckId: widget.truckId,
-      items: items,
-      orderType: orderType,
-    );
-
-    setState(() {
-      estimatedTime = time;
-      isEstimating = false;
-    });
-  }
-
-  Future<void> _placeOrder() async {
-    if (!_citiesMatch()) {
+  Future<void> _handlePlaceOrderPressed() async {
+    if (!_citiesMatch() && orderType == 'delivery') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text("❌ You can only order from trucks in your city.")),
@@ -86,6 +56,58 @@ class _CheckoutPageState extends State<CheckoutPage> {
       return;
     }
 
+    if (orderType == 'pickup') {
+      setState(() => isSubmitting = true);
+
+      // UPDATED: Call EstimateService instead of OrderService
+      final waitingTime = await EstimateService.previewPartOne(widget.truckId);
+
+      setState(() => isSubmitting = false);
+
+      if (mounted) {
+        _showPickupConfirmationDialog(waitingTime);
+      }
+    } else {
+      _executeOrderPlacement();
+    }
+  }
+
+  void _showPickupConfirmationDialog(int? waitingTime) {
+    String message;
+    if (waitingTime == null) {
+      message = "Ready to place your order?";
+    } else if (waitingTime == 0) {
+      message = "Your order will be prepared immediately upon confirmation.";
+    } else {
+      message =
+          "Your order will start preparing in approximately $waitingTime minutes.";
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Confirm Pickup Order"),
+          content: Text(message),
+          actions: [
+            TextButton(
+              child: const Text("Cancel"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text("Place Order"),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _executeOrderPlacement();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _executeOrderPlacement() async {
     setState(() => isSubmitting = true);
 
     try {
@@ -111,10 +133,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       final success = await PaymentService.pay(
         context,
         totalAgorot,
-        {
-          "truckId": widget.truckId,
-          "userEmail": email,
-        },
+        {"truckId": widget.truckId, "userEmail": email},
       );
 
       if (!success) {
@@ -131,6 +150,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         "payment_status": "paid"
       };
 
+      // This call remains correct, as you still place the order via OrderService
       final response = await OrderService.placeOrder(orderData);
       setState(() => isSubmitting = false);
 
@@ -143,15 +163,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
           Navigator.pop(context);
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ Failed: ${response.body}")),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("❌ Failed: ${response.body}")),
+          );
+        }
       }
     } catch (e) {
       setState(() => isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Error: $e")),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("❌ Error: $e")),
+        );
+      }
     }
   }
 
@@ -179,10 +203,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   value: 'pickup',
                   groupValue: orderType,
                   onChanged: (value) {
-                    setState(() {
-                      orderType = value!;
-                    });
-                    _loadEstimate();
+                    setState(() => orderType = value!);
                   },
                 ),
                 const Text('Pickup'),
@@ -191,12 +212,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   value: 'delivery',
                   groupValue: orderType,
                   onChanged: citiesMatch
-                      ? (value) {
-                          setState(() {
-                            orderType = value!;
-                          });
-                          _loadEstimate();
-                        }
+                      ? (value) => setState(() => orderType = value!)
                       : null,
                 ),
                 const Text('Delivery'),
@@ -222,27 +238,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
               ),
             const SizedBox(height: 30),
-
-            // Estimate Section
-            if (isEstimating)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 10),
-                child: Text("⏳ Estimating preparation time..."),
-              )
-            else if (estimatedTime != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Text(
-                  "⏱ Estimated Preparation Time: ~${estimatedTime!} minutes",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black54,
-                  ),
-                ),
-              ),
-
-            // Total
             Text(
               "Total: ₪${total.toStringAsFixed(2)}",
               style: const TextStyle(
@@ -255,7 +250,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: isSubmitting ? null : _placeOrder,
+                onPressed: isSubmitting ? null : _handlePlaceOrderPressed,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,
                   padding: const EdgeInsets.symmetric(vertical: 14),

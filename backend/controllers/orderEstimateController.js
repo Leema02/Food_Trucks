@@ -40,21 +40,23 @@ exports.getByOrder = async (req, res, next) => {
   }
 };
 
-exports.previewEstimate = async (req, res) => {
+exports.previewWaitingTime = async (req, res) => {
   try {
-    const { truck_id, items, order_type } = req.body;
+    const { truck_id } = req.params;
 
-    // Validate input
-    if (!truck_id || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    if (!truck_id) {
+      return res.status(400).json({ success: false, message: 'truck_id is required' });
     }
 
-    const estimatedTime = await estimateService.calculateEstimatePreview(truck_id, items, order_type);
-    
-    return res.json({ success: true, estimatedTimeInMinutes: estimatedTime });
+    const waitingMinutes = await estimateService.previewPartOneEstimate(truck_id);
+
+    res.status(200).json({
+      success: true,
+      waitingTimeInMinutes: waitingMinutes
+    });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ success: false, message: 'Error calculating estimate preview' });
+    console.error('❌ Error in previewWaitingTime:', err.message);
+    res.status(500).json({ success: false, message: 'Error calculating waiting time' });
   }
 };
 
