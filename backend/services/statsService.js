@@ -1,5 +1,6 @@
 const Order = require('../models/orderModel');
 const PreparationStats = require('../models/PreparationStats');
+const OrderStatusTimestamp = require('../models/OrderStatusTimestamp'); // استدعاء الموديل الجديد
 
 /**
  * When an order goes Ready, record its actual prep time for each menu item.
@@ -12,16 +13,24 @@ async function recordPrepDuration(orderId) {
     return;
   }
 
-  const { preparing: start, ready: end } = order.statusTimestamps || {};
+  const timestampsDoc = await OrderStatusTimestamp.findOne({ orderId });
+  if (!timestampsDoc || !timestampsDoc.timestamps) {
+    console.warn(`⚠️ No timestamps found for order ${orderId}`);
+    return;
+  }
+
+  const start = timestampsDoc.timestamps.get("preparing");
+  const end = timestampsDoc.timestamps.get("ready");
+
   if (!start || !end) {
-    console.warn(`⚠️ Missing status timestamps on order ${orderId}`);
+    console.warn(`⚠️ Missing 'preparing' or 'ready' timestamp for order ${orderId}`);
     return;
   }
 
   const delta = (end - start) / 60000; // duration in minutes
 
   await Promise.all(order.items.map(async item => {
-    const menuItemId =   menuItemId; // Ensure you're using `menu_id` in your Order schema
+    const menuItemId = item.menu_id;
 
     try {
       const stat = await PreparationStats.findOneAndUpdate(

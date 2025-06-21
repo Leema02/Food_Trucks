@@ -3,6 +3,7 @@ const User = require("../models/userModel");
 const Truck = require("../models/truckModel");
 const Notification=require("../models/NotificationModel");
 const OrderEstimate      = require("../models/OrderEstimate");
+const OrderStatusTimestamp = require("../models/OrderStatusTimestamp");
 
 const { sendToClient } = require("../services/CustomSocketService");
 
@@ -65,7 +66,6 @@ const placeOrder = async (req, res) => {
   }
 };
 
-// 🔴 Update order status
 const updateOrderStatus = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -73,20 +73,23 @@ const updateOrderStatus = async (req, res) => {
 
     const newStatus = req.body.status;
     order.status = newStatus;
-    order.statusTimestamps = {
-      ...order.statusTimestamps,
-      [newStatus.toLowerCase()]: new Date()
-    };
     await order.save();
 
+    // ✅ Save or update status timestamp in separate model
+    await OrderStatusTimestamp.findOneAndUpdate(
+      { orderId: order._id },
+      { $set: { [`timestamps.${newStatus.toLowerCase()}`]: new Date() } },
+      { upsert: true, new: true }
+    );
+
+    // 🚀 Notifications + estimate logic
     if (newStatus === "Preparing") {
-      await Notification.create({
+      const not = await Notification.create({
         userId: order.customer_id.toString(),
         title: "Order Update",
         message: "Your order is being prepared"
-      }).then((not) =>
-        sendToClient(order.customer_id.toString(), "Notification", not)
-      );
+      });
+      sendToClient(order.customer_id.toString(), "Notification", not);
 
       const { partOne, partTwo, estimatedTime, maxConcurrent } =
         await computeEstimate(order._id);
@@ -99,13 +102,12 @@ const updateOrderStatus = async (req, res) => {
     }
 
     if (newStatus === "Ready") {
-      await Notification.create({
+      const not = await Notification.create({
         userId: order.customer_id.toString(),
         title: "Order Update",
         message: "Your order is ready"
-      }).then((not) =>
-        sendToClient(order.customer_id.toString(), "Notification", not)
-      );
+      });
+      sendToClient(order.customer_id.toString(), "Notification", not);
 
       await recordPrepDuration(order._id);
 
@@ -118,9 +120,9 @@ const updateOrderStatus = async (req, res) => {
     res.json({ success: true, order });
 
   } catch (err) {
+    console.error("❌ Error updating order status:", err);
     res.status(500).json({ message: err.message });
   }
-
 };
 
 

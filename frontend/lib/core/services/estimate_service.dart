@@ -62,39 +62,38 @@ class EstimateService {
     }
   }
 
-  /// Preview estimate before order is saved (used on checkout)
-  static Future<int?> previewEstimate({
-    required String truckId,
-    required List<Map<String, dynamic>> items,
-    required String orderType, // 'pickup' or 'delivery'
-  }) async {
+  /// Preview only partOne (waiting time) for a truck
+  static Future<int?> previewPartOne(String truckId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('accessToken');
-      final url = Uri.parse('$baseUrl/estimate-preview');
+      final url = Uri.parse('$baseUrl/preview-wait/$truckId');
 
-      final response = await http.post(
+      final response = await http.get(
         url,
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode({
-          "truck_id": truckId,
-          "items": items,
-          "order_type": orderType,
-        }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['estimatedTimeInMinutes'];
+        print('✅ preview-wait response: $data');
+
+        // Safely extract waitingTimeInMinutes from the response
+        if (data['waitingTimeInMinutes'] != null) {
+          return (data['waitingTimeInMinutes'] as num).round();
+        } else {
+          print('⚠️ No waitingTimeInMinutes found in response.');
+          return null;
+        }
       } else {
-        print('❌ Failed to preview estimate: ${response.body}');
+        print('❌ Failed to preview partOne: ${response.body}');
         return null;
       }
     } catch (e) {
-      print('⚠️ Exception in previewEstimate: $e');
+      print('⚠️ Exception in previewPartOne: $e');
       return null;
     }
   }

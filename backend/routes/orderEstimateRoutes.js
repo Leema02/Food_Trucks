@@ -10,6 +10,6 @@ router.post('/orders/:orderId/estimate', ctrl.calculateAndCreate);
 router.get('/orders/:orderId/estimate',  ctrl.getByOrder);
 
 
-router.post('/orders/estimate-preview', ctrl.previewEstimate);
+router.get('/orders/preview-wait/:truck_id', ctrl.previewWaitingTime);
 
 module.exports = router;

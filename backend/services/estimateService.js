@@ -19,7 +19,6 @@ async function getTruckCapacity(truckId) {
   }
 }
 
-
 /**
  * Estimate time for an existing order by ID
  */
@@ -73,26 +72,33 @@ async function computeEstimate(orderId, maxConcurrentOverride) {
 }
 
 /**
- * Preview estimated time for a new (unsaved) order
+ * ✅ Preview only the waiting time (partOne) for a truck — without placing an order
  */
-async function calculateEstimatePreview(truckId, items, orderType) {
+async function previewPartOneEstimate(truckId) {
   const maxConcurrent = await getTruckCapacity(truckId);
+  const activeOrders = await Order.find({ truck_id: truckId, status: 'Preparing' });
 
-  const itemPrepTimes = await Promise.all(
-    items.map(async (item) => {
-      const stats = await PreparationStats.findOne({ menuItemId: item.menu_id });
-      const avgTime = stats?.avgTime || DEFAULT_PREP_TIME;
-      return avgTime * item.quantity;
+  if (activeOrders.length < maxConcurrent) return 0;
+
+  const now = Date.now();
+
+  const remainingTimes = await Promise.all(
+    activeOrders.map(async (activeOrder) => {
+      const startTime = activeOrder.statusTimestamps?.preparing || now;
+      const elapsed = (now - startTime) / 60000;
+
+      const firstItem = activeOrder.items[0];
+      const stats = await PreparationStats.findOne({ menuItemId: firstItem.menu_id });
+      const avgPrep = stats?.avgTime || DEFAULT_PREP_TIME;
+
+      return Math.max(avgPrep - elapsed, 0);
     })
   );
 
-  const totalPrepTime = itemPrepTimes.reduce((sum, time) => sum + time, 0);
-  const estimatedTime = Math.ceil(totalPrepTime / maxConcurrent);
-
-  return estimatedTime;
+  return Math.min(...remainingTimes);
 }
 
 module.exports = {
   computeEstimate,
-  calculateEstimatePreview
+  previewPartOneEstimate
 };
