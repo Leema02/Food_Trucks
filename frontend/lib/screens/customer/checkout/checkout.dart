@@ -3,6 +3,7 @@ import 'package:myapp/screens/customer/checkout/payment_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../cart/cart_controller.dart';
 import '../../../core/services/order_service.dart';
+import '../../../core/services/estimate_service.dart';
 
 class CheckoutPage extends StatefulWidget {
   final String truckId;
@@ -22,22 +23,51 @@ class CheckoutPage extends StatefulWidget {
 
 class _CheckoutPageState extends State<CheckoutPage> {
   bool isSubmitting = false;
+  bool isEstimating = false;
+  int? estimatedTime;
   String orderType = 'pickup';
   String deliveryAddress = '';
 
   @override
   void initState() {
     super.initState();
-
-    // force pickup if cities don’t match
     if (!_citiesMatch()) {
       orderType = 'pickup';
     }
+    _loadEstimate();
   }
 
   bool _citiesMatch() {
     return widget.customerCity.trim().toLowerCase() ==
         widget.truckCity.trim().toLowerCase();
+  }
+
+  Future<void> _loadEstimate() async {
+    setState(() {
+      isEstimating = true;
+      estimatedTime = null;
+    });
+
+    final cartItems = CartController.getCartItems();
+    final items = cartItems.map((item) {
+      return {
+        "menu_id": item['menu_id'],
+        "quantity": item['quantity'],
+        "name": item['name'],
+        "price": item['price'],
+      };
+    }).toList();
+
+    final time = await EstimateService.previewEstimate(
+      truckId: widget.truckId,
+      items: items,
+      orderType: orderType,
+    );
+
+    setState(() {
+      estimatedTime = time;
+      isEstimating = false;
+    });
   }
 
   Future<void> _placeOrder() async {
@@ -64,8 +94,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
       final cartItems = CartController.getCartItems();
       final totalNIS = CartController.getTotal();
-      final totalAgorot =
-          (totalNIS * 100).round(); // Convert to agorot for Stripe
+      final totalAgorot = (totalNIS * 100).round();
 
       final items = cartItems.map((item) {
         return {
@@ -79,7 +108,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
         };
       }).toList();
 
-      // Step 1: Stripe payment
       final success = await PaymentService.pay(
         context,
         totalAgorot,
@@ -94,7 +122,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
         return;
       }
 
-      // Step 2: Submit order to backend
       final orderData = {
         "truck_id": widget.truckId,
         "items": items,
@@ -152,7 +179,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   value: 'pickup',
                   groupValue: orderType,
                   onChanged: (value) {
-                    setState(() => orderType = value!);
+                    setState(() {
+                      orderType = value!;
+                    });
+                    _loadEstimate();
                   },
                 ),
                 const Text('Pickup'),
@@ -161,7 +191,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   value: 'delivery',
                   groupValue: orderType,
                   onChanged: citiesMatch
-                      ? (value) => setState(() => orderType = value!)
+                      ? (value) {
+                          setState(() {
+                            orderType = value!;
+                          });
+                          _loadEstimate();
+                        }
                       : null,
                 ),
                 const Text('Delivery'),
@@ -187,6 +222,27 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
               ),
             const SizedBox(height: 30),
+
+            // Estimate Section
+            if (isEstimating)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 10),
+                child: Text("⏳ Estimating preparation time..."),
+              )
+            else if (estimatedTime != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Text(
+                  "⏱ Estimated Preparation Time: ~${estimatedTime!} minutes",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black54,
+                  ),
+                ),
+              ),
+
+            // Total
             Text(
               "Total: ₪${total.toStringAsFixed(2)}",
               style: const TextStyle(

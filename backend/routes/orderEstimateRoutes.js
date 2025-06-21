@@ -9,4 +9,7 @@ router.post('/orders/:orderId/estimate', ctrl.calculateAndCreate);
 // fetch existing estimate
 router.get('/orders/:orderId/estimate',  ctrl.getByOrder);
 
+
+router.post('/orders/estimate-preview', ctrl.previewEstimate);
+
 module.exports = router;
