@@ -1,20 +1,36 @@
+const axios = require('axios');
 const Order = require('../models/orderModel');
 const PreparationStats = require('../models/PreparationStats');
 
 const DEFAULT_CONCURRENT = parseInt(process.env.MAX_CONCURRENT_ORDERS, 10) || 5;
 const DEFAULT_PREP_TIME = parseInt(process.env.DEFAULT_PREP_TIME, 10) || 10;
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5000/api';
 
 /**
- * Estimate time for an existing order by ID.
+ * Helper to fetch truck capacity via API
+ */
+async function getTruckCapacity(truckId) {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/trucks/capacity/${truckId}`);
+    return res.data?.data?.maxConcurrent ?? DEFAULT_CONCURRENT;
+  } catch (err) {
+    console.error(`❌ Error fetching capacity for truck ${truckId}:`, err.message);
+    return DEFAULT_CONCURRENT;
+  }
+}
+
+
+/**
+ * Estimate time for an existing order by ID
  */
 async function computeEstimate(orderId, maxConcurrentOverride) {
   const order = await Order.findById(orderId);
   if (!order) throw new Error('Order not found');
 
   const truckId = order.truck_id.toString();
-  const maxConcurrent = maxConcurrentOverride || DEFAULT_CONCURRENT;
+  const maxConcurrent = maxConcurrentOverride || await getTruckCapacity(truckId);
 
-  // Part 1: Waiting time due to concurrent limit
+  // Part 1: Waiting time due to concurrent order limit
   const activeOrders = await Order.find({ truck_id: truckId, status: 'Preparing' });
 
   let partOne = 0;
@@ -57,10 +73,10 @@ async function computeEstimate(orderId, maxConcurrentOverride) {
 }
 
 /**
- * Preview estimated time for new unsaved order.
+ * Preview estimated time for a new (unsaved) order
  */
 async function calculateEstimatePreview(truckId, items, orderType) {
-  const maxConcurrent = DEFAULT_CONCURRENT;
+  const maxConcurrent = await getTruckCapacity(truckId);
 
   const itemPrepTimes = await Promise.all(
     items.map(async (item) => {
@@ -71,7 +87,6 @@ async function calculateEstimatePreview(truckId, items, orderType) {
   );
 
   const totalPrepTime = itemPrepTimes.reduce((sum, time) => sum + time, 0);
-
   const estimatedTime = Math.ceil(totalPrepTime / maxConcurrent);
 
   return estimatedTime;

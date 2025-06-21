@@ -71,22 +71,26 @@ const updateOrderStatus = async (req, res) => {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    // stamp new status
-    order.status = req.body.status;
+    const newStatus = req.body.status;
+    order.status = newStatus;
+    order.statusTimestamps = {
+      ...order.statusTimestamps,
+      [newStatus.toLowerCase()]: new Date()
+    };
     await order.save();
 
-    // notifications as before
-    if (order.status === "Preparing") {
-      const not = await Notification.create({
-        userId:  order.customer_id.toString(),
-        title:   "Order Update",
+    if (newStatus === "Preparing") {
+      await Notification.create({
+        userId: order.customer_id.toString(),
+        title: "Order Update",
         message: "Your order is being prepared"
-      });
-      sendToClient(order.customer_id.toString(), "Notification", not);
+      }).then((not) =>
+        sendToClient(order.customer_id.toString(), "Notification", not)
+      );
 
-      // recompute estimate when we actually start preparing
       const { partOne, partTwo, estimatedTime, maxConcurrent } =
         await computeEstimate(order._id);
+
       await OrderEstimate.findOneAndUpdate(
         { orderId: order._id },
         { partOne, partTwo, estimatedTime, maxConcurrent, calculatedAt: new Date() },
@@ -94,18 +98,17 @@ const updateOrderStatus = async (req, res) => {
       );
     }
 
-    if (order.status === "Ready") {
-      const not = await Notification.create({
-        userId:  order.customer_id.toString(),
-        title:   "Order Update",
+    if (newStatus === "Ready") {
+      await Notification.create({
+        userId: order.customer_id.toString(),
+        title: "Order Update",
         message: "Your order is ready"
-      });
-      sendToClient(order.customer_id.toString(), "Notification", not);
+      }).then((not) =>
+        sendToClient(order.customer_id.toString(), "Notification", not)
+      );
 
-      // record the real prep duration for stats
       await recordPrepDuration(order._id);
 
-      // optional: clear or zero‐out the estimate now that it's done
       await OrderEstimate.findOneAndUpdate(
         { orderId: order._id },
         { partOne: 0, partTwo: 0, estimatedTime: 0, calculatedAt: new Date() }
@@ -117,7 +120,9 @@ const updateOrderStatus = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+
 };
+
 
 
 // 🟡 Get logged-in customer orders

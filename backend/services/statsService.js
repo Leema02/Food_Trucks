@@ -1,5 +1,4 @@
-// services/statsService.js
-const Order            = require('../models/orderModel');
+const Order = require('../models/orderModel');
 const PreparationStats = require('../models/PreparationStats');
 
 /**
@@ -8,27 +7,37 @@ const PreparationStats = require('../models/PreparationStats');
  */
 async function recordPrepDuration(orderId) {
   const order = await Order.findById(orderId);
-  if (!order) return;
+  if (!order) {
+    console.warn(`⚠️ Order not found: ${orderId}`);
+    return;
+  }
 
-  const { preparing: start, ready: end } = order.statusTimestamps;
-  if (!start || !end) return;
+  const { preparing: start, ready: end } = order.statusTimestamps || {};
+  if (!start || !end) {
+    console.warn(`⚠️ Missing status timestamps on order ${orderId}`);
+    return;
+  }
 
-  // minutes between statuses
-  const delta = (end - start) / 60000;
+  const delta = (end - start) / 60000; // duration in minutes
 
-  // for each item in the order, record the same delta
   await Promise.all(order.items.map(async item => {
-    const menuItemId = item.menuItem; // assumes your items look like { menuItem, quantity }
-    // push delta into that menuItem's stats
-    const stat = await PreparationStats.findOneAndUpdate(
-      { menuItemId },
-      { $push: { times: delta } },
-      { upsert: true, new: true }
-    );
-    // recompute avgTime
-    const sum = stat.times.reduce((acc, v) => acc + v, 0);
-    stat.avgTime = sum / stat.times.length;
-    await stat.save();
+    const menuItemId =   menuItemId; // Ensure you're using `menu_id` in your Order schema
+
+    try {
+      const stat = await PreparationStats.findOneAndUpdate(
+        { menuItemId },
+        { $push: { times: delta } },
+        { upsert: true, new: true }
+      );
+
+      const times = stat.times || [];
+      const sum = times.reduce((acc, v) => acc + v, 0);
+      stat.avgTime = times.length ? sum / times.length : 0;
+
+      await stat.save();
+    } catch (err) {
+      console.error(`❌ Error updating preparation stats for menuItemId ${menuItemId}:`, err.message);
+    }
   }));
 }
 

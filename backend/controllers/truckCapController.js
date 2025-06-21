@@ -1,5 +1,5 @@
 const TruckCapacity = require('../models/truckCapacityModel');
-
+const mongoose = require('mongoose');
 exports.setCapacity = async (req, res, next) => {
   try {
     const { truckId, maxConcurrent } = req.body;
@@ -36,7 +36,12 @@ exports.getCapacityByTruckId = async (req, res, next) => {
   try {
     const { truckId } = req.params;
 
-    const entry = await TruckCapacity.findOne({ truckId });
+    const entry = await TruckCapacity.findOne({
+      truckId: mongoose.Types.ObjectId.isValid(truckId)
+        ? new mongoose.Types.ObjectId(truckId)
+        : truckId
+    });
+
     if (!entry) {
       return res.status(404).json({ success: false, message: 'No capacity found for this truck' });
     }

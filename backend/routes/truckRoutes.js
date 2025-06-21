@@ -9,6 +9,9 @@ const { authorizeRoles } = require("../middleware/roleMiddleware");
 router.get("/public", TruckController.getAllPublicTrucks);
 router.get("/cuisines", TruckController.getAllCuisines);
 
+router.post('/capacity', capacityController.setCapacity);
+router.get('/capacity/:truckId', capacityController.getCapacityByTruckId);
+
 // ✅ Protected
 router.use(protect);
 
@@ -34,7 +37,5 @@ router.post("/:id/unavailable", authorizeRoles("truck owner"), TruckController.a
 router.delete("/:id/unavailable", authorizeRoles("truck owner"), TruckController.removeUnavailableDate);
 
 
-router.post('/capacity', capacityController.setCapacity);
-router.get('/capacity/:truckId', capacityController.getCapacityByTruckId);
 
 module.exports = router;
